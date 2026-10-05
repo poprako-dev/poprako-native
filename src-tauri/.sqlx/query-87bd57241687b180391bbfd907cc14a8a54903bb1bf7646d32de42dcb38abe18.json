@@ -1,0 +1,74 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT comic_id, last_opened_at, page_id, unit_id, mode FROM work_position WHERE comic_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "comic_id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "work_position",
+            "name": "comic_id"
+          }
+        }
+      },
+      {
+        "name": "last_opened_at",
+        "ordinal": 1,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "work_position",
+            "name": "last_opened_at"
+          }
+        }
+      },
+      {
+        "name": "page_id",
+        "ordinal": 2,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "work_position",
+            "name": "page_id"
+          }
+        }
+      },
+      {
+        "name": "unit_id",
+        "ordinal": 3,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "work_position",
+            "name": "unit_id"
+          }
+        }
+      },
+      {
+        "name": "mode",
+        "ordinal": 4,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "work_position",
+            "name": "mode"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true,
+      false
+    ]
+  },
+  "hash": "87bd57241687b180391bbfd907cc14a8a54903bb1bf7646d32de42dcb38abe18"
+}

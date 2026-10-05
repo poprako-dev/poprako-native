@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-select-image-folder"
+description = "Enables the select_image_folder command without any pre-configured scope."
+commands.allow = ["select_image_folder"]
+
+[[permission]]
+identifier = "deny-select-image-folder"
+description = "Denies the select_image_folder command without any pre-configured scope."
+commands.deny = ["select_image_folder"]

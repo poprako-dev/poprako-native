@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=PopRaKo Native
+Name[en]=PopRaKo Native
+Name[zh_CN]=白杨子 N
+Comment={{comment}}
+Exec={{exec}}
+Icon={{icon}}
+Terminal=false
+Categories={{categories}}

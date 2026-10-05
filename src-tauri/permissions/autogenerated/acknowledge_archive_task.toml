@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-acknowledge-archive-task"
+description = "Enables the acknowledge_archive_task command without any pre-configured scope."
+commands.allow = ["acknowledge_archive_task"]
+
+[[permission]]
+identifier = "deny-acknowledge-archive-task"
+description = "Denies the acknowledge_archive_task command without any pre-configured scope."
+commands.deny = ["acknowledge_archive_task"]

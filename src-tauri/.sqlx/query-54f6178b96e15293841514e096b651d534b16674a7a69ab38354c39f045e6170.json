@@ -1,0 +1,68 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT p.id, COUNT(u.id) AS \"unit_count!: i64\", COALESCE(SUM(u.translated_text != ''), 0) AS \"translated_count!: i64\", COALESCE(SUM(u.is_proofread), 0) AS \"proofread_count!: i64\", COALESCE(SUM(u.is_flagged), 0) AS \"flagged_count!: i64\", COALESCE(SUM(u.translated_text != '' AND u.proofread_text != '' AND u.translated_text != u.proofread_text), 0) AS \"edited_count!: i64\", COALESCE(SUM(u.translated_text = '' AND u.proofread_text != ''), 0) AS \"proofreader_append_count!: i64\" FROM page p LEFT JOIN unit u ON u.page_id = p.id WHERE p.comic_id = ? GROUP BY p.id ORDER BY p.position",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "page",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "name": "unit_count!: i64",
+        "ordinal": 1,
+        "type_info": "Integer",
+        "origin": "Expression"
+      },
+      {
+        "name": "translated_count!: i64",
+        "ordinal": 2,
+        "type_info": "Integer",
+        "origin": "Expression"
+      },
+      {
+        "name": "proofread_count!: i64",
+        "ordinal": 3,
+        "type_info": "Integer",
+        "origin": "Expression"
+      },
+      {
+        "name": "flagged_count!: i64",
+        "ordinal": 4,
+        "type_info": "Integer",
+        "origin": "Expression"
+      },
+      {
+        "name": "edited_count!: i64",
+        "ordinal": 5,
+        "type_info": "Integer",
+        "origin": "Expression"
+      },
+      {
+        "name": "proofreader_append_count!: i64",
+        "ordinal": 6,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "54f6178b96e15293841514e096b651d534b16674a7a69ab38354c39f045e6170"
+}

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-update-comic-metadata"
+description = "Enables the update_comic_metadata command without any pre-configured scope."
+commands.allow = ["update_comic_metadata"]
+
+[[permission]]
+identifier = "deny-update-comic-metadata"
+description = "Denies the update_comic_metadata command without any pre-configured scope."
+commands.deny = ["update_comic_metadata"]

@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE page SET position = ? WHERE id = ? AND comic_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "52d4e392cfb7b4b7cba0fe2c77d0b76f4d619748f84d564a24be615ca73d0444"
+}

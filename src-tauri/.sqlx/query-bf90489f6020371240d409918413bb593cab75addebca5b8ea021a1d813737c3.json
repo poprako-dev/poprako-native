@@ -1,0 +1,138 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT c.id, c.title, c.subtitle, c.author, c.created_at, c.updated_at,\n            (SELECT COUNT(*) FROM page p WHERE p.comic_id = c.id) AS \"page_count!: i64\",\n            (SELECT COUNT(*) FROM unit u JOIN page p ON p.id = u.page_id WHERE p.comic_id = c.id) AS \"unit_count!: i64\",\n            (SELECT COUNT(*) FROM unit u JOIN page p ON p.id = u.page_id WHERE p.comic_id = c.id AND u.translated_text != '') AS \"translated_count!: i64\",\n            (SELECT COUNT(*) FROM unit u JOIN page p ON p.id = u.page_id WHERE p.comic_id = c.id AND u.is_proofread = 1) AS \"proofread_count!: i64\",\n            (SELECT id FROM page WHERE comic_id = c.id ORDER BY position LIMIT 1) AS \"cover_page_id?: String\",\n            w.last_opened_at AS \"last_opened_at?: i64\"\n            FROM comic c LEFT JOIN work_position w ON w.comic_id = c.id\n            ORDER BY w.last_opened_at DESC, c.updated_at DESC, c.id ASC LIMIT ? OFFSET ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "comic",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "name": "title",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "comic",
+            "name": "title"
+          }
+        }
+      },
+      {
+        "name": "subtitle",
+        "ordinal": 2,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "comic",
+            "name": "subtitle"
+          }
+        }
+      },
+      {
+        "name": "author",
+        "ordinal": 3,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "comic",
+            "name": "author"
+          }
+        }
+      },
+      {
+        "name": "created_at",
+        "ordinal": 4,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "comic",
+            "name": "created_at"
+          }
+        }
+      },
+      {
+        "name": "updated_at",
+        "ordinal": 5,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "comic",
+            "name": "updated_at"
+          }
+        }
+      },
+      {
+        "name": "page_count!: i64",
+        "ordinal": 6,
+        "type_info": "Integer",
+        "origin": "Expression"
+      },
+      {
+        "name": "unit_count!: i64",
+        "ordinal": 7,
+        "type_info": "Integer",
+        "origin": "Expression"
+      },
+      {
+        "name": "translated_count!: i64",
+        "ordinal": 8,
+        "type_info": "Integer",
+        "origin": "Expression"
+      },
+      {
+        "name": "proofread_count!: i64",
+        "ordinal": 9,
+        "type_info": "Integer",
+        "origin": "Expression"
+      },
+      {
+        "name": "cover_page_id?: String",
+        "ordinal": 10,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "page",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "name": "last_opened_at?: i64",
+        "ordinal": 11,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "work_position",
+            "name": "last_opened_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "bf90489f6020371240d409918413bb593cab75addebca5b8ea021a1d813737c3"
+}

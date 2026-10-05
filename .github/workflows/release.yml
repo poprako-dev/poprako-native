@@ -1,0 +1,83 @@
+name: Release
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing draft tag to rebuild; leave empty to update the Release PR.
+        type: string
+        default: ""
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ inputs.tag || 'prepare' }}
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+    outputs:
+      tag: ${{ steps.resolve.outputs.tag }}
+      sha: ${{ steps.resolve.outputs.sha }}
+      release-id: ${{ steps.resolve.outputs.release-id }}
+    steps:
+      - uses: googleapis/release-please-action@5c625bfb5d1ff62eadeeb3772007f7f66fdcf071 # v4, release-please 17.3.0
+        id: release
+        if: inputs.tag == ''
+        with:
+          token: ${{ secrets.RELEASE_TOKEN || github.token }}
+          target-branch: main
+      - name: Resolve immutable release source
+        id: resolve
+        if: steps.release.outputs.release_created == 'true' || inputs.tag != ''
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        env:
+          RELEASE_TAG: ${{ inputs.tag || steps.release.outputs.tag_name }}
+          CREATED_SHA: ${{ steps.release.outputs.sha }}
+        with:
+          script: |
+            const tag = process.env.RELEASE_TAG;
+            if (!/^v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/.test(tag)) {
+              throw new Error('Expected a stable version tag, such as v1.0.0.');
+            }
+            const releases = await github.paginate(github.rest.repos.listReleases, {
+              ...context.repo, per_page: 100,
+            });
+            const release = releases.find(item => item.tag_name === tag);
+            if (!release || !release.draft || release.prerelease) {
+              throw new Error('Only an existing stable draft release can be built.');
+            }
+            const { data: commit } = await github.rest.repos.getCommit({
+              ...context.repo, ref: `refs/tags/${tag}`,
+            });
+            const sha = commit.sha;
+            if (process.env.CREATED_SHA && process.env.CREATED_SHA !== sha) {
+              throw new Error('The release tag does not match the release commit.');
+            }
+            const { data: comparison } = await github.rest.repos.compareCommits({
+              ...context.repo, base: sha, head: 'main',
+            });
+            if (!['ahead', 'identical'].includes(comparison.status)) {
+              throw new Error('The release commit must belong to main history.');
+            }
+            core.setOutput('tag', tag);
+            core.setOutput('sha', sha);
+            core.setOutput('release-id', String(release.id));
+
+  build:
+    needs: prepare
+    if: needs.prepare.outputs.tag != ''
+    permissions:
+      contents: write
+    uses: ./.github/workflows/release-build.yml
+    with:
+      tag: ${{ needs.prepare.outputs.tag }}
+      sha: ${{ needs.prepare.outputs.sha }}
+      release-id: ${{ needs.prepare.outputs.release-id }}
+    secrets: inherit

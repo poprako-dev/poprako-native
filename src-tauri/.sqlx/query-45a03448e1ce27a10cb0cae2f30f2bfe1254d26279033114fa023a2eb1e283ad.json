@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE work_position SET unit_id = NULL WHERE unit_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "45a03448e1ce27a10cb0cae2f30f2bfe1254d26279033114fa023a2eb1e283ad"
+}

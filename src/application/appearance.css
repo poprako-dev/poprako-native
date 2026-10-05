@@ -1,0 +1,102 @@
+/* Fixed light appearances from Native 82c20b7 and Web 46dd776. */
+:root {
+  color-scheme: light;
+  --background: #fafaf7;
+  --foreground: #414840;
+  --card: #fefefc;
+  --muted: #f1f2ed;
+  --muted-foreground: #7c827b;
+  --accent: #eff2e9;
+  --border: #e4e6df;
+  --primary: #647c60;
+  --primary-foreground: #fafafa;
+  --ring: #91aa7b;
+  --destructive: #c46868;
+  --state-primary: #91aa7b;
+  --state-secondary: #e1c48b;
+  --state-edited: #dca9c7;
+  --state-muted: #c5cac3;
+  --canvas: var(--color-stone-600);
+  --panel: var(--color-stone-50);
+  --panel-hover: var(--color-stone-100);
+  --unit-selected: color-mix(in oklab, var(--color-stone-300) 50%, transparent);
+  --unit-border: var(--color-stone-200);
+  --unit-bubble: var(--color-pink-300);
+  --unit-note: var(--color-amber-300);
+  --brand-leaf: #88b04b;
+  --status-flag: #e8b428;
+  --marker-selected: #3b82f6;
+  --marker-bubble: color-mix(in oklab, var(--color-pink-300) 80%, transparent);
+  --marker-bubble-dimmed: color-mix(
+    in oklab,
+    var(--color-pink-300) 40%,
+    transparent
+  );
+  --marker-bubble-border-dimmed: color-mix(
+    in oklab,
+    var(--color-pink-400) 40%,
+    transparent
+  );
+  --marker-bubble-border: color-mix(
+    in oklab,
+    var(--color-pink-400) 70%,
+    transparent
+  );
+  --marker-note: color-mix(in oklab, var(--color-amber-300) 80%, transparent);
+  --marker-note-dimmed: color-mix(
+    in oklab,
+    var(--color-amber-300) 40%,
+    transparent
+  );
+  --marker-note-border-dimmed: color-mix(
+    in oklab,
+    var(--color-amber-400) 40%,
+    transparent
+  );
+  --marker-note-border: color-mix(
+    in oklab,
+    var(--color-amber-400) 70%,
+    transparent
+  );
+  --diff-delete-text: #9f6262;
+  --diff-delete-bg: #f0d2d2;
+  --diff-replaced-text: #6f6a64;
+  --diff-replaced-bg: #dfdcd8;
+  --diff-replacement-text: #704b2c;
+  --diff-replacement-bg: #efd1ac;
+  --diff-insert-text: #3f5c45;
+  --diff-insert-bg: #d7e7d3;
+  --stats-translate: var(--color-orange-400);
+  --stats-edit: var(--color-pink-400);
+  --stats-append: var(--brand-leaf);
+}
+
+[data-ui-surface="translator"] {
+  --background: #ffffff;
+  --foreground: oklch(0.13 0.028 261.692);
+  --card: #ffffff;
+  --muted: oklch(0.967 0 0);
+  --muted-foreground: oklch(0.551 0 0);
+  --accent: #ecfdf5;
+  --border: oklch(0.928 0 0);
+  --primary: #059669;
+  --primary-foreground: #ffffff;
+  --ring: rgb(16 185 129 / 50%);
+  --state-primary: #88b04b;
+  --state-secondary: #fdba74;
+  --state-edited: #f9a8d4;
+  font-family:
+    ui-monospace, "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono",
+    "Courier New", monospace;
+}
+
+.translator-floating-button {
+  border: 1px solid var(--color-gray-200);
+  background: rgb(255 255 255 / 85%);
+  color: var(--color-gray-700);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 10%);
+}
+.translator-floating-button:hover {
+  background: #ffffff;
+  color: var(--color-gray-900);
+}

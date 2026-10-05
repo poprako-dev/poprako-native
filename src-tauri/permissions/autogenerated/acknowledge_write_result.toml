@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-acknowledge-write-result"
+description = "Enables the acknowledge_write_result command without any pre-configured scope."
+commands.allow = ["acknowledge_write_result"]
+
+[[permission]]
+identifier = "deny-acknowledge-write-result"
+description = "Denies the acknowledge_write_result command without any pre-configured scope."
+commands.deny = ["acknowledge_write_result"]

@@ -1,0 +1,158 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT id, page_id, position, x_coord, y_coord, is_bubble, is_flagged, translated_text, proofread_text, is_proofread, created_at, updated_at FROM unit WHERE (? AND page_id IN (SELECT id FROM page WHERE comic_id = ?)) OR page_id IN (SELECT value FROM json_each(?)) OR id IN (SELECT value FROM json_each(?)) ORDER BY id",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "unit",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "name": "page_id",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "unit",
+            "name": "page_id"
+          }
+        }
+      },
+      {
+        "name": "position",
+        "ordinal": 2,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "unit",
+            "name": "position"
+          }
+        }
+      },
+      {
+        "name": "x_coord",
+        "ordinal": 3,
+        "type_info": "Float",
+        "origin": {
+          "Table": {
+            "table": "unit",
+            "name": "x_coord"
+          }
+        }
+      },
+      {
+        "name": "y_coord",
+        "ordinal": 4,
+        "type_info": "Float",
+        "origin": {
+          "Table": {
+            "table": "unit",
+            "name": "y_coord"
+          }
+        }
+      },
+      {
+        "name": "is_bubble",
+        "ordinal": 5,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "unit",
+            "name": "is_bubble"
+          }
+        }
+      },
+      {
+        "name": "is_flagged",
+        "ordinal": 6,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "unit",
+            "name": "is_flagged"
+          }
+        }
+      },
+      {
+        "name": "translated_text",
+        "ordinal": 7,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "unit",
+            "name": "translated_text"
+          }
+        }
+      },
+      {
+        "name": "proofread_text",
+        "ordinal": 8,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "unit",
+            "name": "proofread_text"
+          }
+        }
+      },
+      {
+        "name": "is_proofread",
+        "ordinal": 9,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "unit",
+            "name": "is_proofread"
+          }
+        }
+      },
+      {
+        "name": "created_at",
+        "ordinal": 10,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "unit",
+            "name": "created_at"
+          }
+        }
+      },
+      {
+        "name": "updated_at",
+        "ordinal": 11,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "unit",
+            "name": "updated_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "adf224a55b3e5e1b4e27edbc04dc8249a4d362d55a2b90e831af4b94bb3e1691"
+}

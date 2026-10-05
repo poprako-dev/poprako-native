@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO page (id, comic_id, position, unit_revision, image_reference, image_original_name, image_format, image_width, image_height, created_at, updated_at) VALUES (?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 10
+    },
+    "nullable": []
+  },
+  "hash": "b311322c26b13aaf36900240e7847bae3ef464e7b5b17a22565c2b01a0d41a3b"
+}

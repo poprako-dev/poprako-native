@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-release-image-resources"
+description = "Enables the release_image_resources command without any pre-configured scope."
+commands.allow = ["release_image_resources"]
+
+[[permission]]
+identifier = "deny-release-image-resources"
+description = "Denies the release_image_resources command without any pre-configured scope."
+commands.deny = ["release_image_resources"]

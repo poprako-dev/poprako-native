@@ -1,0 +1,19 @@
+name: Setup project
+description: Install the pinned Deno and Rust toolchains and locked dependencies.
+runs:
+  using: composite
+  steps:
+    - uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed # v2
+      with:
+        deno-version-file: .deno-version
+    - name: Install Rust toolchain
+      shell: bash
+      run: rustup show
+    - uses: swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
+      with:
+        workspaces: src-tauri -> target
+        cache-on-failure: true
+        save-if: ${{ github.ref == 'refs/heads/main' }}
+    - name: Install frontend dependencies
+      shell: bash
+      run: deno install --frozen-lockfile

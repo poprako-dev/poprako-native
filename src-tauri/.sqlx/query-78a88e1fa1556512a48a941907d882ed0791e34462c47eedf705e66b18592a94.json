@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE application_preference SET payload = ? WHERE singleton = 1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "78a88e1fa1556512a48a941907d882ed0791e34462c47eedf705e66b18592a94"
+}

@@ -1,0 +1,66 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "PopRaKo Native",
+  "version": "1.0.0",
+  "identifier": "com.poprako.native",
+  "build": {
+    "beforeDevCommand": "deno task dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "deno task build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "白杨子 N",
+        "width": 1280,
+        "height": 800,
+        "minWidth": 640,
+        "minHeight": 480,
+        "decorations": false,
+        "transparent": true,
+        "shadow": true
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data: poprako-resource: http://poprako-resource.localhost; connect-src ipc: http://ipc.localhost",
+      "devCsp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data: poprako-resource: http://poprako-resource.localhost; connect-src ipc: http://ipc.localhost ws://localhost:1420 http://localhost:1420"
+    },
+    "macOSPrivateApi": true
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "macOS": {
+      "minimumSystemVersion": "13.3",
+      "infoPlist": "platform/macos/Info.plist",
+      "files": {
+        "Resources/en.lproj/InfoPlist.strings": "platform/macos/en.lproj/InfoPlist.strings",
+        "Resources/zh_CN.lproj/InfoPlist.strings": "platform/macos/zh_CN.lproj/InfoPlist.strings"
+      }
+    },
+    "linux": {
+      "deb": {
+        "desktopTemplate": "platform/linux/application.desktop"
+      },
+      "rpm": {
+        "desktopTemplate": "platform/linux/application.desktop"
+      }
+    },
+    "windows": {
+      "nsis": {
+        "languages": ["English", "SimpChinese"],
+        "installerHooks": "platform/windows/installer-hooks.nsh"
+      },
+      "webviewInstallMode": {
+        "type": "skip"
+      }
+    },
+    "icon": [
+      "icons/icon.png",
+      "target/generated-icon/icon.icns",
+      "target/generated-icon/icon.ico"
+    ]
+  }
+}

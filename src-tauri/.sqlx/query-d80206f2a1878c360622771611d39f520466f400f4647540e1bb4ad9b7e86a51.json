@@ -1,0 +1,146 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT id, comic_id, position, unit_revision, image_reference, image_original_name, image_format, image_width, image_height, created_at, updated_at FROM page WHERE id = ? AND comic_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "page",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "name": "comic_id",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "page",
+            "name": "comic_id"
+          }
+        }
+      },
+      {
+        "name": "position",
+        "ordinal": 2,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "page",
+            "name": "position"
+          }
+        }
+      },
+      {
+        "name": "unit_revision",
+        "ordinal": 3,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "page",
+            "name": "unit_revision"
+          }
+        }
+      },
+      {
+        "name": "image_reference",
+        "ordinal": 4,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "page",
+            "name": "image_reference"
+          }
+        }
+      },
+      {
+        "name": "image_original_name",
+        "ordinal": 5,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "page",
+            "name": "image_original_name"
+          }
+        }
+      },
+      {
+        "name": "image_format",
+        "ordinal": 6,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "page",
+            "name": "image_format"
+          }
+        }
+      },
+      {
+        "name": "image_width",
+        "ordinal": 7,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "page",
+            "name": "image_width"
+          }
+        }
+      },
+      {
+        "name": "image_height",
+        "ordinal": 8,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "page",
+            "name": "image_height"
+          }
+        }
+      },
+      {
+        "name": "created_at",
+        "ordinal": 9,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "page",
+            "name": "created_at"
+          }
+        }
+      },
+      {
+        "name": "updated_at",
+        "ordinal": 10,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "page",
+            "name": "updated_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "d80206f2a1878c360622771611d39f520466f400f4647540e1bb4ad9b7e86a51"
+}

@@ -1,0 +1,81 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT u.id, u.page_id, u.position AS unit_index, p.position AS page_index, p.unit_revision,\n            CASE WHEN ? THEN u.proofread_text ELSE u.translated_text END AS \"text!: String\"\n            FROM unit u JOIN page p ON p.id = u.page_id\n            WHERE p.comic_id = ? AND instr(CASE WHEN ? THEN u.proofread_text ELSE u.translated_text END, ?) > 0\n            ORDER BY p.position, u.position LIMIT 101",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "unit",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "name": "page_id",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "unit",
+            "name": "page_id"
+          }
+        }
+      },
+      {
+        "name": "unit_index",
+        "ordinal": 2,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "unit",
+            "name": "position"
+          }
+        }
+      },
+      {
+        "name": "page_index",
+        "ordinal": 3,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "page",
+            "name": "position"
+          }
+        }
+      },
+      {
+        "name": "unit_revision",
+        "ordinal": 4,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "page",
+            "name": "unit_revision"
+          }
+        }
+      },
+      {
+        "name": "text!: String",
+        "ordinal": 5,
+        "type_info": "Text",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "745faf8eeb7e8cd73fc0cbb55ee28a97f7b51f517756128479c023ba1d9cb986"
+}

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-get-image-resource"
+description = "Enables the get_image_resource command without any pre-configured scope."
+commands.allow = ["get_image_resource"]
+
+[[permission]]
+identifier = "deny-get-image-resource"
+description = "Denies the get_image_resource command without any pre-configured scope."
+commands.deny = ["get_image_resource"]

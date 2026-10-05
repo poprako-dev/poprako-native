@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-replace-units"
+description = "Enables the replace_units command without any pre-configured scope."
+commands.allow = ["replace_units"]
+
+[[permission]]
+identifier = "deny-replace-units"
+description = "Denies the replace_units command without any pre-configured scope."
+commands.deny = ["replace_units"]

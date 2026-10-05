@@ -1,0 +1,38 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT id, comic_id FROM page WHERE (? AND comic_id = ?) OR id IN (SELECT value FROM json_each(?)) ORDER BY id",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "page",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "name": "comic_id",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "page",
+            "name": "comic_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "9dc1a83a0ba4cd7f3005654564f76fb3b5f2694a16c28b0b1b4436845e533483"
+}

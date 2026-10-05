@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT payload FROM application_preference WHERE singleton = 1",
+  "describe": {
+    "columns": [
+      {
+        "name": "payload",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "application_preference",
+            "name": "payload"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "3827e45ae3c6e40a4313c69e74d2b7994e1543af63f3bc6e8f200b2bccf4d2af"
+}

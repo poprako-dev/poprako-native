@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM unit WHERE page_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "63d8a8fb640589d43dc6a1d313d764bf74d5749930d581f6b342f6433c4fb0e0"
+}

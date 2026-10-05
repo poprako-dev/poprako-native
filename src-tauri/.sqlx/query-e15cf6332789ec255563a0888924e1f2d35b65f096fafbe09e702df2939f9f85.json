@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO application_preference_upgrade (name) VALUES ('web_shortcuts')",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "e15cf6332789ec255563a0888924e1f2d35b65f096fafbe09e702df2939f9f85"
+}

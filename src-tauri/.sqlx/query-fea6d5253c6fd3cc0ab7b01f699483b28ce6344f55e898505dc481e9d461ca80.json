@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE page SET unit_revision = ?, updated_at = ? WHERE id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "fea6d5253c6fd3cc0ab7b01f699483b28ce6344f55e898505dc481e9d461ca80"
+}

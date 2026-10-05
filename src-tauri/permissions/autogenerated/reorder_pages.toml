@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-reorder-pages"
+description = "Enables the reorder_pages command without any pre-configured scope."
+commands.allow = ["reorder_pages"]
+
+[[permission]]
+identifier = "deny-reorder-pages"
+description = "Denies the reorder_pages command without any pre-configured scope."
+commands.deny = ["reorder_pages"]

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-list-comic-infos"
+description = "Enables the list_comic_infos command without any pre-configured scope."
+commands.allow = ["list_comic_infos"]
+
+[[permission]]
+identifier = "deny-list-comic-infos"
+description = "Denies the list_comic_infos command without any pre-configured scope."
+commands.deny = ["list_comic_infos"]

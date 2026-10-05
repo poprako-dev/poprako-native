@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM page WHERE id = ? AND comic_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "835c6866507c8f391a69020dc49a4387fd76eb4248c078a7d5d9e980268e8861"
+}

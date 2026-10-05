@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE unit SET position = ?, x_coord = ?, y_coord = ?, is_bubble = ?, is_flagged = ?, translated_text = ?, proofread_text = ?, is_proofread = ?, updated_at = ? WHERE id = ? AND page_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 11
+    },
+    "nullable": []
+  },
+  "hash": "36d17fcf17bbf3e691b4bc6db29ef58e17eb55fea1cb2aa58170ea8523876cda"
+}

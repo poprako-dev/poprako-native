@@ -1,0 +1,20 @@
+{
+  "nodeModulesDir": "manual",
+  "tasks": {
+    "dev": "deno run --allow-read script/check-toolchain.ts && deno run -A npm:vite@8.0.16",
+    "desktop": "deno task tauri dev",
+    "tauri": "deno run --allow-read script/check-toolchain.ts && deno run -A npm:@tauri-apps/cli@2.11.5",
+    "build": "deno run --allow-read script/check-toolchain.ts && deno task typecheck && deno run -A npm:vite@8.0.16 build",
+    "typecheck": "deno run --allow-read script/check-toolchain.ts && deno run -A npm:typescript@6.0.3/tsc --noEmit",
+    "lint": "deno run --allow-read script/check-toolchain.ts && deno run -A npm:eslint@9.39.1 . --max-warnings 0",
+    "test:frontend": "deno run --allow-read script/check-toolchain.ts && deno run -A npm:vitest@4.1.7 run",
+    "test:rust": "deno run --allow-read script/check-toolchain.ts && cargo test --manifest-path src-tauri/Cargo.toml --workspace --all-targets --locked",
+    "test": "deno run --allow-read script/check-toolchain.ts && deno task test:frontend && deno task test:rust",
+    "format": "deno run --allow-read script/check-toolchain.ts && deno run -A npm:prettier@3.6.2 --write src script .github .release-please-manifest.json *.json *.ts *.mjs && cargo fmt --manifest-path src-tauri/Cargo.toml --all",
+    "format:check": "deno run --allow-read script/check-toolchain.ts && deno run -A npm:prettier@3.6.2 --check src script .github .release-please-manifest.json *.json *.ts *.mjs && cargo fmt --manifest-path src-tauri/Cargo.toml --all --check",
+    "check": "deno run --allow-read script/check-toolchain.ts && deno run -A script/check.ts",
+    "generate": "deno run --allow-read script/check-toolchain.ts && deno run -A script/generate.ts",
+    "package": "deno task tauri build",
+    "check:rust-style": "deno run --allow-read script/check-toolchain.ts && cargo run --manifest-path src-tauri/Cargo.toml --locked -p poprako-style-check"
+  }
+}

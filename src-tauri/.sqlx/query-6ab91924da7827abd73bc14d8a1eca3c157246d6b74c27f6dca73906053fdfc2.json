@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO application_preference (singleton, payload) VALUES (1, ?)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "6ab91924da7827abd73bc14d8a1eca3c157246d6b74c27f6dca73906053fdfc2"
+}

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-get-write-result"
+description = "Enables the get_write_result command without any pre-configured scope."
+commands.allow = ["get_write_result"]
+
+[[permission]]
+identifier = "deny-get-write-result"
+description = "Denies the get_write_result command without any pre-configured scope."
+commands.deny = ["get_write_result"]

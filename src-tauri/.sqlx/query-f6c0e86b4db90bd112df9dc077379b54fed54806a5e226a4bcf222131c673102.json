@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE work_position SET page_id = ?, unit_id = NULL WHERE comic_id = ? AND page_id IS NULL",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "f6c0e86b4db90bd112df9dc077379b54fed54806a5e226a4bcf222131c673102"
+}

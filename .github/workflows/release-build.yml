@@ -1,0 +1,279 @@
+name: Build release
+on:
+  workflow_call:
+    inputs:
+      tag:
+        type: string
+        required: true
+      sha:
+        type: string
+        required: true
+      release-id:
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-release-${{ inputs.tag }}
+  cancel-in-progress: false
+
+env:
+  RELEASE_TAG: ${{ inputs.tag }}
+  RELEASE_SHA: ${{ inputs.sha }}
+  RELEASE_SIGNING: ${{ vars.RELEASE_SIGNING == 'true' && 'true' || 'false' }}
+  RELEASE_PUBLISH: ${{ vars.RELEASE_PUBLISH == 'true' && 'true' || 'false' }}
+
+jobs:
+  build:
+    name: Installer (${{ matrix.platform }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: macos-arm64
+            runner: macos-15
+          - platform: windows-x64
+            runner: windows-2025
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 90
+    env:
+      RELEASE_PLATFORM: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ inputs.sha }}
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+      - run: deno task check
+      - name: Check tracked files remain unchanged
+        run: git diff --exit-code
+      - name: Check Apple signing configuration
+        if: matrix.platform == 'macos-arm64' && env.RELEASE_SIGNING == 'true'
+        shell: bash
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          test -n "$APPLE_CERTIFICATE"
+          test -n "$APPLE_CERTIFICATE_PASSWORD"
+          test -n "$APPLE_ID"
+          test -n "$APPLE_PASSWORD"
+          test -n "$APPLE_TEAM_ID"
+          case "$APPLE_SIGNING_IDENTITY" in
+            'Developer ID Application: '*) ;;
+            *) echo 'A Developer ID Application identity is required.' >&2; exit 1 ;;
+          esac
+      - name: Build ad-hoc macOS installer
+        if: matrix.platform == 'macos-arm64' && env.RELEASE_SIGNING != 'true'
+        uses: tauri-apps/tauri-action@1deb371b0cd8bd54025b384f1cd735e725c4060f # v1
+        env:
+          APPLE_SIGNING_IDENTITY: "-"
+        with:
+          tauriScript: deno task tauri
+          args: --target aarch64-apple-darwin --bundles app,dmg -- --locked
+      - name: Build signed macOS installer
+        if: matrix.platform == 'macos-arm64' && env.RELEASE_SIGNING == 'true'
+        uses: tauri-apps/tauri-action@1deb371b0cd8bd54025b384f1cd735e725c4060f # v1
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        with:
+          tauriScript: deno task tauri
+          args: --target aarch64-apple-darwin --bundles app,dmg -- --locked
+      - name: Verify ad-hoc macOS signature
+        if: matrix.platform == 'macos-arm64' && env.RELEASE_SIGNING != 'true'
+        shell: bash
+        run: |
+          app='src-tauri/target/aarch64-apple-darwin/release/bundle/macos/PopRaKo Native.app'
+          codesign --verify --deep --strict "$app"
+          codesign -dv --verbose=4 "$app" 2>&1 | grep -q '^Signature=adhoc$'
+      - name: Verify macOS signature and notarization
+        if: matrix.platform == 'macos-arm64' && env.RELEASE_SIGNING == 'true'
+        shell: bash
+        run: |
+          app='src-tauri/target/aarch64-apple-darwin/release/bundle/macos/PopRaKo Native.app'
+          codesign --verify --deep --strict "$app"
+          xcrun stapler validate "$app"
+          spctl --assess --type execute "$app"
+      - name: Import Windows signing certificate
+        if: matrix.platform == 'windows-x64' && env.RELEASE_SIGNING == 'true'
+        shell: pwsh
+        env:
+          WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
+          WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+          WINDOWS_TIMESTAMP_URL: ${{ vars.WINDOWS_TIMESTAMP_URL }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          if (!$env:WINDOWS_CERTIFICATE -or !$env:WINDOWS_CERTIFICATE_PASSWORD -or !$env:WINDOWS_TIMESTAMP_URL) {
+            throw 'Windows certificate, password and timestamp URL are required.'
+          }
+          $certificatePath = Join-Path $env:RUNNER_TEMP 'release-certificate.pfx'
+          [IO.File]::WriteAllBytes($certificatePath, [Convert]::FromBase64String($env:WINDOWS_CERTIFICATE))
+          $password = ConvertTo-SecureString $env:WINDOWS_CERTIFICATE_PASSWORD -AsPlainText -Force
+          $certificates = @(Import-PfxCertificate -FilePath $certificatePath -CertStoreLocation Cert:\CurrentUser\My -Password $password)
+          $signers = @($certificates | Where-Object { $_.HasPrivateKey })
+          if ($signers.Count -ne 1) { throw 'Expected one signing identity in the PFX.' }
+          $thumbprint = $signers[0].Thumbprint
+          "WINDOWS_CERTIFICATE_THUMBPRINT=$thumbprint" >> $env:GITHUB_ENV
+          $configuration = @{ bundle = @{ windows = @{
+            certificateThumbprint = $thumbprint
+            digestAlgorithm = 'sha256'
+            timestampUrl = $env:WINDOWS_TIMESTAMP_URL
+          } } } | ConvertTo-Json -Depth 5
+          $configurationPath = Join-Path $env:RUNNER_TEMP 'release-signing.json'
+          Set-Content -Path $configurationPath -Value $configuration -Encoding utf8
+          "WINDOWS_SIGNING_CONFIG=$configurationPath" >> $env:GITHUB_ENV
+      - name: Build Windows installer
+        if: matrix.platform == 'windows-x64'
+        uses: tauri-apps/tauri-action@1deb371b0cd8bd54025b384f1cd735e725c4060f # v1
+        with:
+          tauriScript: deno task tauri
+          args: >-
+            --target x86_64-pc-windows-msvc --bundles nsis
+            ${{ env.RELEASE_SIGNING == 'true' && format('--config "{0}"', env.WINDOWS_SIGNING_CONFIG) || '' }}
+            -- --locked
+      - name: Verify Windows signatures
+        if: matrix.platform == 'windows-x64' && env.RELEASE_SIGNING == 'true'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $installers = @(Get-ChildItem 'src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis/*.exe')
+          if ($installers.Count -ne 1) { throw 'Expected one Windows installer.' }
+          $paths = @($installers[0].FullName, 'src-tauri/target/x86_64-pc-windows-msvc/release/poprako-native.exe')
+          foreach ($path in $paths) {
+            $signature = Get-AuthenticodeSignature $path
+            if ($signature.Status -ne 'Valid' -or $signature.SignerCertificate.Thumbprint -ne $env:WINDOWS_CERTIFICATE_THUMBPRINT) {
+              throw "Invalid signature: $path"
+            }
+          }
+      - name: Collect installer and provenance
+        env:
+          RELEASE_DIRECTORY: ${{ runner.temp }}/release-output
+        run: deno run -A script/release-artifact.ts collect
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: release-${{ inputs.tag }}-${{ matrix.platform }}
+          path: ${{ runner.temp }}/release-output/*
+          if-no-files-found: error
+          retention-days: 14
+          overwrite: true
+      - name: Remove Windows signing material
+        if: always() && matrix.platform == 'windows-x64'
+        shell: pwsh
+        run: |
+          if ($env:WINDOWS_CERTIFICATE_THUMBPRINT) {
+            Remove-Item "Cert:\CurrentUser\My\$env:WINDOWS_CERTIFICATE_THUMBPRINT" -Force -ErrorAction SilentlyContinue
+          }
+          Remove-Item (Join-Path $env:RUNNER_TEMP 'release-certificate.pfx') -Force -ErrorAction SilentlyContinue
+          Remove-Item (Join-Path $env:RUNNER_TEMP 'release-signing.json') -Force -ErrorAction SilentlyContinue
+
+  publish:
+    name: Assemble release
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ inputs.sha }}
+          persist-credentials: false
+      - uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed # v2
+        with:
+          deno-version-file: .deno-version
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          pattern: release-${{ inputs.tag }}-*
+          path: ${{ runner.temp }}/release-output
+          merge-multiple: true
+      - name: Verify complete artifact set
+        env:
+          RELEASE_DIRECTORY: ${{ runner.temp }}/release-output
+        run: deno run --allow-read --allow-write --allow-env script/release-artifact.ts verify
+      - name: Upload to draft and publish when enabled
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        env:
+          RELEASE_ID: ${{ inputs.release-id }}
+          RELEASE_DIRECTORY: ${{ runner.temp }}/release-output
+        with:
+          script: |
+            const fs = require('node:fs/promises');
+            const path = require('node:path');
+            const releaseId = Number(process.env.RELEASE_ID);
+            const tag = process.env.RELEASE_TAG;
+            const { data: release } = await github.rest.repos.getRelease({
+              ...context.repo, release_id: releaseId,
+            });
+            if (!release.draft || release.prerelease || release.tag_name !== tag) {
+              throw new Error('Refusing to change a published or mismatched release.');
+            }
+            const { data: commit } = await github.rest.repos.getCommit({
+              ...context.repo, ref: `refs/tags/${tag}`,
+            });
+            if (commit.sha !== process.env.RELEASE_SHA) {
+              throw new Error('Release tag moved during the build.');
+            }
+            const directory = process.env.RELEASE_DIRECTORY;
+            const files = await fs.readdir(directory);
+            const assets = await github.paginate(github.rest.repos.listReleaseAssets, {
+              ...context.repo, release_id: releaseId, per_page: 100,
+            });
+            if (assets.some(asset => !files.includes(asset.name))) {
+              throw new Error('Draft contains unexpected assets; inspect before retrying.');
+            }
+            for (const name of files) {
+              const existing = assets.find(asset => asset.name === name);
+              if (existing) {
+                await github.rest.repos.deleteReleaseAsset({
+                  ...context.repo, asset_id: existing.id,
+                });
+              }
+              const data = await fs.readFile(path.join(directory, name));
+              await github.rest.repos.uploadReleaseAsset({
+                ...context.repo, release_id: releaseId, name, data,
+                headers: { 'content-type': 'application/octet-stream', 'content-length': data.length },
+              });
+            }
+            const uploaded = await github.paginate(github.rest.repos.listReleaseAssets, {
+              ...context.repo, release_id: releaseId, per_page: 100,
+            });
+            for (const name of files) {
+              const stat = await fs.stat(path.join(directory, name));
+              const asset = uploaded.find(item => item.name === name);
+              if (!asset || asset.state !== 'uploaded' || asset.size !== stat.size) {
+                throw new Error(`Incomplete release asset: ${name}`);
+              }
+            }
+            const originalBody = (release.body || '').replace(
+              /\n*<!-- poprako-installation:start -->[\s\S]*?<!-- poprako-installation:end -->/g,
+              '',
+            ).trimEnd();
+            const installationUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/blob/${process.env.RELEASE_SHA}/docs/installation.md`;
+            const notice = process.env.RELEASE_SIGNING === 'true'
+              ? `[安装说明](${installationUrl})`
+              : `macOS 安装包采用 ad-hoc 签名，未经 Apple 公证。首次打开可能需要在「系统设置 → 隐私与安全性」中选择「仍要打开」。Windows 安装包暂未签名。\n\n[安装说明](${installationUrl})`;
+            await github.rest.repos.updateRelease({
+              ...context.repo,
+              release_id: releaseId,
+              tag_name: tag,
+              target_commitish: process.env.RELEASE_SHA,
+              body: `${originalBody}\n\n<!-- poprako-installation:start -->\n${notice}\n<!-- poprako-installation:end -->`,
+              draft: process.env.RELEASE_PUBLISH !== 'true',
+              ...(process.env.RELEASE_PUBLISH === 'true' ? { make_latest: 'legacy' } : {}),
+            });
+            await core.summary
+              .addHeading(`${tag}: ${process.env.RELEASE_PUBLISH === 'true' ? 'published' : 'draft ready'}`)
+              .addRaw(`Source: ${process.env.RELEASE_SHA}\n\n`)
+              .addLink('Release', release.html_url)
+              .write();

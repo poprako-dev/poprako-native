@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE page SET image_reference = ?, image_original_name = ?, image_format = ?, image_width = ?, image_height = ?, unit_revision = ?, updated_at = ? WHERE id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 8
+    },
+    "nullable": []
+  },
+  "hash": "bde2cf939e855f1c0cf3b2bfc8ed253cd1d4e127ce14e7875a3cd03473255ea1"
+}

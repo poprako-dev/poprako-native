@@ -1,0 +1,18 @@
+[package]
+name = "poprako-sql-prepare"
+version = "0.1.0"
+edition = "2024"
+publish = false
+authors = ["Lubover"]
+license = "AGPL-3.0-or-later"
+readme = "../../README.md"
+description = "Temporary SQLite schema preparation for PopRaKo Native"
+keywords = ["sqlite", "migration", "offline"]
+categories = ["database"]
+
+[dependencies]
+sqlx = { version = "=0.9.0", default-features = false, features = ["sqlite", "runtime-tokio", "macros", "migrate"] }
+tokio = { version = "=1.53.1", features = ["rt-multi-thread", "macros"] }
+
+[lints]
+workspace = true
