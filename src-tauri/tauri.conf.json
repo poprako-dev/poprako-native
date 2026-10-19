@@ -4,9 +4,9 @@
   "version": "1.0.0",
   "identifier": "com.poprako.native",
   "build": {
-    "beforeDevCommand": "deno task dev",
+    "beforeDevCommand": "pnpm run dev",
     "devUrl": "http://localhost:1420",
-    "beforeBuildCommand": "deno task build",
+    "beforeBuildCommand": "pnpm run build",
     "frontendDist": "../dist"
   },
   "app": {

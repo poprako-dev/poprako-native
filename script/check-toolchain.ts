@@ -1,3 +1,3 @@
-import { checkDenoVersion } from "./toolchain.ts";
+import { checkNodeVersion } from "./toolchain.ts";
 
-checkDenoVersion();
+checkNodeVersion();

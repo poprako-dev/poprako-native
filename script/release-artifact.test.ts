@@ -35,14 +35,7 @@ async function fixture(platform: string, signed: boolean): Promise<void> {
 function verify(overrides: Record<string, string> = {}): void {
   execFileSync(
     process.execPath,
-    [
-      "run",
-      "--allow-read",
-      "--allow-write",
-      "--allow-env",
-      resolve("script/release-artifact.ts"),
-      "verify",
-    ],
+    [resolve("script/release-artifact.ts"), "verify"],
     {
       stdio: "pipe",
       env: {

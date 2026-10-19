@@ -2,6 +2,6 @@ node_modules/
 dist/
 src-tauri/target/
 src-tauri/gen/
-deno.lock
+pnpm-lock.yaml
 src/bridge/generated/
 src/route-tree.gen.ts

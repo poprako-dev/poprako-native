@@ -1,8 +1,8 @@
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
-import { checkDenoVersion } from "./toolchain.ts";
+import { checkNodeVersion } from "./toolchain.ts";
 
-checkDenoVersion();
+checkNodeVersion();
 
 // GNU's unmodified AGPL v3 text, verified by Licensee's Exact matcher.
 // Source: https://www.gnu.org/licenses/agpl-3.0.txt

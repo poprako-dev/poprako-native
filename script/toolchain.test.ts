@@ -1,19 +1,19 @@
 import { describe, expect, it } from "vitest";
-import { assertDenoVersion } from "./toolchain.ts";
+import { assertNodeVersion } from "./toolchain.ts";
 
-describe("Deno toolchain pin", () => {
+describe("Node.js toolchain pin", () => {
   it("accepts the pinned runtime", () => {
     expect(() => {
-      assertDenoVersion("2.9.6", "2.9.6");
+      assertNodeVersion("26.11.1", "26.11.1");
     }).not.toThrow();
   });
 
-  it.each(["2.9.5", "2.10.0", undefined])(
+  it.each(["26.11.0", "27.0.0", undefined])(
     "rejects a mismatched runtime (%s)",
     (actual) => {
       expect(() => {
-        assertDenoVersion(actual, "2.9.6");
-      }).toThrow("requires Deno 2.9.6");
+        assertNodeVersion(actual, "26.11.1");
+      }).toThrow("requires Node.js 26.11.1");
     },
   );
 });

@@ -82,5 +82,5 @@ for (const path of paths) {
   visit(source);
 }
 if (errors.length > 0) throw new Error(errors.join("\n"));
-await run("deno", ["task", "check:rust-style"]);
+await run("pnpm", ["run", "check:rust-style"]);
 console.log("Project style checks passed.");

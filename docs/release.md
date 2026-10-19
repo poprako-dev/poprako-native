@@ -12,7 +12,7 @@
 ## 版本与产物
 
 - 使用 Conventional Commits：`fix` 对应 patch，`feat` 对应 minor，破坏性改动对应 major；一批提交汇总为一次发布。
-- 首发 `1.0.0`。Release PR 同步 package、Tauri、Cargo、Cargo.lock 和发布 manifest；`deno task check` 检查版本一致。
+- 首发 `1.0.0`。Release PR 同步 package、Tauri、Cargo、Cargo.lock 和发布 manifest；`pnpm run check` 检查版本一致。
 - Cargo.lock 的 TOML 选择器使用 `@.name.value`，匹配固定 release-please 17.3.0 的节点结构；升级 Action 时需验证版本更新。
 - 产物为 `PopRaKo-Native_X.Y.Z_macos-arm64.dmg`、`PopRaKo-Native_X.Y.Z_windows-x64-setup.exe`、两份平台元数据和 `SHA256SUMS`。
 - 工作流验证固定 SHA、版本、平台、签名模式与文件摘要；任一平台失败或产物不完整均不公开。

@@ -1,7 +1,7 @@
 import { spawn } from "node:child_process";
-import { checkDenoVersion } from "./toolchain.ts";
+import { checkNodeVersion } from "./toolchain.ts";
 
-checkDenoVersion();
+checkNodeVersion();
 
 export async function run(
   command: string,

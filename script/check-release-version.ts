@@ -1,5 +1,5 @@
 import { readReleaseVersion } from "./release-version.ts";
-import { checkDenoVersion } from "./toolchain.ts";
+import { checkNodeVersion } from "./toolchain.ts";
 
-checkDenoVersion();
+checkNodeVersion();
 console.log(`Release version: ${await readReleaseVersion(process.cwd())}`);

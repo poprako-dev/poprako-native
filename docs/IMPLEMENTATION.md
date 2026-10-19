@@ -157,17 +157,17 @@ Exported by PopRaKo Native
 
 ## 4. 第一阶段技术门禁
 
-以下表格定义工程门禁。实际工具链与依赖由 `.deno-version`、`rust-toolchain.toml`、包配置及锁文件固定；最低系统、Windows 和完整性能验收仍需目标环境实测。
+以下表格定义工程门禁。实际工具链与依赖由 `.node-version`、`rust-toolchain.toml`、包配置及锁文件固定；最低系统、Windows 和完整性能验收仍需目标环境实测。
 
 | 门禁 | 实现约束 | 通过证据／失败处理 |
 | --- | --- | --- |
-| Deno 与前端 | 固定 Deno 2.9.6、Vite 8.0.16、React 插件 6.0.2、TS 6.0.3；Tailwind 4.1.18 走 PostCSS | 安装、HMR、构建和严格类型通过；不用 peer 不覆盖 Vite 8 的旧 @tailwindcss/vite，不能偷升 Tailwind 4.2 |
+| Node.js 与前端 | 固定 Node.js 26.11.1 和 pnpm 12.11.2、Vite 8.0.16、React 插件 6.0.2、TS 6.0.3；Tailwind 4.1.18 走 PostCSS | 安装、HMR、构建和严格类型通过；不用 peer 不覆盖 Vite 8 的旧 @tailwindcss/vite，不能偷升 Tailwind 4.2 |
 | 路由生成 | src/route，business 子树忽略，生成文件在外部 | 嵌套路由正确、排除范围精确、生成检查只读；解决生成器抑制头，不手改生成物 |
 | IPC | 精确固定 tauri-specta/specta 2.0.0-rc.24 与 specta-typescript 0.0.11 | Rust/TS 实编译，Result/Option/枚举与 i64 安全整数生成一致，无重复 Specta 版本破坏接口 |
 | Orchestra / SQLx | 最小 command → usecase → Context 事务，临时文件库 | 实际 Future 满足 Tauri Send／生命周期，提交／回滚／取消边界可验证；不取消架构来掩盖泛型约束 |
 | SQLite 运行时 | SQLx 0.9.0；验证实际 SQLite 含 WAL 修复并记录来源及版本 | STRICT、逐连接外键、受检查查询、真实锁竞争；不能只看 Cargo 包版本，必须验证实际绑定的运行库 |
 | 图片管线 | 固定支持四种静态格式及动画检测的解码器 | 格式／方向／高位深／畸形输入与预算覆盖明确；Limits 的尽力限制不能当硬隔离 |
-| 质量任务 | 落实统一 deno task 入口和既定专项规则 | 一次完整 check 通过，负样例能拦截错误 type/interface、未处理 Promise、400 行及禁用 Rust 写法 |
+| 质量任务 | 落实统一 pnpm run 入口和既定专项规则 | 一次完整 check 通过，负样例能拦截错误 type/interface、未处理 Promise、400 行及禁用 Rust 写法 |
 
 依赖精确版本以实际通过结果入锁。上表保留门禁依据，实际解析版本以锁文件为准。缺少 Windows 环境不阻止宿主验证，但 Windows 部分阻塞该平台交付；不伪报双平台通过。
 

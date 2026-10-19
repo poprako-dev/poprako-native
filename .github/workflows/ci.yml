@@ -30,6 +30,6 @@ jobs:
         with:
           persist-credentials: false
       - uses: ./.github/actions/setup
-      - run: deno task check
+      - run: pnpm run check
       - name: Check tracked files remain unchanged
         run: git diff --exit-code

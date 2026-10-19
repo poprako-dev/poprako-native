@@ -42,5 +42,26 @@
     "@testing-library/user-event": "14.6.7",
     "@testing-library/jest-dom": "7.0.1",
     "jsdom": "30.1.1"
+  },
+  "packageManager": "pnpm@12.11.2",
+  "engines": {
+    "node": "26.x"
+  },
+  "scripts": {
+    "dev": "node script/check-toolchain.ts && vite",
+    "desktop": "pnpm run tauri dev",
+    "tauri": "node script/check-toolchain.ts && tauri",
+    "build": "node script/check-toolchain.ts && pnpm run typecheck && vite build",
+    "typecheck": "node script/check-toolchain.ts && tsc --noEmit",
+    "lint": "node script/check-toolchain.ts && eslint . --max-warnings 0",
+    "test:frontend": "node script/check-toolchain.ts && vitest run",
+    "test:rust": "node script/check-toolchain.ts && cargo test --manifest-path src-tauri/Cargo.toml --workspace --all-targets --locked",
+    "test": "node script/check-toolchain.ts && pnpm run test:frontend && pnpm run test:rust",
+    "format": "node script/check-toolchain.ts && prettier --write src script .github .release-please-manifest.json *.json *.ts *.mjs && cargo fmt --manifest-path src-tauri/Cargo.toml --all",
+    "format:check": "node script/check-toolchain.ts && prettier --check src script .github .release-please-manifest.json *.json *.ts *.mjs && cargo fmt --manifest-path src-tauri/Cargo.toml --all --check",
+    "check": "node script/check-toolchain.ts && node script/check.ts",
+    "generate": "node script/check-toolchain.ts && node script/generate.ts",
+    "package": "pnpm run tauri build",
+    "check:rust-style": "node script/check-toolchain.ts && cargo run --manifest-path src-tauri/Cargo.toml --locked -p poprako-style-check"
   }
 }
