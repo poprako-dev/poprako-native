@@ -4,7 +4,7 @@ use sqlx::SqliteConnection;
 use crate::data::page::PageBaseline;
 use crate::implementation::coordinator::{Immediate, SqliteContext};
 use crate::implementation::repository::SqliteRepository;
-use crate::implementation::repository::catalog::read_comic;
+use crate::implementation::repository::catalog::read_chapter;
 use crate::implementation::repository::read;
 use crate::model::page::Page;
 use crate::part::repository::page::{AppendPages, ReplacePageImage};
@@ -37,12 +37,15 @@ pub fn validate_image(image: &Image) -> AppResult<()> {
 
 /// # Errors
 /// Returns validation, missing-content, conflict, or storage errors without changing partial state.
-pub async fn read_pages(connection: &mut SqliteConnection, comic_id: &str) -> AppResult<Vec<Page>> {
-    read_comic(connection, comic_id).await?;
+pub async fn read_pages(
+    connection: &mut SqliteConnection,
+    chapter_id: &str,
+) -> AppResult<Vec<Page>> {
+    read_chapter(connection, chapter_id).await?;
 
     let rows = sqlx::query!(
-        "SELECT id FROM page WHERE comic_id = ? ORDER BY position",
-        comic_id
+        "SELECT id FROM page WHERE chapter_id = ? ORDER BY position",
+        chapter_id
     )
     .fetch_all(&mut *connection)
     .await?;
@@ -50,7 +53,7 @@ pub async fn read_pages(connection: &mut SqliteConnection, comic_id: &str) -> Ap
     let mut pages = Vec::with_capacity(rows.len());
 
     for row in rows {
-        pages.push(read::page(connection, comic_id, &row.id).await?);
+        pages.push(read::page(connection, chapter_id, &row.id).await?);
     }
 
     Ok(pages)
@@ -74,7 +77,7 @@ impl Step<AppendPages, SqliteContext> for SqliteRepository {
         context: &mut SqliteContext,
         operation: &AppendPages,
     ) -> AppResult<Vec<Page>> {
-        let existing = read_pages(&mut context.0, &operation.comic_id).await?;
+        let existing = read_pages(&mut context.0, &operation.chapter_id).await?;
 
         if existing.len() != operation.baseline.len()
             || !existing
@@ -115,20 +118,19 @@ impl Step<AppendPages, SqliteContext> for SqliteRepository {
 
             let height = i64::from(image.height);
 
-            sqlx::query!("INSERT INTO page (id, comic_id, position, unit_revision, image_reference, image_original_name, image_format, image_width, image_height, created_at, updated_at) VALUES (?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?)",
-                id, operation.comic_id, ordinal, image.reference, image.original_name, format, width, height, now, now)
+            sqlx::query!("INSERT INTO page (id, chapter_id, position, unit_revision, image_reference, image_original_name, image_format, image_width, image_height, created_at, updated_at) VALUES (?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?)",
+                id, operation.chapter_id, ordinal, image.reference, image.original_name, format, width, height, now, now)
                 .execute(&mut *context.0).await?;
         }
 
-        sqlx::query!(
-            "UPDATE comic SET updated_at = ? WHERE id = ?",
+        crate::implementation::repository::chapter::touch(
+            &mut context.0,
+            &operation.chapter_id,
             now,
-            operation.comic_id
         )
-        .execute(&mut *context.0)
         .await?;
 
-        read_pages(&mut context.0, &operation.comic_id).await
+        read_pages(&mut context.0, &operation.chapter_id).await
     }
 }
 
@@ -143,7 +145,12 @@ impl Step<ReplacePageImage, SqliteContext> for SqliteRepository {
     ) -> AppResult<Page> {
         validate_image(&operation.image)?;
 
-        let page = read::page(&mut context.0, &operation.comic_id, &operation.baseline.id).await?;
+        let page = read::page(
+            &mut context.0,
+            &operation.chapter_id,
+            &operation.baseline.id,
+        )
+        .await?;
 
         if !matches_baseline(&page, &operation.baseline) {
             return Err(AppError::Conflict);
@@ -188,15 +195,14 @@ impl Step<ReplacePageImage, SqliteContext> for SqliteRepository {
         sqlx::query!("UPDATE page SET image_reference = ?, image_original_name = ?, image_format = ?, image_width = ?, image_height = ?, unit_revision = ?, updated_at = ? WHERE id = ?", image.reference, image.original_name, format, width, height, revision, now, page.id)
             .execute(&mut *context.0).await?;
 
-        sqlx::query!(
-            "UPDATE comic SET updated_at = ? WHERE id = ?",
+        crate::implementation::repository::chapter::touch(
+            &mut context.0,
+            &operation.chapter_id,
             now,
-            operation.comic_id
         )
-        .execute(&mut *context.0)
         .await?;
 
-        read::page(&mut context.0, &operation.comic_id, &page.id).await
+        read::page(&mut context.0, &operation.chapter_id, &page.id).await
     }
 }
 
@@ -204,12 +210,12 @@ impl poprako_orchestra::Run<crate::part::repository::page::ReadPage> for SqliteR
     type Error = AppError;
 
     async fn run(&self, operation: &crate::part::repository::page::ReadPage) -> AppResult<Page> {
-        validate_id(&operation.comic_id)?;
+        validate_id(&operation.chapter_id)?;
 
         validate_id(&operation.page_id)?;
 
         let mut connection = self.pool.acquire().await?;
 
-        read::page(&mut connection, &operation.comic_id, &operation.page_id).await
+        read::page(&mut connection, &operation.chapter_id, &operation.page_id).await
     }
 }

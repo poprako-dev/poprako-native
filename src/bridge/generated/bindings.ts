@@ -71,12 +71,12 @@ export const commands = {
 	 *  # Errors
 	 *  Stale previews, invalid input and failed transactions retain explicit outcomes.
 	 */
-	confirmArchiveImport: (taskId: string, metadata: ComicMetadata, mode: ArchiveImportMode, request: WriteRequest) => typedError<ArchiveCompletion, CommandError>(__TAURI_INVOKE("confirm_archive_import", { taskId, metadata, mode, request })),
+	confirmArchiveImport: (taskId: string, metadata: ArchiveComic, mode: ArchiveImportMode, request: WriteRequest) => typedError<ArchiveCompletion, CommandError>(__TAURI_INVOKE("confirm_archive_import", { taskId, metadata, mode, request })),
 	/**
 	 *  # Errors
 	 *  Only a native save dialog may authorize the export destination.
 	 */
-	exportArchive: (comicId: string, includeImages: boolean) => typedError<ArchiveSelection, CommandError>(__TAURI_INVOKE("export_archive", { comicId, includeImages })),
+	exportArchive: (chapterId: string, includeImages: boolean) => typedError<ArchiveSelection, CommandError>(__TAURI_INVOKE("export_archive", { chapterId, includeImages })),
 	/**
 	 *  # Errors
 	 *  Rejects stale page order, invalid identifiers, and unresolved writes.
@@ -89,9 +89,39 @@ export const commands = {
 	removePages: (input: RemovePages, request: WriteRequest) => typedError<Page[], CommandError>(__TAURI_INVOKE("remove_pages", { input, request })),
 	/**
 	 *  # Errors
-	 *  Rejects invalid pagination or unavailable local storage.
+	 *  Rejects invalid pagination or unavailable storage.
 	 */
 	listComicInfos: (offset: number, limit: number) => typedError<ComicInfo[], CommandError>(__TAURI_INVOKE("list_comic_infos", { offset, limit })),
+	/**
+	 *  # Errors
+	 *  Preserves exact write outcomes and rejects invalid or stale requests.
+	 */
+	createComic: (input: NewComic, request: WriteRequest) => typedError<Chapter, CommandError>(__TAURI_INVOKE("create_comic", { input, request })),
+	/**
+	 *  # Errors
+	 *  Preserves exact write outcomes and rejects invalid or stale requests.
+	 */
+	updateComicMetadata: (comicId: string, metadata: ComicMetadata, request: WriteRequest) => typedError<Comic, CommandError>(__TAURI_INVOKE("update_comic_metadata", { comicId, metadata, request })),
+	/**
+	 *  # Errors
+	 *  Preserves exact write outcomes and rejects invalid or stale requests.
+	 */
+	deleteComic: (comicId: string, request: WriteRequest) => typedError<null, CommandError>(__TAURI_INVOKE("delete_comic", { comicId, request })),
+	/**
+	 *  # Errors
+	 *  Preserves exact write outcomes and rejects invalid or stale requests.
+	 */
+	reorderChapters: (input: ChapterOrder, request: WriteRequest) => typedError<null, CommandError>(__TAURI_INVOKE("reorder_chapters", { input, request })),
+	/**
+	 *  # Errors
+	 *  Preserves exact write outcomes and rejects invalid or stale requests.
+	 */
+	moveChapter: (input: MoveChapter, request: WriteRequest) => typedError<Chapter, CommandError>(__TAURI_INVOKE("move_chapter", { input, request })),
+	/**
+	 *  # Errors
+	 *  Rejects invalid pagination or unavailable local storage.
+	 */
+	listChapterInfos: (comicId: string) => typedError<ChapterInfo[], CommandError>(__TAURI_INVOKE("list_chapter_infos", { comicId })),
 	/**
 	 *  # Errors
 	 *  Rejects empty queries, more than 100 hits, or unreadable content.
@@ -106,27 +136,27 @@ export const commands = {
 	 *  # Errors
 	 *  Reports invalid identifiers, missing projects, or unreadable storage.
 	 */
-	getComicDetail: (comicId: string) => typedError<ComicDetail, CommandError>(__TAURI_INVOKE("get_comic_detail", { comicId })),
+	getChapterDetail: (chapterId: string) => typedError<ChapterDetail, CommandError>(__TAURI_INVOKE("get_chapter_detail", { chapterId })),
 	/**
 	 *  # Errors
 	 *  Rejects invalid metadata or conflicting write requests; preserves uncertain results.
 	 */
-	createComic: (metadata: ComicMetadata, request: WriteRequest) => typedError<Comic, CommandError>(__TAURI_INVOKE("create_comic", { metadata, request })),
+	createChapter: (comicId: string, baseline: string[], metadata: ChapterMetadata, request: WriteRequest) => typedError<Chapter, CommandError>(__TAURI_INVOKE("create_chapter", { comicId, baseline, metadata, request })),
 	/**
 	 *  # Errors
 	 *  Reports invalid metadata, missing projects, or unresolved writes.
 	 */
-	updateComicMetadata: (comicId: string, metadata: ComicMetadata, request: WriteRequest) => typedError<Comic, CommandError>(__TAURI_INVOKE("update_comic_metadata", { comicId, metadata, request })),
+	updateChapterMetadata: (chapterId: string, metadata: ChapterMetadata, request: WriteRequest) => typedError<Chapter, CommandError>(__TAURI_INVOKE("update_chapter_metadata", { chapterId, metadata, request })),
 	/**
 	 *  # Errors
 	 *  Reports missing projects, conflicting requests, or unresolved deletion.
 	 */
-	deleteComic: (comicId: string, request: WriteRequest) => typedError<null, CommandError>(__TAURI_INVOKE("delete_comic", { comicId, request })),
+	deleteChapter: (chapterId: string, request: WriteRequest) => typedError<null, CommandError>(__TAURI_INVOKE("delete_chapter", { chapterId, request })),
 	/**
 	 *  # Errors
 	 *  Reports invalid page ownership, missing content, or unreadable storage.
 	 */
-	getPageEditor: (comicId: string, pageId: string) => typedError<PageEditor, CommandError>(__TAURI_INVOKE("get_page_editor", { comicId, pageId })),
+	getPageEditor: (chapterId: string, pageId: string) => typedError<PageEditor, CommandError>(__TAURI_INVOKE("get_page_editor", { chapterId, pageId })),
 	/**
 	 *  # Errors
 	 *  Rejects stale snapshots and retains exact evidence for uncertain commits.
@@ -152,12 +182,12 @@ export const commands = {
 	 *  # Errors
 	 *  Rejects invalid page ownership or exhausted resource handles.
 	 */
-	getImageResource: (comicId: string, pageId: string, kind: ImageKind) => typedError<ImageResource, CommandError>(__TAURI_INVOKE("get_image_resource", { comicId, pageId, kind })),
+	getImageResource: (chapterId: string, pageId: string, kind: ImageKind) => typedError<ImageResource, CommandError>(__TAURI_INVOKE("get_image_resource", { chapterId, pageId, kind })),
 	/**
 	 *  # Errors
 	 *  Rejects invalid tile dimensions, ownership, or exhausted resource handles.
 	 */
-	getImageTile: (comicId: string, pageId: string, x: number, y: number, width: number, height: number) => typedError<ImageResource, CommandError>(__TAURI_INVOKE("get_image_tile", { comicId, pageId, x, y, width, height })),
+	getImageTile: (chapterId: string, pageId: string, x: number, y: number, width: number, height: number) => typedError<ImageResource, CommandError>(__TAURI_INVOKE("get_image_tile", { chapterId, pageId, x, y, width, height })),
 	/**
 	 *  # Errors
 	 *  Rejects oversized release batches or poisoned resource state.
@@ -195,8 +225,14 @@ export type ApplicationPreference = {
 	marker_opacity: number,
 };
 
+export type ArchiveComic = {
+	title: string,
+	subtitle: string,
+	author: string,
+};
+
 export type ArchiveCompletion = {
-	comic_id: string,
+	chapter_id: string,
 	warnings: string[],
 };
 
@@ -211,8 +247,9 @@ export type ArchivePagePreview = {
 };
 
 export type ArchivePreview = {
+	target_comic: Comic | null,
 	pages: ArchivePagePreview[],
-	metadata: ComicMetadata,
+	metadata: ArchiveComic,
 	page_count: number,
 	unit_count: number,
 	warnings: string[],
@@ -220,27 +257,28 @@ export type ArchivePreview = {
 
 export type ArchiveSelection = { status: "cancelled" } | { status: "selected"; task_id: string };
 
-export type ArchiveTarget = { kind: "new" } | { kind: "existing"; comic_id: string };
+export type ArchiveTarget = { kind: "new" } | { kind: "new_chapter"; comic_id: string; baseline: string[] } | { kind: "existing"; chapter_id: string };
 
 export type ArchiveTask = { phase: "preparing"; completed: number; total: number } | { phase: "awaiting_confirmation"; preview: ArchivePreview } | { phase: "committing" } | { phase: "cleaning" } | { phase: "completed"; result: ArchiveCompletion } | { phase: "failed"; message: string; commit_uncertain: boolean } | { phase: "cancelled" };
 
-export type Comic = {
+export type Chapter = {
 	id: string,
+	comic_id: string,
 	title: string,
-	subtitle: string,
-	author: string,
+	index: number,
 	created_at: number,
 	updated_at: number,
 };
 
-export type ComicDetail = {
+export type ChapterDetail = {
 	comic: Comic,
+	chapter: Chapter,
 	pages: PageInfo[],
 	work_position: WorkPosition | null,
 };
 
-export type ComicInfo = {
-	comic: Comic,
+export type ChapterInfo = {
+	chapter: Chapter,
 	page_count: number,
 	unit_count: number,
 	translated_count: number,
@@ -249,9 +287,39 @@ export type ComicInfo = {
 	last_opened_at: number | null,
 };
 
+export type ChapterMetadata = {
+	title: string,
+};
+
+export type ChapterOrder = {
+	comic_id: string,
+	baseline: string[],
+	ordered_ids: string[],
+};
+
+export type Comic = {
+	id: string,
+	title: string,
+	author: string,
+	created_at: number,
+	updated_at: number,
+};
+
+export type ComicInfo = {
+	comic: Comic,
+	chapter_count: number,
+	page_count: number,
+	unit_count: number,
+	translated_count: number,
+	proofread_count: number,
+	cover_page_id: string | null,
+	cover_chapter_id: string | null,
+	latest_chapter_id: string | null,
+	last_opened_at: number | null,
+};
+
 export type ComicMetadata = {
 	title: string,
-	subtitle: string,
 	author: string,
 };
 
@@ -281,7 +349,7 @@ export type ImageImportPreview = {
 	byte_length: number,
 };
 
-export type ImageImportTarget = { kind: "append"; comic_id: string; baseline: PageBaseline[] } | { kind: "replace"; comic_id: string; baseline: PageBaseline };
+export type ImageImportTarget = { kind: "append"; chapter_id: string; baseline: PageBaseline[] } | { kind: "replace"; chapter_id: string; baseline: PageBaseline };
 
 export type ImageKind = "thumbnail" | "preview";
 
@@ -304,9 +372,22 @@ export type ImageTaskStatus = {
 	previews: ImageImportPreview[],
 };
 
+export type MoveChapter = {
+	chapter_id: string,
+	source_comic_id: string,
+	target_comic_id: string,
+	source_baseline: string[],
+	target_baseline: string[],
+};
+
+export type NewComic = {
+	comic: ComicMetadata,
+	chapter_title: string,
+};
+
 export type Page = {
 	id: string,
-	comic_id: string,
+	chapter_id: string,
 	index: number,
 	unit_revision: number,
 	image: Image,
@@ -338,19 +419,19 @@ export type PageInfo = {
 export type Recovery = "retry" | "reload" | "correct_input" | "wait_for_confirmation" | "restart";
 
 export type RemovePages = {
-	comic_id: string,
+	chapter_id: string,
 	baseline: PageBaseline[],
 	page_ids: string[],
 };
 
 export type ReorderPages = {
-	comic_id: string,
+	chapter_id: string,
 	baseline: PageBaseline[],
 	page_ids: string[],
 };
 
 export type ReplaceUnits = {
-	comic_id: string,
+	chapter_id: string,
 	stage: TextStage,
 	units: UnitReplacement[],
 };
@@ -366,7 +447,7 @@ export type ReplacementResult = {
 };
 
 export type SavePageUnits = {
-	comic_id: string,
+	chapter_id: string,
 	page_id: string,
 	expected_revision: number,
 	units: UnitDraft[],
@@ -382,7 +463,7 @@ export type SearchHit = {
 };
 
 export type SearchUnits = {
-	comic_id: string,
+	chapter_id: string,
 	stage: TextStage,
 	query: string,
 };
@@ -438,7 +519,7 @@ export type UnitReplacement = {
 };
 
 export type WorkPosition = {
-	comic_id: string,
+	chapter_id: string,
 	last_opened_at: number,
 	page_id: string | null,
 	unit_id: string | null,

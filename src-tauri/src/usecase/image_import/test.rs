@@ -7,12 +7,12 @@ use poprako_orchestra::Run;
 use tempfile::TempDir;
 use tokio::sync::Notify;
 
-use crate::data::comic::ComicMetadata;
+use crate::data::comic::{ComicMetadata, NewComic};
 use crate::data::image_import::{ImageImportTarget, ImageTaskPhase};
 use crate::harness::Harness;
 use crate::part::image_selection::{ImageSelectionKind, SelectImages};
 use crate::result::{AppError, AppResult};
-use crate::usecase::{comic, image_import};
+use crate::usecase::{chapter, image_import};
 
 struct Selection {
     output: AppResult<Option<Vec<PathBuf>>>,
@@ -36,12 +36,14 @@ async fn setup() -> Result<(TempDir, Arc<Harness>, ImageImportTarget), Box<dyn E
 
     let harness = Arc::new(Harness::open(directory.path().join("managed"))?);
 
-    let comic = comic::create_comic(
+    let chapter = crate::usecase::comic::create_comic(
         harness.database().await?,
-        ComicMetadata {
-            title: "Selection workflow".to_owned(),
-            subtitle: String::new(),
-            author: String::new(),
+        NewComic {
+            comic: ComicMetadata {
+                title: "Selection workflow".to_owned(),
+                author: String::new(),
+            },
+            chapter_title: "第1章".to_owned(),
         },
     )
     .await?;
@@ -50,7 +52,7 @@ async fn setup() -> Result<(TempDir, Arc<Harness>, ImageImportTarget), Box<dyn E
         directory,
         harness,
         ImageImportTarget::Append {
-            comic_id: comic.id,
+            chapter_id: chapter.id,
             baseline: Vec::new(),
         },
     ))
@@ -153,7 +155,7 @@ async fn cancellation_during_selection_prevents_preparation() -> Result<(), Box<
 async fn selected_bad_supported_image_fails_explicitly() -> Result<(), Box<dyn Error>> {
     let (directory, harness, target) = setup().await?;
 
-    let comic_id = target.comic_id().to_owned();
+    let chapter_id = target.chapter_id().to_owned();
 
     let source = directory.path().join("broken.png");
 
@@ -182,7 +184,7 @@ async fn selected_bad_supported_image_fails_explicitly() -> Result<(), Box<dyn E
     );
 
     assert!(
-        comic::get_comic_detail(harness.database().await?, &comic_id)
+        chapter::get_chapter_detail(harness.database().await?, &chapter_id)
             .await?
             .pages
             .is_empty()

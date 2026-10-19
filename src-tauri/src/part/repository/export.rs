@@ -5,5 +5,5 @@ use crate::data::export::ExportSnapshot;
 #[derive(Oper)]
 #[oper(output = ExportSnapshot)]
 pub struct ReadExportSnapshot {
-    pub comic_id: String,
+    pub chapter_id: String,
 }

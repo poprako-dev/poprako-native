@@ -2,21 +2,21 @@ use std::error::Error;
 
 use uuid::Uuid;
 
-use crate::data::comic::ComicMetadata;
+use crate::data::comic::{ComicMetadata, NewComic};
 use crate::data::editor::{SavePageUnits, UnitDraft};
 use crate::data::page::NewPage;
 use crate::data::search::{ReplaceUnits, Replacement, SearchUnits, TextStage, UnitReplacement};
 use crate::implementation::coordinator::SqliteCoordinator;
 use crate::implementation::coordinator::database;
 use crate::result::AppError;
-use crate::usecase::{comic, editor, page, search};
+use crate::usecase::{editor, page, search};
 use crate::value::image::{Image, ImageFormat};
 
 async fn fixture() -> Result<
     (
         SqliteCoordinator,
         std::path::PathBuf,
-        crate::model::comic::Comic,
+        crate::model::chapter::Chapter,
         Vec<crate::model::page::Page>,
         Vec<UnitDraft>,
     ),
@@ -26,19 +26,21 @@ async fn fixture() -> Result<
 
     let coordinator = SqliteCoordinator::new(database::open(&path).await?);
 
-    let comic = comic::create_comic(
+    let chapter = crate::usecase::comic::create_comic(
         &coordinator,
-        ComicMetadata {
-            title: "Test".to_owned(),
-            subtitle: String::new(),
-            author: String::new(),
+        NewComic {
+            comic: ComicMetadata {
+                title: "Test".to_owned(),
+                author: String::new(),
+            },
+            chapter_title: "第1章".to_owned(),
         },
     )
     .await?;
 
     let pages = page::append_pages(
         &coordinator,
-        &comic.id,
+        &chapter.id,
         &[],
         &[NewPage {
             id: Uuid::new_v4().to_string(),
@@ -69,7 +71,7 @@ async fn fixture() -> Result<
     editor::save_page_units(
         &coordinator,
         SavePageUnits {
-            comic_id: comic.id.clone(),
+            chapter_id: chapter.id.clone(),
             page_id: pages[0].id.clone(),
             expected_revision: 0,
             units: units.clone(),
@@ -77,15 +79,15 @@ async fn fixture() -> Result<
     )
     .await?;
 
-    Ok((coordinator, path, comic, pages, units))
+    Ok((coordinator, path, chapter, pages, units))
 }
 
 #[tokio::test]
 async fn search_limit_stage_case_and_atomic_replacement() -> Result<(), Box<dyn Error>> {
-    let (coordinator, path, comic, pages, units) = fixture().await?;
+    let (coordinator, path, chapter, pages, units) = fixture().await?;
 
     let query = SearchUnits {
-        comic_id: comic.id.clone(),
+        chapter_id: chapter.id.clone(),
         stage: TextStage::Translation,
         query: " love ".to_owned(),
     };
@@ -122,7 +124,7 @@ async fn search_limit_stage_case_and_atomic_replacement() -> Result<(), Box<dyn 
     editor::save_page_units(
         &coordinator,
         SavePageUnits {
-            comic_id: comic.id.clone(),
+            chapter_id: chapter.id.clone(),
             page_id: pages[0].id.clone(),
             expected_revision: 1,
             units: units[..2].to_vec(),
@@ -150,7 +152,7 @@ async fn search_limit_stage_case_and_atomic_replacement() -> Result<(), Box<dyn 
         search::replace_units(
             &coordinator,
             ReplaceUnits {
-                comic_id: comic.id.clone(),
+                chapter_id: chapter.id.clone(),
                 stage: TextStage::Translation,
                 units: vec![valid.clone(), invalid]
             }
@@ -167,7 +169,7 @@ async fn search_limit_stage_case_and_atomic_replacement() -> Result<(), Box<dyn 
     let result = search::replace_units(
         &coordinator,
         ReplaceUnits {
-            comic_id: comic.id.clone(),
+            chapter_id: chapter.id.clone(),
             stage: TextStage::Translation,
             units: vec![valid],
         },
@@ -176,7 +178,7 @@ async fn search_limit_stage_case_and_atomic_replacement() -> Result<(), Box<dyn 
 
     assert_eq!(result.changed_unit_count, 1);
 
-    let saved = editor::get_page_editor(&coordinator, &comic.id, &pages[0].id).await?;
+    let saved = editor::get_page_editor(&coordinator, &chapter.id, &pages[0].id).await?;
 
     assert_eq!(saved.units[0].translated_text, "I like you");
 

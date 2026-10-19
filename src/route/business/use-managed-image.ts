@@ -7,7 +7,7 @@ type ImageState = { key: string; url: string; error: string };
 type ManagedImage = { url: string; error: string; retry: () => void };
 
 export function useManagedImage(
-  comicId: string,
+  chapterId: string,
   pageId: string,
   reference: string,
   kind: ImageKind,
@@ -15,7 +15,7 @@ export function useManagedImage(
 ): ManagedImage {
   const [attempt, setAttempt] = useState(0);
   const key = JSON.stringify([
-    comicId,
+    chapterId,
     pageId,
     reference,
     kind,
@@ -43,7 +43,7 @@ export function useManagedImage(
     async function load(): Promise<void> {
       try {
         const image = unwrap(
-          await commands.getImageResource(comicId, pageId, kind),
+          await commands.getImageResource(chapterId, pageId, kind),
         );
         if (!active) {
           await release(image.handle);
@@ -77,7 +77,7 @@ export function useManagedImage(
         });
       }
     };
-  }, [comicId, pageId, kind, visible, key]);
+  }, [chapterId, pageId, kind, visible, key]);
   const current = state.key === key ? state : { url: "", error: "" };
   return {
     ...current,

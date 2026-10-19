@@ -12,7 +12,7 @@ pub struct PageBaseline {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Type)]
 #[serde(deny_unknown_fields)]
 pub struct ReorderPages {
-    pub comic_id: String,
+    pub chapter_id: String,
     pub baseline: Vec<PageBaseline>,
     pub page_ids: Vec<String>,
 }
@@ -20,7 +20,7 @@ pub struct ReorderPages {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Type)]
 #[serde(deny_unknown_fields)]
 pub struct RemovePages {
-    pub comic_id: String,
+    pub chapter_id: String,
     pub baseline: Vec<PageBaseline>,
     pub page_ids: Vec<String>,
 }

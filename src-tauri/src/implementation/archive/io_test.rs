@@ -5,7 +5,6 @@ use image::RgbImage;
 use tempfile::tempdir;
 
 use crate::data::archive::{ArchiveComic, ArchiveDocument, ArchiveImage, ArchivePage};
-use crate::data::comic::ComicMetadata;
 use crate::data::search::TextStage;
 use crate::implementation::archive::{destination, import, package, source};
 use crate::implementation::image::ImagePipeline;
@@ -110,21 +109,24 @@ fn zip_import_retains_original_and_cleans_rolled_back_publication() -> TestResul
 
     let published = import::publish(
         prepared,
-        ComicMetadata {
+        ArchiveComic {
             title: "新项目".to_owned(),
             subtitle: String::new(),
             author: String::new(),
+        },
+        crate::data::import::ImportParent::New {
+            comic_id: uuid::Uuid::new_v4().to_string(),
         },
         &store,
     )?;
 
     let page = &published.input.pages[0].page;
 
-    let comic_id = uuid::Uuid::parse_str(&published.input.comic_id)?;
+    let chapter_id = uuid::Uuid::parse_str(&published.input.chapter_id)?;
 
     let page_id = uuid::Uuid::parse_str(&page.id)?;
 
-    let managed = store.resolve(&page.image.reference, comic_id, page_id)?;
+    let managed = store.resolve(&page.image.reference, chapter_id, page_id)?;
 
     assert_eq!(fs::read(&managed)?, original);
 

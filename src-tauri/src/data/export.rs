@@ -1,8 +1,9 @@
 use crate::data::editor::PageEditor;
-use crate::model::comic::Comic;
+use crate::model::chapter::Chapter;
 
 #[derive(Debug, Clone)]
 pub struct ExportSnapshot {
-    pub comic: Comic,
+    pub comic: crate::model::comic::Comic,
+    pub chapter: Chapter,
     pub pages: Vec<PageEditor>,
 }

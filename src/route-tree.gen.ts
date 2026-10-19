@@ -7,10 +7,10 @@
 import { Route as rootRouteImport } from "./route/__root";
 import { Route as IndexRouteImport } from "./route/index";
 import { Route as HomeRouteRouteImport } from "./route/home/route";
-import { Route as ComicComicIdRouteRouteImport } from "./route/comic/$comicId/route";
+import { Route as ChapterChapterIdRouteRouteImport } from "./route/chapter/$chapterId/route";
 import { Route as HomeIndexRouteImport } from "./route/home/index";
-import { Route as ComicComicIdIndexRouteImport } from "./route/comic/$comicId/index";
-import { Route as ComicComicIdTranslatorRouteImport } from "./route/comic/$comicId/translator";
+import { Route as ChapterChapterIdIndexRouteImport } from "./route/chapter/$chapterId/index";
+import { Route as ChapterChapterIdTranslatorRouteImport } from "./route/chapter/$chapterId/translator";
 
 const IndexRoute = IndexRouteImport.update({
   id: "/",
@@ -22,9 +22,9 @@ const HomeRouteRoute = HomeRouteRouteImport.update({
   path: "/home",
   getParentRoute: () => rootRouteImport,
 } as any);
-const ComicComicIdRouteRoute = ComicComicIdRouteRouteImport.update({
-  id: "/comic/$comicId",
-  path: "/comic/$comicId",
+const ChapterChapterIdRouteRoute = ChapterChapterIdRouteRouteImport.update({
+  id: "/chapter/$chapterId",
+  path: "/chapter/$chapterId",
   getParentRoute: () => rootRouteImport,
 } as any);
 const HomeIndexRoute = HomeIndexRouteImport.update({
@@ -32,65 +32,66 @@ const HomeIndexRoute = HomeIndexRouteImport.update({
   path: "/",
   getParentRoute: () => HomeRouteRoute,
 } as any);
-const ComicComicIdIndexRoute = ComicComicIdIndexRouteImport.update({
+const ChapterChapterIdIndexRoute = ChapterChapterIdIndexRouteImport.update({
   id: "/",
   path: "/",
-  getParentRoute: () => ComicComicIdRouteRoute,
+  getParentRoute: () => ChapterChapterIdRouteRoute,
 } as any);
-const ComicComicIdTranslatorRoute = ComicComicIdTranslatorRouteImport.update({
-  id: "/translator",
-  path: "/translator",
-  getParentRoute: () => ComicComicIdRouteRoute,
-} as any);
+const ChapterChapterIdTranslatorRoute =
+  ChapterChapterIdTranslatorRouteImport.update({
+    id: "/translator",
+    path: "/translator",
+    getParentRoute: () => ChapterChapterIdRouteRoute,
+  } as any);
 
 export interface FileRoutesByFullPath {
   "/": typeof IndexRoute;
   "/home": typeof HomeRouteRouteWithChildren;
-  "/comic/$comicId": typeof ComicComicIdRouteRouteWithChildren;
+  "/chapter/$chapterId": typeof ChapterChapterIdRouteRouteWithChildren;
   "/home/": typeof HomeIndexRoute;
-  "/comic/$comicId/translator": typeof ComicComicIdTranslatorRoute;
-  "/comic/$comicId/": typeof ComicComicIdIndexRoute;
+  "/chapter/$chapterId/translator": typeof ChapterChapterIdTranslatorRoute;
+  "/chapter/$chapterId/": typeof ChapterChapterIdIndexRoute;
 }
 export interface FileRoutesByTo {
   "/": typeof IndexRoute;
   "/home": typeof HomeIndexRoute;
-  "/comic/$comicId/translator": typeof ComicComicIdTranslatorRoute;
-  "/comic/$comicId": typeof ComicComicIdIndexRoute;
+  "/chapter/$chapterId/translator": typeof ChapterChapterIdTranslatorRoute;
+  "/chapter/$chapterId": typeof ChapterChapterIdIndexRoute;
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport;
   "/": typeof IndexRoute;
   "/home": typeof HomeRouteRouteWithChildren;
-  "/comic/$comicId": typeof ComicComicIdRouteRouteWithChildren;
+  "/chapter/$chapterId": typeof ChapterChapterIdRouteRouteWithChildren;
   "/home/": typeof HomeIndexRoute;
-  "/comic/$comicId/translator": typeof ComicComicIdTranslatorRoute;
-  "/comic/$comicId/": typeof ComicComicIdIndexRoute;
+  "/chapter/$chapterId/translator": typeof ChapterChapterIdTranslatorRoute;
+  "/chapter/$chapterId/": typeof ChapterChapterIdIndexRoute;
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath;
   fullPaths:
     | "/"
     | "/home"
-    | "/comic/$comicId"
+    | "/chapter/$chapterId"
     | "/home/"
-    | "/comic/$comicId/translator"
-    | "/comic/$comicId/";
+    | "/chapter/$chapterId/translator"
+    | "/chapter/$chapterId/";
   fileRoutesByTo: FileRoutesByTo;
-  to: "/" | "/home" | "/comic/$comicId/translator" | "/comic/$comicId";
+  to: "/" | "/home" | "/chapter/$chapterId/translator" | "/chapter/$chapterId";
   id:
     | "__root__"
     | "/"
     | "/home"
-    | "/comic/$comicId"
+    | "/chapter/$chapterId"
     | "/home/"
-    | "/comic/$comicId/translator"
-    | "/comic/$comicId/";
+    | "/chapter/$chapterId/translator"
+    | "/chapter/$chapterId/";
   fileRoutesById: FileRoutesById;
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute;
   HomeRouteRoute: typeof HomeRouteRouteWithChildren;
-  ComicComicIdRouteRoute: typeof ComicComicIdRouteRouteWithChildren;
+  ChapterChapterIdRouteRoute: typeof ChapterChapterIdRouteRouteWithChildren;
 }
 
 declare module "@tanstack/react-router" {
@@ -109,11 +110,11 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof HomeRouteRouteImport;
       parentRoute: typeof rootRouteImport;
     };
-    "/comic/$comicId": {
-      id: "/comic/$comicId";
-      path: "/comic/$comicId";
-      fullPath: "/comic/$comicId";
-      preLoaderRoute: typeof ComicComicIdRouteRouteImport;
+    "/chapter/$chapterId": {
+      id: "/chapter/$chapterId";
+      path: "/chapter/$chapterId";
+      fullPath: "/chapter/$chapterId";
+      preLoaderRoute: typeof ChapterChapterIdRouteRouteImport;
       parentRoute: typeof rootRouteImport;
     };
     "/home/": {
@@ -123,19 +124,19 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof HomeIndexRouteImport;
       parentRoute: typeof HomeRouteRoute;
     };
-    "/comic/$comicId/": {
-      id: "/comic/$comicId/";
+    "/chapter/$chapterId/": {
+      id: "/chapter/$chapterId/";
       path: "/";
-      fullPath: "/comic/$comicId/";
-      preLoaderRoute: typeof ComicComicIdIndexRouteImport;
-      parentRoute: typeof ComicComicIdRouteRoute;
+      fullPath: "/chapter/$chapterId/";
+      preLoaderRoute: typeof ChapterChapterIdIndexRouteImport;
+      parentRoute: typeof ChapterChapterIdRouteRoute;
     };
-    "/comic/$comicId/translator": {
-      id: "/comic/$comicId/translator";
+    "/chapter/$chapterId/translator": {
+      id: "/chapter/$chapterId/translator";
       path: "/translator";
-      fullPath: "/comic/$comicId/translator";
-      preLoaderRoute: typeof ComicComicIdTranslatorRouteImport;
-      parentRoute: typeof ComicComicIdRouteRoute;
+      fullPath: "/chapter/$chapterId/translator";
+      preLoaderRoute: typeof ChapterChapterIdTranslatorRouteImport;
+      parentRoute: typeof ChapterChapterIdRouteRoute;
     };
   }
 }
@@ -152,23 +153,25 @@ const HomeRouteRouteWithChildren = HomeRouteRoute._addFileChildren(
   HomeRouteRouteChildren,
 );
 
-interface ComicComicIdRouteRouteChildren {
-  ComicComicIdTranslatorRoute: typeof ComicComicIdTranslatorRoute;
-  ComicComicIdIndexRoute: typeof ComicComicIdIndexRoute;
+interface ChapterChapterIdRouteRouteChildren {
+  ChapterChapterIdTranslatorRoute: typeof ChapterChapterIdTranslatorRoute;
+  ChapterChapterIdIndexRoute: typeof ChapterChapterIdIndexRoute;
 }
 
-const ComicComicIdRouteRouteChildren: ComicComicIdRouteRouteChildren = {
-  ComicComicIdTranslatorRoute: ComicComicIdTranslatorRoute,
-  ComicComicIdIndexRoute: ComicComicIdIndexRoute,
+const ChapterChapterIdRouteRouteChildren: ChapterChapterIdRouteRouteChildren = {
+  ChapterChapterIdTranslatorRoute: ChapterChapterIdTranslatorRoute,
+  ChapterChapterIdIndexRoute: ChapterChapterIdIndexRoute,
 };
 
-const ComicComicIdRouteRouteWithChildren =
-  ComicComicIdRouteRoute._addFileChildren(ComicComicIdRouteRouteChildren);
+const ChapterChapterIdRouteRouteWithChildren =
+  ChapterChapterIdRouteRoute._addFileChildren(
+    ChapterChapterIdRouteRouteChildren,
+  );
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   HomeRouteRoute: HomeRouteRouteWithChildren,
-  ComicComicIdRouteRoute: ComicComicIdRouteRouteWithChildren,
+  ChapterChapterIdRouteRoute: ChapterChapterIdRouteRouteWithChildren,
 };
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

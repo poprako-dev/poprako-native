@@ -1,9 +1,11 @@
 use uuid::Uuid;
 
+use crate::data::archive::ArchiveComic;
 use crate::data::archive::ArchiveUnit;
-use crate::data::comic::ComicMetadata;
 use crate::data::editor::UnitDraft;
-use crate::data::import::{ExistingComicImport, ImportMode, NewComicImport, PreparedImportPage};
+use crate::data::import::{
+    ExistingChapterImport, ImportMode, NewChapterImport, PreparedImportPage,
+};
 use crate::data::page::{NewPage, PageBaseline};
 use crate::implementation::archive::source::PreparedArchive;
 use crate::implementation::resource::ResourceStore;
@@ -11,7 +13,7 @@ use crate::result::{AppError, AppResult};
 use crate::value::image::{Image, ImageFormat};
 
 pub struct PublishedArchive {
-    pub input: NewComicImport,
+    pub input: NewChapterImport,
     pub prepared: PreparedArchive,
 }
 
@@ -43,26 +45,27 @@ fn format(extension: &str) -> AppResult<ImageFormat> {
 /// Retain this artifact until commit status is known; never clean uncertain commits.
 pub fn publish(
     prepared: PreparedArchive,
-    metadata: ComicMetadata,
+    metadata: ArchiveComic,
+    parent: crate::data::import::ImportParent,
     store: &ResourceStore,
 ) -> AppResult<PublishedArchive> {
     if prepared.images.len() != prepared.document.pages.len() {
         return Err(AppError::InvalidInput);
     }
 
-    let comic_id = Uuid::new_v4();
+    let chapter_id = Uuid::new_v4();
 
     let mut pages: Vec<PreparedImportPage> = Vec::new();
 
     for (source, image) in prepared.document.pages.iter().zip(&prepared.images) {
         let page_id = Uuid::new_v4();
 
-        let Ok(reference) = store.publish(image, comic_id, page_id) else {
+        let Ok(reference) = store.publish(image, chapter_id, page_id) else {
             for page in &pages {
                 store
                     .remove_unreferenced(
                         &page.page.image.reference,
-                        comic_id,
+                        chapter_id,
                         Uuid::parse_str(&page.page.id).map_err(|_| AppError::InvalidInput)?,
                     )
                     .map_err(|_| AppError::Storage)?;
@@ -92,8 +95,9 @@ pub fn publish(
     }
 
     Ok(PublishedArchive {
-        input: NewComicImport {
-            comic_id: comic_id.to_string(),
+        input: NewChapterImport {
+            parent,
+            chapter_id: chapter_id.to_string(),
             metadata,
             pages,
         },
@@ -109,14 +113,14 @@ pub fn cleanup(
     store: &ResourceStore,
 ) -> AppResult<()> {
     if !committed {
-        let comic_id =
-            Uuid::parse_str(&published.input.comic_id).map_err(|_| AppError::InvalidInput)?;
+        let chapter_id =
+            Uuid::parse_str(&published.input.chapter_id).map_err(|_| AppError::InvalidInput)?;
 
         for page in &published.input.pages {
             let page_id = Uuid::parse_str(&page.page.id).map_err(|_| AppError::InvalidInput)?;
 
             store
-                .remove_unreferenced(&page.page.image.reference, comic_id, page_id)
+                .remove_unreferenced(&page.page.image.reference, chapter_id, page_id)
                 .map_err(|_| AppError::Storage)?;
         }
     }
@@ -134,16 +138,16 @@ pub fn cleanup(
 /// Existing targets retain their images and require exact page correspondence.
 pub fn existing(
     document: &crate::data::archive::ArchiveDocument,
-    comic_id: String,
+    chapter_id: String,
     baseline: Vec<PageBaseline>,
     mode: ImportMode,
-) -> AppResult<ExistingComicImport> {
+) -> AppResult<ExistingChapterImport> {
     if baseline.len() != document.pages.len() {
         return Err(AppError::InvalidInput);
     }
 
-    Ok(ExistingComicImport {
-        comic_id,
+    Ok(ExistingChapterImport {
+        chapter_id,
         baseline,
         pages: document
             .pages

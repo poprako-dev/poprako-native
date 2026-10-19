@@ -8,7 +8,7 @@ use crate::result::{AppError, AppResult};
 
 #[derive(Clone)]
 pub struct ImageGrant {
-    pub comic_id: Uuid,
+    pub chapter_id: Uuid,
     pub page_id: Uuid,
     pub reference: String,
     pub request: DisplayRequest,

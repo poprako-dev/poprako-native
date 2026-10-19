@@ -32,7 +32,7 @@ export function MetadataForm(props: MetadataFormProps): ReactElement {
     >
       <div className="space-y-1.5">
         <label htmlFor={`${id}-title`} className="text-xs font-medium">
-          标题
+          漫画标题
         </label>
         <input
           id={`${id}-title`}
@@ -47,7 +47,7 @@ export function MetadataForm(props: MetadataFormProps): ReactElement {
       </div>
       <div className="space-y-1.5">
         <label htmlFor={`${id}-subtitle`} className="text-xs font-medium">
-          副标题
+          章节名称
         </label>
         <input
           id={`${id}-subtitle`}
@@ -61,7 +61,7 @@ export function MetadataForm(props: MetadataFormProps): ReactElement {
       </div>
       <div className="space-y-1.5">
         <label htmlFor={`${id}-author`} className="text-xs font-medium">
-          作者
+          漫画作者
         </label>
         <input
           id={`${id}-author`}

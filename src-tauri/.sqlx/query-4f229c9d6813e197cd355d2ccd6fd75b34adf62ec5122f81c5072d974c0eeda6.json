@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE page SET unit_revision = 0 WHERE id = ? AND chapter_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "4f229c9d6813e197cd355d2ccd6fd75b34adf62ec5122f81c5072d974c0eeda6"
+}

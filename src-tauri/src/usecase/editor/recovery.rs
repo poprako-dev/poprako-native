@@ -29,7 +29,7 @@ pub async fn save(
         unit_page_ids: vec![snapshot.page_id.clone()],
         unit_ids: snapshot.units.iter().map(|unit| unit.id.clone()).collect(),
         work_position: true,
-        ..RecoveryScope::comic(&snapshot.comic_id)
+        ..RecoveryScope::chapter(&snapshot.chapter_id)
     };
 
     execute(coordinator, PersistPageUnits { snapshot }, scope, evidence).await

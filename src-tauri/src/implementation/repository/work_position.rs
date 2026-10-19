@@ -12,9 +12,9 @@ use crate::value::validation::validate_id;
 /// Returns validation, missing-content, conflict, or storage errors without changing partial state.
 pub async fn read_position(
     connection: &mut SqliteConnection,
-    comic_id: &str,
+    chapter_id: &str,
 ) -> AppResult<Option<WorkPosition>> {
-    let row = sqlx::query!("SELECT comic_id, last_opened_at, page_id, unit_id, mode FROM work_position WHERE comic_id = ?", comic_id)
+    let row = sqlx::query!("SELECT chapter_id, last_opened_at, page_id, unit_id, mode FROM work_position WHERE chapter_id = ?", chapter_id)
         .fetch_optional(connection).await?;
 
     let Some(row) = row else {
@@ -29,7 +29,7 @@ pub async fn read_position(
     };
 
     Ok(Some(WorkPosition {
-        comic_id: row.comic_id,
+        chapter_id: row.chapter_id,
         last_opened_at: row.last_opened_at,
         page_id: row.page_id,
         unit_id: row.unit_id,
@@ -48,9 +48,9 @@ impl Step<PersistWorkPosition, SqliteContext> for SqliteRepository {
     ) -> AppResult<WorkPosition> {
         let input = &operation.position;
 
-        validate_id(&input.comic_id)?;
+        validate_id(&input.chapter_id)?;
 
-        sqlx::query!("SELECT id FROM comic WHERE id = ?", input.comic_id)
+        sqlx::query!("SELECT id FROM chapter WHERE id = ?", input.chapter_id)
             .fetch_one(&mut *context.0)
             .await?;
 
@@ -58,9 +58,9 @@ impl Step<PersistWorkPosition, SqliteContext> for SqliteRepository {
             validate_id(page_id)?;
 
             sqlx::query!(
-                "SELECT id FROM page WHERE id = ? AND comic_id = ?",
+                "SELECT id FROM page WHERE id = ? AND chapter_id = ?",
                 page_id,
-                input.comic_id
+                input.chapter_id
             )
             .fetch_one(&mut *context.0)
             .await?;
@@ -84,7 +84,7 @@ impl Step<PersistWorkPosition, SqliteContext> for SqliteRepository {
 
         let mode = input.mode.as_str();
 
-        sqlx::query!("INSERT INTO work_position (comic_id, last_opened_at, page_id, unit_id, mode) VALUES (?, ?, ?, ?, ?) ON CONFLICT(comic_id) DO UPDATE SET last_opened_at = excluded.last_opened_at, page_id = excluded.page_id, unit_id = excluded.unit_id, mode = excluded.mode", input.comic_id, now, input.page_id, input.unit_id, mode)
+        sqlx::query!("INSERT INTO work_position (chapter_id, last_opened_at, page_id, unit_id, mode) VALUES (?, ?, ?, ?, ?) ON CONFLICT(chapter_id) DO UPDATE SET last_opened_at = excluded.last_opened_at, page_id = excluded.page_id, unit_id = excluded.unit_id, mode = excluded.mode", input.chapter_id, now, input.page_id, input.unit_id, mode)
             .execute(&mut *context.0).await?;
 
         Ok(WorkPosition {

@@ -54,7 +54,7 @@ fn symlink_reference_is_rejected() -> Result<(), Box<dyn std::error::Error>> {
 
     let store = ResourceStore::open(&root)?;
 
-    let comic = Uuid::new_v4();
+    let chapter = Uuid::new_v4();
 
     let page = Uuid::new_v4();
 
@@ -62,7 +62,7 @@ fn symlink_reference_is_rejected() -> Result<(), Box<dyn std::error::Error>> {
 
     let directory = root
         .join("library")
-        .join(comic.to_string())
+        .join(chapter.to_string())
         .join(page.to_string());
 
     fs::create_dir_all(&directory)?;
@@ -76,13 +76,21 @@ fn symlink_reference_is_rejected() -> Result<(), Box<dyn std::error::Error>> {
 
     assert!(
         store
-            .resolve(&format!("library/{comic}/{page}/{image}.png"), comic, page)
+            .resolve(
+                &format!("library/{chapter}/{page}/{image}.png"),
+                chapter,
+                page
+            )
             .is_err()
     );
 
     assert!(
         store
-            .remove_unreferenced(&format!("library/{comic}/{page}/{image}.png"), comic, page)
+            .remove_unreferenced(
+                &format!("library/{chapter}/{page}/{image}.png"),
+                chapter,
+                page
+            )
             .is_err()
     );
 
@@ -94,7 +102,11 @@ fn symlink_reference_is_rejected() -> Result<(), Box<dyn std::error::Error>> {
 
     assert!(
         store
-            .remove_unreferenced(&format!("library/{comic}/{page}/{image}.png"), comic, page)
+            .remove_unreferenced(
+                &format!("library/{chapter}/{page}/{image}.png"),
+                chapter,
+                page
+            )
             .is_err()
     );
 
@@ -109,17 +121,17 @@ fn missing_original_cleanup_requires_valid_ownership() -> Result<(), Box<dyn std
 
     let store = ResourceStore::open(directory.path())?;
 
-    let comic = Uuid::new_v4();
+    let chapter = Uuid::new_v4();
 
     let page = Uuid::new_v4();
 
     let image = Uuid::new_v4();
 
-    let reference = format!("library/{comic}/{page}/{image}.png");
+    let reference = format!("library/{chapter}/{page}/{image}.png");
 
-    store.remove_unreferenced(&reference, comic, page)?;
+    store.remove_unreferenced(&reference, chapter, page)?;
 
-    store.remove_unreferenced(&reference, comic, page)?;
+    store.remove_unreferenced(&reference, chapter, page)?;
 
     assert!(
         store
@@ -130,8 +142,8 @@ fn missing_original_cleanup_requires_valid_ownership() -> Result<(), Box<dyn std
     assert!(
         store
             .remove_unreferenced(
-                &format!("library/{comic}/{page}/../outside.png"),
-                comic,
+                &format!("library/{chapter}/{page}/../outside.png"),
+                chapter,
                 page
             )
             .is_err()
@@ -139,7 +151,11 @@ fn missing_original_cleanup_requires_valid_ownership() -> Result<(), Box<dyn std
 
     assert!(
         store
-            .remove_unreferenced(&format!("library/{comic}/{page}/{image}.gif"), comic, page)
+            .remove_unreferenced(
+                &format!("library/{chapter}/{page}/{image}.gif"),
+                chapter,
+                page
+            )
             .is_err()
     );
 

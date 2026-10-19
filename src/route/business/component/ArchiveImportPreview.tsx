@@ -3,7 +3,7 @@ import type { ReactElement } from "react";
 import type {
   ArchiveImportMode,
   ArchivePreview,
-  ComicMetadata,
+  ArchiveComic,
 } from "@/bridge/generated/bindings";
 import { MetadataForm } from "@/route/business/component/MetadataForm";
 import { Button } from "@/shared/component/Button";
@@ -13,7 +13,7 @@ type ArchiveImportPreviewProps = {
   existing: boolean;
   busy: boolean;
   error: string;
-  onSubmit: (metadata: ComicMetadata, mode: ArchiveImportMode) => void;
+  onSubmit: (metadata: ArchiveComic, mode: ArchiveImportMode) => void;
   onCancel: () => void;
 };
 
@@ -26,6 +26,9 @@ export function ArchiveImportPreview({
   onCancel,
 }: ArchiveImportPreviewProps): ReactElement {
   const [mode, setMode] = useState<ArchiveImportMode>("fill_empty");
+  const [chapterTitle, setChapterTitle] = useState(
+    preview.metadata.subtitle || "第1章",
+  );
   return (
     <div className="space-y-4">
       <p className="text-sm">
@@ -102,7 +105,7 @@ export function ArchiveImportPreview({
           </label>
         </fieldset>
       )}
-      {!existing && (
+      {!existing && preview.target_comic === null && (
         <MetadataForm
           title={preview.metadata.title}
           subtitle={preview.metadata.subtitle}
@@ -115,6 +118,57 @@ export function ArchiveImportPreview({
             onSubmit({ title, subtitle, author }, mode);
           }}
         />
+      )}
+      {!existing && preview.target_comic !== null && (
+        <form
+          className="space-y-3"
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (!busy && chapterTitle.trim() !== "")
+              onSubmit(
+                {
+                  title: preview.target_comic?.title ?? "",
+                  subtitle: chapterTitle,
+                  author: preview.target_comic?.author ?? "",
+                },
+                mode,
+              );
+          }}
+        >
+          <p className="text-sm">
+            所属漫画：{preview.target_comic.title} ·{" "}
+            {preview.target_comic.author || "未填写作者"}
+          </p>
+          <label className="block space-y-1 text-sm">
+            <span>章节名称</span>
+            <input
+              className="h-9 w-full rounded border border-border bg-background px-3"
+              value={chapterTitle}
+              required
+              disabled={busy}
+              onChange={(event) => {
+                setChapterTitle(event.currentTarget.value);
+              }}
+            />
+          </label>
+          {error !== "" && (
+            <p role="alert" className="text-xs text-destructive">
+              {error}
+            </p>
+          )}
+          <div className="flex justify-end gap-2">
+            <Button variant="ghost" disabled={busy} onClick={onCancel}>
+              取消
+            </Button>
+            <Button
+              variant="primary"
+              type="submit"
+              disabled={busy || chapterTitle.trim() === ""}
+            >
+              确认导入章节
+            </Button>
+          </div>
+        </form>
       )}
       {existing && (
         <>

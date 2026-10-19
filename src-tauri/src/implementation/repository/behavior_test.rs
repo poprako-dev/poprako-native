@@ -3,7 +3,7 @@ use std::path::PathBuf;
 
 use uuid::Uuid;
 
-use crate::data::comic::ComicMetadata;
+use crate::data::comic::{ComicMetadata, NewComic};
 use crate::data::editor::{SavePageUnits, UnitDraft};
 use crate::data::page::{NewPage, PageBaseline, RemovePages, ReorderPages};
 use crate::implementation::coordinator::SqliteCoordinator;
@@ -11,7 +11,7 @@ use crate::implementation::coordinator::database;
 use crate::model::page::Page;
 use crate::model::work_position::{EditorMode, WorkPosition};
 use crate::result::AppError;
-use crate::usecase::{comic, editor, page, preference, work_position};
+use crate::usecase::{chapter, editor, page, preference, work_position};
 use crate::value::image::{Image, ImageFormat};
 
 fn require_send<T: Send>(value: T) -> T {
@@ -64,24 +64,32 @@ async fn fixture() -> Result<(SqliteCoordinator, PathBuf, String, Vec<Page>), Bo
 
     let coordinator = SqliteCoordinator::new(pool);
 
-    let comic = require_send(comic::create_comic(
+    let chapter = require_send(crate::usecase::comic::create_comic(
         &coordinator,
-        ComicMetadata {
-            title: "  漫画 \u{2003}".to_owned(),
-            subtitle: "\t".to_owned(),
-            author: "作者".to_owned(),
+        NewComic {
+            comic: ComicMetadata {
+                title: "  漫画 \u{2003}".to_owned(),
+                author: "作者".to_owned(),
+            },
+            chapter_title: "第1章".to_owned(),
         },
     ))
     .await?;
 
-    assert_eq!(comic.title, "漫画");
+    assert_eq!(chapter.title, "第1章");
 
-    assert_eq!(comic.subtitle, "");
+    assert_eq!(
+        chapter::get_chapter_detail(&coordinator, &chapter.id)
+            .await?
+            .comic
+            .title,
+        "漫画"
+    );
 
     let pages =
-        page::append_pages(&coordinator, &comic.id, &[], &[image(), image(), image()]).await?;
+        page::append_pages(&coordinator, &chapter.id, &[], &[image(), image(), image()]).await?;
 
-    Ok((coordinator, path, comic.id, pages))
+    Ok((coordinator, path, chapter.id, pages))
 }
 
 async fn cleanup(coordinator: SqliteCoordinator, path: PathBuf) -> Result<(), Box<dyn Error>> {
@@ -94,7 +102,7 @@ async fn cleanup(coordinator: SqliteCoordinator, path: PathBuf) -> Result<(), Bo
 
 #[tokio::test]
 async fn snapshot_diff_noop_reorder_conflict_and_reopen() -> Result<(), Box<dyn Error>> {
-    let (coordinator, path, comic_id, pages) = fixture().await?;
+    let (coordinator, path, chapter_id, pages) = fixture().await?;
 
     let page_id = pages[0].id.clone();
 
@@ -103,7 +111,7 @@ async fn snapshot_diff_noop_reorder_conflict_and_reopen() -> Result<(), Box<dyn 
     let second = draft("  保留缩进\n");
 
     let request = SavePageUnits {
-        comic_id: comic_id.clone(),
+        chapter_id: chapter_id.clone(),
         page_id: page_id.clone(),
         expected_revision: 0,
         units: vec![first.clone(), second.clone()],
@@ -136,7 +144,7 @@ async fn snapshot_diff_noop_reorder_conflict_and_reopen() -> Result<(), Box<dyn 
     let reordered = editor::save_page_units(
         &coordinator,
         SavePageUnits {
-            comic_id: comic_id.clone(),
+            chapter_id: chapter_id.clone(),
             page_id: page_id.clone(),
             expected_revision: 1,
             units: vec![second.clone(), first.clone()],
@@ -155,7 +163,7 @@ async fn snapshot_diff_noop_reorder_conflict_and_reopen() -> Result<(), Box<dyn 
     let reopened = SqliteCoordinator::new(database::open(&path).await?);
 
     assert_eq!(
-        editor::get_page_editor(&reopened, &comic_id, &page_id).await?,
+        editor::get_page_editor(&reopened, &chapter_id, &page_id).await?,
         reordered
     );
 
@@ -164,7 +172,7 @@ async fn snapshot_diff_noop_reorder_conflict_and_reopen() -> Result<(), Box<dyn 
 
 #[tokio::test]
 async fn collision_rolls_back_deletion_and_work_reference() -> Result<(), Box<dyn Error>> {
-    let (coordinator, path, comic_id, pages) = fixture().await?;
+    let (coordinator, path, chapter_id, pages) = fixture().await?;
 
     let first = draft("first");
 
@@ -174,7 +182,7 @@ async fn collision_rolls_back_deletion_and_work_reference() -> Result<(), Box<dy
         editor::save_page_units(
             &coordinator,
             SavePageUnits {
-                comic_id: comic_id.clone(),
+                chapter_id: chapter_id.clone(),
                 page_id: pages[target].id.clone(),
                 expected_revision: 0,
                 units: vec![unit],
@@ -186,7 +194,7 @@ async fn collision_rolls_back_deletion_and_work_reference() -> Result<(), Box<dy
     work_position::update_work_position(
         &coordinator,
         WorkPosition {
-            comic_id: comic_id.clone(),
+            chapter_id: chapter_id.clone(),
             page_id: Some(pages[0].id.clone()),
             unit_id: Some(first.id.clone()),
             mode: EditorMode::Proofreading,
@@ -195,12 +203,12 @@ async fn collision_rolls_back_deletion_and_work_reference() -> Result<(), Box<dy
     )
     .await?;
 
-    let before = editor::get_page_editor(&coordinator, &comic_id, &pages[0].id).await?;
+    let before = editor::get_page_editor(&coordinator, &chapter_id, &pages[0].id).await?;
 
     let result = editor::save_page_units(
         &coordinator,
         SavePageUnits {
-            comic_id: comic_id.clone(),
+            chapter_id: chapter_id.clone(),
             page_id: pages[0].id.clone(),
             expected_revision: 1,
             units: vec![collision],
@@ -211,11 +219,11 @@ async fn collision_rolls_back_deletion_and_work_reference() -> Result<(), Box<dy
     assert_eq!(result, Err(AppError::Conflict));
 
     assert_eq!(
-        editor::get_page_editor(&coordinator, &comic_id, &pages[0].id).await?,
+        editor::get_page_editor(&coordinator, &chapter_id, &pages[0].id).await?,
         before
     );
 
-    let detail = comic::get_comic_detail(&coordinator, &comic_id).await?;
+    let detail = chapter::get_chapter_detail(&coordinator, &chapter_id).await?;
 
     assert_eq!(
         detail.work_position.and_then(|position| position.unit_id),
@@ -227,14 +235,14 @@ async fn collision_rolls_back_deletion_and_work_reference() -> Result<(), Box<dy
 
 #[tokio::test]
 async fn page_permutations_and_delete_restore_position() -> Result<(), Box<dyn Error>> {
-    let (coordinator, path, comic_id, pages) = fixture().await?;
+    let (coordinator, path, chapter_id, pages) = fixture().await?;
 
     let ids: Vec<_> = pages.iter().rev().map(|page| page.id.clone()).collect();
 
     let reordered = page::reorder_pages(
         &coordinator,
         ReorderPages {
-            comic_id: comic_id.clone(),
+            chapter_id: chapter_id.clone(),
             baseline: baseline(&pages),
             page_ids: ids.clone(),
         },
@@ -247,14 +255,14 @@ async fn page_permutations_and_delete_restore_position() -> Result<(), Box<dyn E
     );
 
     assert_eq!(
-        page::append_pages(&coordinator, &comic_id, &baseline(&pages), &[image()]).await,
+        page::append_pages(&coordinator, &chapter_id, &baseline(&pages), &[image()]).await,
         Err(AppError::Conflict)
     );
 
     work_position::update_work_position(
         &coordinator,
         WorkPosition {
-            comic_id: comic_id.clone(),
+            chapter_id: chapter_id.clone(),
             page_id: Some(ids[1].clone()),
             unit_id: None,
             mode: EditorMode::Translation,
@@ -266,7 +274,7 @@ async fn page_permutations_and_delete_restore_position() -> Result<(), Box<dyn E
     let remaining = page::remove_pages(
         &coordinator,
         RemovePages {
-            comic_id: comic_id.clone(),
+            chapter_id: chapter_id.clone(),
             baseline: baseline(&reordered),
             page_ids: vec![ids[1].clone()],
         },
@@ -277,7 +285,7 @@ async fn page_permutations_and_delete_restore_position() -> Result<(), Box<dyn E
 
     assert_eq!(remaining[1].index, 1);
 
-    let detail = comic::get_comic_detail(&coordinator, &comic_id).await?;
+    let detail = chapter::get_chapter_detail(&coordinator, &chapter_id).await?;
 
     assert_eq!(
         detail.work_position.and_then(|position| position.page_id),
@@ -289,11 +297,11 @@ async fn page_permutations_and_delete_restore_position() -> Result<(), Box<dyn E
 
 #[tokio::test]
 async fn preference_compare_and_swap_preserves_content_time() -> Result<(), Box<dyn Error>> {
-    let (coordinator, path, comic_id, _) = fixture().await?;
+    let (coordinator, path, chapter_id, _) = fixture().await?;
 
-    let before = comic::get_comic_detail(&coordinator, &comic_id)
+    let before = chapter::get_chapter_detail(&coordinator, &chapter_id)
         .await?
-        .comic;
+        .chapter;
 
     let original = preference::get_preference(&coordinator).await?;
 
@@ -311,9 +319,9 @@ async fn preference_compare_and_swap_preserves_content_time() -> Result<(), Box<
     assert_eq!(preference::get_preference(&coordinator).await?, changed);
 
     assert_eq!(
-        comic::get_comic_detail(&coordinator, &comic_id)
+        chapter::get_chapter_detail(&coordinator, &chapter_id)
             .await?
-            .comic,
+            .chapter,
         before
     );
 

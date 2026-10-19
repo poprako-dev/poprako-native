@@ -28,7 +28,7 @@ fn baseline(page: &Page) -> PageBaseline {
 struct Replacement {
     _directory: TempDir,
     harness: Arc<Harness>,
-    comic_id: String,
+    chapter_id: String,
     source: PathBuf,
     old_path: PathBuf,
     old: Page,
@@ -38,7 +38,7 @@ struct Replacement {
 }
 
 async fn replacement() -> Result<Replacement, Box<dyn Error>> {
-    let (directory, harness, comic_id) = setup().await?;
+    let (directory, harness, chapter_id) = setup().await?;
 
     let source = directory.path().join("source.png");
 
@@ -47,7 +47,7 @@ async fn replacement() -> Result<Replacement, Box<dyn Error>> {
     let initial = stage(
         &harness,
         ImageImportTarget::Append {
-            comic_id: comic_id.clone(),
+            chapter_id: chapter_id.clone(),
             baseline: Vec::new(),
         },
         vec![source.clone()],
@@ -60,12 +60,12 @@ async fn replacement() -> Result<Replacement, Box<dyn Error>> {
 
     let old_path = harness.resource.resolve(
         &old.image.reference,
-        Uuid::parse_str(&comic_id)?,
+        Uuid::parse_str(&chapter_id)?,
         Uuid::parse_str(&old.id)?,
     )?;
 
     let grant = harness.resource_registry.acquire(ImageGrant {
-        comic_id: Uuid::parse_str(&comic_id)?,
+        chapter_id: Uuid::parse_str(&chapter_id)?,
         page_id: Uuid::parse_str(&old.id)?,
         reference: old.image.reference.clone(),
         request: DisplayRequest::Thumbnail,
@@ -74,7 +74,7 @@ async fn replacement() -> Result<Replacement, Box<dyn Error>> {
     let replacement = stage(
         &harness,
         ImageImportTarget::Replace {
-            comic_id: comic_id.clone(),
+            chapter_id: chapter_id.clone(),
             baseline: baseline(old),
         },
         vec![source.clone()],
@@ -95,7 +95,7 @@ async fn replacement() -> Result<Replacement, Box<dyn Error>> {
     Ok(Replacement {
         _directory: directory,
         harness,
-        comic_id,
+        chapter_id,
         source,
         old_path,
         old: old.clone(),
@@ -111,7 +111,7 @@ async fn released_thumbnail_allows_following_append_and_replace() -> Result<(), 
 
     let Replacement {
         harness,
-        comic_id,
+        chapter_id,
         source,
         old_path,
         old,
@@ -121,7 +121,7 @@ async fn released_thumbnail_allows_following_append_and_replace() -> Result<(), 
     } = &fixture;
 
     let target = ImageImportTarget::Append {
-        comic_id: comic_id.clone(),
+        chapter_id: chapter_id.clone(),
         baseline: vec![baseline(current)],
     };
 
@@ -145,7 +145,7 @@ async fn released_thumbnail_allows_following_append_and_replace() -> Result<(), 
     let next = stage(
         harness,
         ImageImportTarget::Replace {
-            comic_id: comic_id.clone(),
+            chapter_id: chapter_id.clone(),
             baseline: baseline(current),
         },
         vec![source.clone()],
@@ -202,7 +202,7 @@ async fn already_deleted_old_image_can_finish_retained_cleanup() -> Result<(), B
 
     let lease = fixture.harness.resource.open_original(
         &fixture.old.image.reference,
-        Uuid::parse_str(&fixture.comic_id)?,
+        Uuid::parse_str(&fixture.chapter_id)?,
         Uuid::parse_str(&fixture.old.id)?,
     )?;
 
@@ -257,7 +257,7 @@ async fn retry_keeps_protected_cleanup_pending_after_page_deletion() -> Result<(
     page::remove_pages(
         fixture.harness.database().await?,
         RemovePages {
-            comic_id: fixture.comic_id.clone(),
+            chapter_id: fixture.chapter_id.clone(),
             baseline: vec![baseline(&fixture.current)],
             page_ids: vec![fixture.current.id.clone()],
         },
@@ -274,7 +274,7 @@ async fn retry_keeps_protected_cleanup_pending_after_page_deletion() -> Result<(
     let next = stage(
         &fixture.harness,
         ImageImportTarget::Append {
-            comic_id: fixture.comic_id.clone(),
+            chapter_id: fixture.chapter_id.clone(),
             baseline: Vec::new(),
         },
         vec![fixture.source.clone()],
@@ -307,7 +307,7 @@ async fn transient_cleanup_failure_retains_resources_until_next_import()
     std::fs::create_dir(&fixture.old_path)?;
 
     let target = ImageImportTarget::Append {
-        comic_id: fixture.comic_id.clone(),
+        chapter_id: fixture.chapter_id.clone(),
         baseline: vec![baseline(&fixture.current)],
     };
 
@@ -335,7 +335,7 @@ async fn transient_cleanup_failure_retains_resources_until_next_import()
 
     let lease = fixture.harness.resource.open_original(
         &fixture.old.image.reference,
-        Uuid::parse_str(&fixture.comic_id)?,
+        Uuid::parse_str(&fixture.chapter_id)?,
         Uuid::parse_str(&fixture.old.id)?,
     )?;
 

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-move-chapter"
+description = "Enables the move_chapter command without any pre-configured scope."
+commands.allow = ["move_chapter"]
+
+[[permission]]
+identifier = "deny-move-chapter"
+description = "Denies the move_chapter command without any pre-configured scope."
+commands.deny = ["move_chapter"]

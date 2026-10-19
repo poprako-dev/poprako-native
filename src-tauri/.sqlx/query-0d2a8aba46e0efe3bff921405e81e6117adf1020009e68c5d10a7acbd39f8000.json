@@ -1,0 +1,152 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT c.id, c.title, c.author, c.created_at, c.updated_at,\n            (SELECT COUNT(*) FROM chapter h WHERE h.comic_id = c.id) AS \"chapter_count!: i64\",\n            (SELECT COUNT(*) FROM page p JOIN chapter h ON h.id = p.chapter_id WHERE h.comic_id = c.id) AS \"page_count!: i64\",\n            (SELECT COUNT(*) FROM unit u JOIN page p ON p.id = u.page_id JOIN chapter h ON h.id = p.chapter_id WHERE h.comic_id = c.id) AS \"unit_count!: i64\",\n            (SELECT COUNT(*) FROM unit u JOIN page p ON p.id = u.page_id JOIN chapter h ON h.id = p.chapter_id WHERE h.comic_id = c.id AND u.translated_text != '') AS \"translated_count!: i64\",\n            (SELECT COUNT(*) FROM unit u JOIN page p ON p.id = u.page_id JOIN chapter h ON h.id = p.chapter_id WHERE h.comic_id = c.id AND u.is_proofread = 1) AS \"proofread_count!: i64\",\n            (SELECT p.id FROM chapter h JOIN page p ON p.chapter_id = h.id WHERE h.comic_id = c.id ORDER BY h.position, p.position LIMIT 1) AS \"cover_page_id?: String\",\n            (SELECT h.id FROM chapter h JOIN page p ON p.chapter_id = h.id WHERE h.comic_id = c.id ORDER BY h.position, p.position LIMIT 1) AS \"cover_chapter_id?: String\",\n            (SELECT h.id FROM chapter h LEFT JOIN work_position w ON w.chapter_id = h.id WHERE h.comic_id = c.id ORDER BY w.last_opened_at DESC, h.position LIMIT 1) AS \"latest_chapter_id?: String\",\n            (SELECT MAX(w.last_opened_at) FROM chapter h JOIN work_position w ON w.chapter_id = h.id WHERE h.comic_id = c.id) AS \"last_opened_at?: i64\"\n            FROM comic c ORDER BY \"last_opened_at?: i64\" DESC, c.updated_at DESC, c.id LIMIT ? OFFSET ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "comic",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "name": "title",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "comic",
+            "name": "title"
+          }
+        }
+      },
+      {
+        "name": "author",
+        "ordinal": 2,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "comic",
+            "name": "author"
+          }
+        }
+      },
+      {
+        "name": "created_at",
+        "ordinal": 3,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "comic",
+            "name": "created_at"
+          }
+        }
+      },
+      {
+        "name": "updated_at",
+        "ordinal": 4,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "comic",
+            "name": "updated_at"
+          }
+        }
+      },
+      {
+        "name": "chapter_count!: i64",
+        "ordinal": 5,
+        "type_info": "Integer",
+        "origin": "Expression"
+      },
+      {
+        "name": "page_count!: i64",
+        "ordinal": 6,
+        "type_info": "Integer",
+        "origin": "Expression"
+      },
+      {
+        "name": "unit_count!: i64",
+        "ordinal": 7,
+        "type_info": "Integer",
+        "origin": "Expression"
+      },
+      {
+        "name": "translated_count!: i64",
+        "ordinal": 8,
+        "type_info": "Integer",
+        "origin": "Expression"
+      },
+      {
+        "name": "proofread_count!: i64",
+        "ordinal": 9,
+        "type_info": "Integer",
+        "origin": "Expression"
+      },
+      {
+        "name": "cover_page_id?: String",
+        "ordinal": 10,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "page",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "name": "cover_chapter_id?: String",
+        "ordinal": 11,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "chapter",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "name": "latest_chapter_id?: String",
+        "ordinal": 12,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "chapter",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "name": "last_opened_at?: i64",
+        "ordinal": 13,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "0d2a8aba46e0efe3bff921405e81e6117adf1020009e68c5d10a7acbd39f8000"
+}

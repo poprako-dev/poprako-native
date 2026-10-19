@@ -3,8 +3,8 @@ use std::sync::atomic::{AtomicBool, Ordering};
 
 use uuid::Uuid;
 
+use crate::data::archive::ArchiveComic;
 use crate::data::archive_task::{ArchivePagePreview, ArchivePreview, ArchiveTarget, ArchiveTask};
-use crate::data::comic::ComicMetadata;
 use crate::data::page::PageBaseline;
 use crate::data::search::TextStage;
 use crate::harness::Harness;
@@ -14,9 +14,9 @@ use crate::implementation::archive_task::{ImportArtifact, check_cancel};
 use crate::result::{AppError, AppResult};
 use crate::value::validation::position;
 
-fn preview(artifact: &ImportArtifact) -> AppResult<ArchivePreview> {
+async fn preview(state: &Harness, artifact: &ImportArtifact) -> AppResult<ArchivePreview> {
     let (document, targets) = match artifact {
-        ImportArtifact::New(prepared) => (
+        ImportArtifact::New { prepared, .. } => (
             &prepared.document,
             prepared
                 .image_names
@@ -37,7 +37,16 @@ fn preview(artifact: &ImportArtifact) -> AppResult<ArchivePreview> {
             .ok_or(AppError::InvalidInput)
     })?;
 
+    let target_comic = match artifact {
+        ImportArtifact::New {
+            parent: crate::data::import::ImportParent::Existing { comic_id, .. },
+            ..
+        } => Some(crate::usecase::comic::get_comic(state.database().await?, comic_id).await?),
+        _ => None,
+    };
+
     Ok(ArchivePreview {
+        target_comic,
         pages: document
             .pages
             .iter()
@@ -61,7 +70,7 @@ fn preview(artifact: &ImportArtifact) -> AppResult<ArchivePreview> {
                 })
             })
             .collect::<AppResult<Vec<_>>>()?,
-        metadata: ComicMetadata {
+        metadata: ArchiveComic {
             title: document.comic.title.clone(),
             subtitle: document.comic.subtitle.clone(),
             author: document.comic.author.clone(),
@@ -75,7 +84,7 @@ fn preview(artifact: &ImportArtifact) -> AppResult<ArchivePreview> {
 /// # Errors
 /// Discards only unpublished prepared files, retaining user inputs untouched.
 pub fn discard(state: &Harness, artifact: &ImportArtifact) -> AppResult<()> {
-    if let ImportArtifact::New(prepared) = artifact {
+    if let ImportArtifact::New { prepared, .. } = artifact {
         for image in &prepared.images {
             state
                 .resource
@@ -129,6 +138,38 @@ pub async fn cancel(state: Arc<Harness>, id: String) -> AppResult<()> {
     Ok(())
 }
 
+async fn import_parent(
+    state: &Harness,
+    target: &ArchiveTarget,
+) -> AppResult<Option<crate::data::import::ImportParent>> {
+    let parent = match target {
+        ArchiveTarget::New => Some(crate::data::import::ImportParent::New {
+            comic_id: Uuid::new_v4().to_string(),
+        }),
+        ArchiveTarget::NewChapter { comic_id, baseline } => {
+            let actual =
+                crate::usecase::chapter::list_chapter_infos(state.database().await?, comic_id)
+                    .await?;
+
+            if !actual
+                .iter()
+                .map(|info| &info.chapter.id)
+                .eq(baseline.iter())
+            {
+                return Err(AppError::Conflict);
+            }
+
+            Some(crate::data::import::ImportParent::Existing {
+                comic_id: comic_id.clone(),
+                baseline: baseline.clone(),
+            })
+        }
+        ArchiveTarget::Existing { .. } => None,
+    };
+
+    Ok(parent)
+}
+
 async fn build(
     state: Arc<Harness>,
     id: String,
@@ -137,38 +178,45 @@ async fn build(
     text_stage: TextStage,
     cancel: Arc<AtomicBool>,
 ) -> AppResult<ImportArtifact> {
+    let parent = import_parent(&state, &target).await?;
+
     match target {
-        ArchiveTarget::New => tokio::task::spawn_blocking(move || {
-            let mut progress = |completed, total| {
-                check_cancel(&cancel)?;
+        ArchiveTarget::New | ArchiveTarget::NewChapter { .. } => {
+            tokio::task::spawn_blocking(move || {
+                let mut progress = |completed, total| {
+                    check_cancel(&cancel)?;
 
-                state.archive_tasks.update(&id, |record| {
-                    record.status = ArchiveTask::Preparing {
-                        completed: position(completed)?,
-                        total: position(total)?,
-                    };
+                    state.archive_tasks.update(&id, |record| {
+                        record.status = ArchiveTask::Preparing {
+                            completed: position(completed)?,
+                            total: position(total)?,
+                        };
 
-                    Ok(())
+                        Ok(())
+                    })
+                };
+
+                let prepared = source::prepare_controlled(
+                    &selection.source,
+                    &selection.images,
+                    &state.directory().join("staging"),
+                    &state.resource,
+                    &state.image,
+                    &text_stage,
+                    &mut progress,
+                )?;
+
+                Ok(ImportArtifact::New {
+                    prepared,
+                    parent: parent.ok_or(AppError::InvalidInput)?,
                 })
-            };
-
-            let prepared = source::prepare_controlled(
-                &selection.source,
-                &selection.images,
-                &state.directory().join("staging"),
-                &state.resource,
-                &state.image,
-                &text_stage,
-                &mut progress,
-            )?;
-
-            Ok(ImportArtifact::New(prepared))
-        })
-        .await
-        .map_err(|_| AppError::Storage)?,
-        ArchiveTarget::Existing { comic_id } => {
+            })
+            .await
+            .map_err(|_| AppError::Storage)?
+        }
+        ArchiveTarget::Existing { chapter_id } => {
             let snapshot =
-                crate::usecase::export::snapshot(state.database().await?, &comic_id).await?;
+                crate::usecase::export::snapshot(state.database().await?, &chapter_id).await?;
 
             tokio::task::spawn_blocking(move || {
                 let document = source::read_translation(&selection.source, &text_stage)?;
@@ -190,7 +238,7 @@ async fn build(
                         .resource
                         .open_original(
                             &page.image.reference,
-                            Uuid::parse_str(&comic_id).map_err(|_| AppError::InvalidInput)?,
+                            Uuid::parse_str(&chapter_id).map_err(|_| AppError::InvalidInput)?,
                             Uuid::parse_str(&page.id).map_err(|_| AppError::InvalidInput)?,
                         )
                         .map_err(|_| AppError::Storage)?;
@@ -201,7 +249,7 @@ async fn build(
                         .resource
                         .resolve(
                             &page.image.reference,
-                            Uuid::parse_str(&comic_id).map_err(|_| AppError::InvalidInput)?,
+                            Uuid::parse_str(&chapter_id).map_err(|_| AppError::InvalidInput)?,
                             Uuid::parse_str(&page.id).map_err(|_| AppError::InvalidInput)?,
                         )
                         .map_err(|_| AppError::Storage)?;
@@ -227,7 +275,7 @@ async fn build(
 
                 Ok(ImportArtifact::Existing {
                     document,
-                    comic_id,
+                    chapter_id,
                     baseline,
                     target_pages,
                 })
@@ -273,7 +321,7 @@ pub async fn run(
                     Err(error) => Err(error),
                 }
             }
-            false => match preview(&artifact) {
+            false => match preview(&state, &artifact).await {
                 Ok(preview) => state.archive_tasks.update(&id, |record| {
                     record.status = ArchiveTask::AwaitingConfirmation { preview };
 

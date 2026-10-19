@@ -5,10 +5,10 @@ import { ArchiveTaskDialog } from "@/route/business/component/ArchiveTaskDialog"
 import { Button } from "@/shared/component/Button";
 import { Dialog } from "@/shared/component/Dialog";
 
-type ArchiveExportDialogProps = { comicId: string; onClose: () => void };
+type ArchiveExportDialogProps = { chapterId: string; onClose: () => void };
 
 export function ArchiveExportDialog({
-  comicId,
+  chapterId,
   onClose,
 }: ArchiveExportDialogProps): ReactElement {
   const [includeImages, setIncludeImages] = useState(true);
@@ -21,7 +21,7 @@ export function ArchiveExportDialog({
     setError("");
     try {
       const selection = unwrap(
-        await commands.exportArchive(comicId, includeImages),
+        await commands.exportArchive(chapterId, includeImages),
       );
       if (selection.status === "selected") {
         setTaskId(selection.task_id);

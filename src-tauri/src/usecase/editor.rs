@@ -12,14 +12,14 @@ pub mod recovery;
 /// Reports missing or invalid page ownership and storage failures.
 pub async fn get_page_editor(
     coordinator: &SqliteCoordinator,
-    comic_id: &str,
+    chapter_id: &str,
     page_id: &str,
 ) -> AppResult<PageEditor> {
     let repository = SqliteRepository::new(coordinator.pool().clone());
 
     repository
         .run(&ReadPageEditor {
-            comic_id: comic_id.to_owned(),
+            chapter_id: chapter_id.to_owned(),
             page_id: page_id.to_owned(),
         })
         .await

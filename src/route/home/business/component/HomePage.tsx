@@ -10,6 +10,17 @@ type HomeData = { comics: ComicInfo[]; latest: ComicInfo | null };
 
 export function HomePage(): ReactElement {
   const [offset, setOffset] = useState(0);
+  const [expanded, setExpanded] = useState<ReadonlySet<string>>(
+    () => new Set(),
+  );
+  function toggle(id: string): void {
+    setExpanded((previous) => {
+      const next = new Set(previous);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
   const load = useCallback(async (): Promise<HomeData> => {
     const comics = unwrap(await commands.listComicInfos(offset, 50));
     const first =
@@ -24,13 +35,15 @@ export function HomePage(): ReactElement {
     return (
       <StatePanel
         state="error"
-        message="项目列表无法读取，请重试。"
+        message="漫画列表无法读取，请重试。"
         onRetry={resource.reload}
       />
     );
   }
   return (
     <HomeContent
+      expanded={expanded}
+      onToggle={toggle}
       comics={resource.state.value.comics}
       latest={resource.state.value.latest}
       onReload={resource.reload}

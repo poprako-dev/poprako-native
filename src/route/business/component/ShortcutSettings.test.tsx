@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { Shortcut } from "@/bridge/generated/bindings";
-import { preference } from "@/route/comic/$comicId/business/translator/editor-shortcut-test-fixture";
+import { preference } from "@/route/chapter/$chapterId/business/translator/editor-shortcut-test-fixture";
 import { ShortcutSettings } from "./ShortcutSettings";
 
 afterEach(cleanup);

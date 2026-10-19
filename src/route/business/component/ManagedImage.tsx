@@ -6,7 +6,7 @@ import { useManagedImage } from "@/route/business/use-managed-image";
 import { Button } from "@/shared/component/Button";
 
 type ManagedImageProps = {
-  comicId: string;
+  chapterId: string;
   pageId: string;
   reference: string;
   kind: ImageKind;
@@ -15,7 +15,7 @@ type ManagedImageProps = {
 };
 
 export function ManagedImage({
-  comicId,
+  chapterId,
   pageId,
   reference,
   kind,
@@ -25,7 +25,7 @@ export function ManagedImage({
   const element = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
   const [failedUrl, setFailedUrl] = useState("");
-  const image = useManagedImage(comicId, pageId, reference, kind, visible);
+  const image = useManagedImage(chapterId, pageId, reference, kind, visible);
   useEffect(() => {
     const target = element.current;
     if (target === null) {

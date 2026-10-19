@@ -4,8 +4,8 @@ use std::sync::Arc;
 use image::RgbImage;
 use tempfile::{TempDir, tempdir};
 
+use crate::data::archive::ArchiveComic;
 use crate::data::archive_task::{ArchiveImportMode, ArchiveTarget, ArchiveTask};
-use crate::data::comic::ComicMetadata;
 use crate::data::search::TextStage;
 use crate::harness::Harness;
 use crate::implementation::archive_task::picker::ImportSelection;
@@ -39,8 +39,8 @@ fn fixture() -> Result<(TempDir, Arc<Harness>, ImportSelection), Box<dyn std::er
     ))
 }
 
-fn metadata() -> ComicMetadata {
-    ComicMetadata {
+fn metadata() -> ArchiveComic {
+    ArchiveComic {
         title: "项目".to_owned(),
         subtitle: String::new(),
         author: String::new(),
@@ -97,7 +97,7 @@ async fn prepared_import_commits_once_and_exports_queryable_result() -> TestResu
     ));
 
     let snapshot =
-        crate::usecase::export::snapshot(state.database().await?, &result.comic_id).await?;
+        crate::usecase::export::snapshot(state.database().await?, &result.chapter_id).await?;
 
     assert_eq!(snapshot.pages[0].units[0].proofread_text, "原文");
 
@@ -116,7 +116,7 @@ async fn prepared_import_commits_once_and_exports_queryable_result() -> TestResu
     export::run(
         Arc::clone(&state),
         export_id.clone(),
-        result.comic_id,
+        result.chapter_id,
         target.clone(),
         true,
         false,
@@ -258,7 +258,7 @@ async fn existing_import_rejects_stale_preview_without_overwriting_edit() -> Tes
             images: Vec::new(),
         },
         ArchiveTarget::Existing {
-            comic_id: created.comic_id.clone(),
+            chapter_id: created.chapter_id.clone(),
         },
         TextStage::Proofreading,
         cancel,
@@ -271,7 +271,7 @@ async fn existing_import_rejects_stale_preview_without_overwriting_edit() -> Tes
     ));
 
     let snapshot =
-        crate::usecase::export::snapshot(state.database().await?, &created.comic_id).await?;
+        crate::usecase::export::snapshot(state.database().await?, &created.chapter_id).await?;
 
     let page = &snapshot.pages[0];
 
@@ -282,7 +282,7 @@ async fn existing_import_rejects_stale_preview_without_overwriting_edit() -> Tes
     crate::usecase::editor::save_page_units(
         state.database().await?,
         crate::data::editor::SavePageUnits {
-            comic_id: created.comic_id.clone(),
+            chapter_id: created.chapter_id.clone(),
             page_id: page.page.id.clone(),
             expected_revision: page.page.unit_revision,
             units: vec![unit],
@@ -302,7 +302,7 @@ async fn existing_import_rejects_stale_preview_without_overwriting_edit() -> Tes
     ));
 
     let snapshot =
-        crate::usecase::export::snapshot(state.database().await?, &created.comic_id).await?;
+        crate::usecase::export::snapshot(state.database().await?, &created.chapter_id).await?;
 
     assert_eq!(snapshot.pages[0].units[0].translated_text, "用户新编辑");
 

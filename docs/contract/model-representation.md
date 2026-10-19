@@ -6,8 +6,8 @@
 
 | 值 | Rust 模型 | SQLite | 生成的 TypeScript 与约束 |
 | --- | --- | --- | --- |
-| comic / page / unit ID | `String` | 非空 `TEXT` 主键或外键 | `string`，规范的 UUID v4，小写、带连字符 |
-| 标题、副标题、作者、双阶段正文 | `String` | 非空 `TEXT` | `string`；可留空字段统一使用 `""` |
+| comic / chapter / page / unit ID | `String` | 非空 `TEXT` 主键或外键 | `string`，规范的 UUID v4，小写、带连字符 |
+| 漫画标题、章节名称、漫画作者、双阶段正文 | `String` | 非空 `TEXT` | `string`；可留空字段统一使用 `""` |
 | 页／单元顺序 | `u32` | 非负 `INTEGER` | 安全整数 `number`，最终状态为父对象内连续的 `0..N-1` |
 | 归一化坐标 | `f64` | 非空 `REAL` | `number`，有限且位于 `[0, 1]` |
 | 图片宽高 | `u32` | 正 `INTEGER` | 正整数 `number`；解码安全范围由图片决策确定 |
@@ -25,8 +25,8 @@
 
 ## 2. 文本规范化
 
-- 副标题、作者、翻译和校对文本没有内容时统一为 `""`，读模型不存在空串与 `null` 两种空态。
-- 标题、副标题和作者保存时去除首尾空白、保留中间内容；规范化后标题为空则拒绝，副标题与作者为空则保存为 `""`。
+- 漫画作者、翻译和校对文本没有内容时统一为 `""`，读模型不存在空串与 `null` 两种空态。
+- 漫画标题、章节名称和漫画作者保存时去除首尾空白、保留中间内容；规范化后标题或章节名称为空则拒绝，作者为空则保存为 `""`。
 - 空白统一按 Unicode `White_Space` 属性判断，由 Rust 执行权威规范化；不要另用一套平台或前端 trim 规则决定最终持久化结果。
 - 正文只含空白时规范为 `""`；存在非空白内容时保留全文，不 trim、不统一换行、不做 Unicode 正规化或大小写折叠。正常保存、批量修改和导入在形成本地正文时使用同一规则；旧格式解析本身的损失另由交换协议说明。
 - 文本规范化不能改变 `is_proofread`、`is_flagged` 或框内外类别。最终文本、翻译数、复制翻译到校对的空态判断遵循同一正文存在性规则。
@@ -42,18 +42,19 @@
 | 内容操作 | 更新时间的对象 |
 | --- | --- |
 | 修改 comic 资料 | comic |
-| 新建 page | 新 page 的创建／修改时间，以及 comic 的修改时间 |
-| 换图 | 对应 page 与 comic；选择清空单元时同时删除所属 unit |
-| 删除 page | 存活且序号改变的 page，以及 comic |
-| 重排 page | 序号实际改变的 page，以及 comic；不修改其 unit 时间 |
-| 新建／修改／删除 unit | 新建或实际改变字段的存活 unit，所属 page 与 comic |
-| 重排 unit 或增删导致顺序改变 | 序号实际改变的 unit，所属 page 与 comic |
-| 替换整页翻校内容 | 新 unit 的创建／修改时间，以及对应 page 与 comic |
-| 浏览、编辑模式切换、修改应用偏好、重建缓存 | 不更新 comic / page / unit 的内容时间 |
+| 修改 chapter 名称 | chapter 与 comic |
+| 新建 page | 新 page 的创建／修改时间，以及 chapter 和 comic 的修改时间 |
+| 换图 | 对应 page、chapter 与 comic；选择清空单元时同时删除所属 unit |
+| 删除 page | 存活且序号改变的 page，以及 chapter 与 comic |
+| 重排 page | 序号实际改变的 page，以及 chapter 与 comic；不修改其 unit 时间 |
+| 新建／修改／删除 unit | 新建或实际改变字段的存活 unit，所属 page、chapter 与 comic |
+| 重排 unit 或增删导致顺序改变 | 序号实际改变的 unit，所属 page、chapter 与 comic |
+| 替换整页翻校内容 | 新 unit 的创建／修改时间，以及对应 page、chapter 与 comic |
+| 浏览、编辑模式切换、修改应用偏好、重建缓存 | 不更新 comic / chapter / page / unit 的内容时间 |
 
 - 存量对象的 `created_at` 不修改。删除对象不保留墓碑或历史时间；父对象只反映删除后剩余内容的修改。
 - 系统时钟可能回拨；毫秒时间不承担版本号、保存次序或并发控制，不强制严格递增，也不建立 `updated_at >= created_at` 的硬约束。保存顺序与过期响应使用保存契约确定的 unit_revision、固定在途快照和会话代次。
-- 导入为新 comic 时，comic、page、unit 的创建与修改时间统一使用本次本地创建时间，不继承来源时间。替换存量页面的单元也为新 unit 生成本次创建时间，comic/page 的创建时间保持不变。
+- 导入为新 chapter 时，chapter、page、unit 的创建与修改时间统一使用本次本地创建时间，不继承来源时间。替换存量页面的单元也为新 unit 生成本次创建时间，chapter/page 的创建时间保持不变。
 - PRK 的完整内容往返不包括本机身份、创建／修改时间、工作位置或偏好；重新导入形成独立本地对象。交换协议不得为保留外部时间而暗中增加来源时间字段。
 - 数据迁移、受管目录调整与可重建缓存维护不伪装为用户修改内容；文件故障恢复的具体行为由图片决策细化。
 
@@ -63,10 +64,11 @@
 
 | 表 | 主键与主要字段 | 关系与约束 |
 | --- | --- | --- |
-| `comic` | `id`；`title`、`subtitle`、`author`；`created_at`、`updated_at` | 主键及必需字段全部显式 `NOT NULL`；标题非空 |
-| `page` | `id`；`comic_id`、`position`、`unit_revision`；图片组成字段；创建／修改时间 | comic 外键，父级删除级联；`UNIQUE(comic_id, position)`；位置非负 |
+| `comic` | `id`、`title`、`author`、创建／修改时间 | 标题非空；作者可为空字符串 |
+| `chapter` | `id`、`comic_id`、`title`、`position`、创建／修改时间 | comic 外键删除级联；名称非空；`UNIQUE(comic_id, position)` |
+| `page` | `id`；`chapter_id`、`position`、`unit_revision`；图片组成字段；创建／修改时间 | chapter 外键，父级删除级联；`UNIQUE(chapter_id, position)`；位置非负 |
 | `unit` | `id`；`page_id`、`position`；坐标、三项布尔值、双阶段正文、创建／修改时间 | page 外键，父级删除级联；`UNIQUE(page_id, position)`；坐标范围和布尔值检查 |
-| `work_position` | `comic_id`；`last_opened_at`、可空 `page_id` / `unit_id`、`mode` | 每个 comic 最多一行；comic 外键删除级联；页面／单元简单外键可置空；mode 限于三种编辑模式 |
+| `work_position` | `chapter_id`；`last_opened_at`、可空 `page_id` / `unit_id`、`mode` | 每个 chapter 最多一行；chapter 外键删除级联；页面／单元简单外键可置空；mode 限于三种编辑模式 |
 | `application_preference` | 固定单行键 `singleton = 1`；非空 `payload` | payload 为经过 Rust 类型校验的完整偏好 JSON，不提供任意 key/value 写入接口 |
 
 - page.unit_revision 作为内部并发校验元数据：新页面为 0，单元集合每次实际事务变更递增一次，上界为 JavaScript 最大安全整数；它不属于可编辑业务字段、派生统计或交换内容，不增加新表。具体更新范围见[编辑保存与离开行为](./editor-save.md)。
@@ -76,7 +78,7 @@
 - UUID 格式、Unicode 空白规则、坐标有限性、序号表示范围由 Rust 边界校验；数据库用 `NOT NULL`、主外键、唯一及可执行的数值检查兜底。不要把 SQLite 的 ASCII trim 检查宣称为完整 Unicode 校验。
 - 自有业务表采用 `STRICT`，使用其支持的 `TEXT`、`INTEGER` 和 `REAL`，布尔值额外约束为 0/1，不声明 `BOOLEAN` 类型。所有文本主键显式 `NOT NULL`。实际 SQLite 版本使用锁定且经过运行验证的版本；不能为兼容过旧运行时而静默取消约束。[STRICT 表](https://www.sqlite.org/stricttables.html)、[数据类型](https://www.sqlite.org/datatype3.html)
 - 在事务开始前为每个数据库连接启用并检查外键；在事务内更改开关不生效。模式迁移通过工程规范的版本化迁移执行，SQLx 类型映射与运行时行为由编译检查及数据库回归验证。[外键启用](https://www.sqlite.org/foreignkeys.html#enabling_foreign_key_support)
-- 所属关系不能通过普通字段编辑变更；page 不在 comic 间移动，unit 不在 page 间移动。首期既定操作只在当前父对象内增删和重排。
+- 所属关系不能通过普通字段编辑变更；page 不在 chapter 间移动，unit 不在 page 间移动。首期既定操作只在当前父对象内增删和重排。
 - 不额外持久化最终文本、计数、百分比、封面 ID、已完成状态、隐藏删除链或服务端组织关系。查询可以聚合产生返回值。
 
 ## 5. 顺序变更
@@ -96,11 +98,11 @@
 
 ## 6. 工作位置与偏好
 
-- comic 创建时可没有工作位置行。首次打开后记录 `last_opened_at`；没有已保存位置时按既定规则从第一页、翻译模式进入，没有页面则进入 detail。
-- `page_id = null` 表示没有可定位页面；有页面但没有所选单元时 `unit_id = null`。有 unit 引用必须有对应 page，且两者确实属于该 comic；Rust 用例在事务中检查这一跨表归属。
-- 简单外键只保障引用存在，不能证明归属正确。避免给包含 comic 主键的复合外键直接套用 `ON DELETE SET NULL`。数据库删除动作的触发顺序不作为工作位置恢复逻辑；本方案不依赖可能被中间级联顺序触发的跨引用 CHECK，先由用例显式清理与修复。[外键与删除动作](https://www.sqlite.org/foreignkeys.html)
+- chapter 创建时可没有工作位置行。首次打开后记录 `last_opened_at`；没有已保存位置时按既定规则从第一页、翻译模式进入，没有页面则进入 detail。
+- `page_id = null` 表示没有可定位页面；有页面但没有所选单元时 `unit_id = null`。有 unit 引用必须有对应 page，且两者确实属于该 chapter；Rust 用例在事务中检查这一跨表归属。
+- 简单外键只保障引用存在，不能证明归属正确。避免给包含 chapter 主键的复合外键直接套用 `ON DELETE SET NULL`。数据库删除动作的触发顺序不作为工作位置恢复逻辑；本方案不依赖可能被中间级联顺序触发的跨引用 CHECK，先由用例显式清理与修复。[外键与删除动作](https://www.sqlite.org/foreignkeys.html)
 - 删除所记 unit 前清除其引用；删除所记 page 前清除对应单元定位，在删除和重排后的同一事务中回退到剩余第一页，无页时将页面引用置空。不选中另一个碰巧占据旧序号的 unit。
-- 清理工作引用不更新 `last_opened_at`；内容删除依照第 3 节更新父级内容时间。删除 comic 时一并删除工作位置，不删除全局偏好。
+- 清理工作引用不更新 `last_opened_at`；内容删除依照第 3 节更新父级内容时间。删除 chapter 时一并删除工作位置，不删除全局偏好。
 - 偏好 JSON 由有明确字段的 Rust 数据结构表达，包括快捷键、特殊字符及其收藏／顺序、重定位和标记透明度；界面固定浅色，不保存主题；读取后返回完整有效值。无已存偏好时使用统一默认值，首次修改后持久化。
 - JSON 字段升级纳入数据库版本迁移；解析或升级失败不得把原设置静默覆写为默认值。具体快捷键动作、字符项和重定位参数见 [IMPLEMENTATION.md](../IMPLEMENTATION.md#32-偏好与默认值)。
 - 工作位置和偏好均由 Rust 写入 SQLite，不建立 localStorage 的平行持久化来源；两者不随项目交换包导出。
@@ -113,3 +115,11 @@
 - TypeScript 纯数据和 Props 必须用 `type`；仅含函数签名的能力接口用 `interface`，且有实际消费者才引入。
 - Props 优先接收有效、非空的具体内容。无页面、无选中单元、未加载和失败是路由视图状态，可通过分支或判别联合表示，不传空 UUID、伪造 page/unit 或强制类型断言。
 - 页面数据按需要查询，不因为有完整模型就要求 home 一次加载全部图片与 20,000 个单元。聚合统计和加载粒度由 IPC 决策确定，不预建冗余权威模型。
+
+## 8. 漫画与章节管理
+
+创建漫画与首章必须同一事务提交；追加章节校验所属漫画和完整章序基线。漫画资料仅含标题及作者，章节资料仅含名称。移章同时校验两侧完整章序，在一个事务中调整归属、源顺序和两侧内容时间，目标追加到末尾。章节重排使用与页序相同的临时非负区间方案，仅实际变序章节更新时间。移章和章序变化不更新页面／单元或单元保存版本。
+
+修改章节内容沿 chapter 更新 comic 内容时间；修改漫画资料只更新 comic。工作位置仍按 chapter 保存；漫画最近工作和封面通过所属章节查询得到，不新增可编辑计数或最近章节副本。删除 chapter 修复余下章序，空漫画保留；删除 comic 级联删除全部章节内容和工作位置。
+
+提交核实范围包含受影响漫画、完整章序，以及操作涉及的页面、单元、工作位置。跨漫画移动必须同时核实两侧，未知结果不重放写入。旧库迁移通过新增版本化事务重建关系并搬入全部原记录，保持 page/unit 身份及图片引用；失败保留旧库，关闭连接后备份和恢复的测试覆盖重试升级。

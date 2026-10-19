@@ -29,7 +29,7 @@ fn publish(
     target: &ImageImportTarget,
     files: Vec<PreparedFile>,
 ) -> AppResult<Vec<NewPage>> {
-    let comic_id = Uuid::parse_str(target.comic_id()).map_err(|_| AppError::InvalidInput)?;
+    let chapter_id = Uuid::parse_str(target.chapter_id()).map_err(|_| AppError::InvalidInput)?;
 
     let mut pages = Vec::new();
 
@@ -47,13 +47,13 @@ fn publish(
 
         let reference = harness
             .resource
-            .publish(&file.image, comic_id, page_id)
+            .publish(&file.image, chapter_id, page_id)
             .map_err(|_| AppError::Storage)?;
 
         harness.image_task.update(task_id, |task| {
             task.published.push(PublishedImage {
                 reference: reference.clone(),
-                comic_id,
+                chapter_id,
                 page_id,
             });
 
@@ -85,7 +85,7 @@ fn rollback_files(harness: &Harness, task_id: &str, error: &AppError) -> AppResu
     for image in published {
         if harness
             .resource
-            .remove_unreferenced(&image.reference, image.comic_id, image.page_id)
+            .remove_unreferenced(&image.reference, image.chapter_id, image.page_id)
             .is_err()
         {
             pending.push(image);
@@ -117,10 +117,14 @@ async fn apply(
     clear_units: bool,
 ) -> AppResult<Vec<Page>> {
     match target {
-        ImageImportTarget::Append { comic_id, baseline } => {
-            page::append_pages(harness.database().await?, comic_id, baseline, pages).await
-        }
-        ImageImportTarget::Replace { comic_id, baseline } => {
+        ImageImportTarget::Append {
+            chapter_id,
+            baseline,
+        } => page::append_pages(harness.database().await?, chapter_id, baseline, pages).await,
+        ImageImportTarget::Replace {
+            chapter_id,
+            baseline,
+        } => {
             let page = pages
                 .first()
                 .filter(|_| pages.len() == 1)
@@ -129,7 +133,7 @@ async fn apply(
             Ok(vec![
                 page::replace_page_image(
                     harness.database().await?,
-                    comic_id,
+                    chapter_id,
                     baseline.clone(),
                     page.image.clone(),
                     clear_units,
@@ -220,10 +224,15 @@ pub async fn confirm(
             )?;
 
             harness.image_task.update(&task_id, |task| {
-                if let ImageImportTarget::Replace { comic_id, baseline } = &target {
+                if let ImageImportTarget::Replace {
+                    chapter_id,
+                    baseline,
+                } = &target
+                {
                     task.obsolete.push(PublishedImage {
                         reference: baseline.image_reference.clone(),
-                        comic_id: Uuid::parse_str(comic_id).map_err(|_| AppError::InvalidInput)?,
+                        chapter_id: Uuid::parse_str(chapter_id)
+                            .map_err(|_| AppError::InvalidInput)?,
                         page_id: Uuid::parse_str(&baseline.id)
                             .map_err(|_| AppError::InvalidInput)?,
                     });

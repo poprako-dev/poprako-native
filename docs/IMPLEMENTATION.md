@@ -4,9 +4,21 @@
 
 界面依据与复核见[界面来源对照](./contract/ui-reference.md)。模型存储、保存协调、图片资源及迁移验收分别见 [docs/contract](./contract)。
 
+## 漫画与章节层级（issue #3）
+
+本次以真实 `comic → chapter → page → unit` 替代旧单项目层级。Comic 保存标题、作者；Chapter 保存名称、所属漫画、顺序。旧 comic 各生成一部漫画与一个章节，原 ID 成为章节 ID；原副标题成为章节名称，为空时「第1章」。原图、页面／单元身份、工作位置和时间保留。
+
+- Home 漫画行展开章节；漫画按最近章节工作时间、内容时间、ID 排序。章节按保存章序展示，新增追加末尾；章序写入保留完整基线校验，Home 不提供上下排序按钮。漫画及首章原子创建，允许无图片首章；删除或移走最后一章保留空漫画。
+- 详情与 Translator 路由为 `/chapter/$chapterId` 及其 translator 子路由；编辑、搜索、页管理、工作位置均以 chapter ID 为范围。
+- 漫画封面取章序中首个有页面章节的第一页；最近工作取最近打开章节，无历史时取第一章。空章进入详情，空漫画不可进入 Translator。展开不写工作位置。
+- Rust 区分 ComicMetadata、ChapterMetadata、NewComic、ComicInfo、ChapterInfo、ChapterDetail；list_comic_infos 分页聚合漫画，list_chapter_infos 按漫画返回章序摘要。create_comic 创建漫画与首章；create_chapter、reorder_chapters、move_chapter、update/delete 两层操作各有明确范围。生成 IPC 与命令权限同步更新。
+- 移章同时校验两侧章序，保存章节身份和全部内容，采用目标漫画资料；修改章节内容逐级更新漫画时间。提交核实支持多漫画、完整章序和所涉内容，不把丢失响应当作回滚。
+- 导入目标为新漫画及首章、已有漫画的新章节、已有章节。前两者在准备完成后整批提交；已有漫画资料不被来源覆盖。新章节预览明确展示目标漫画及可编辑章节名称。
+- 以下 PRK v1 的 `comic.title/subtitle/author` 是冻结的单章交换字段，分别映射当前漫画标题、章节名称、漫画作者。JSON 字段、format_version 和历史方言不改名，旧文件不代表多章节包；不增加整部漫画导出。
+
 ## 1. 实施边界
 
-- 只做 home、comic detail、translator，Windows x64／macOS arm64，完全本地运行；保留已经确认的翻校、搜索替换、交换和图片管理能力。
+- 只做 home、chapter detail、translator，Windows x64／macOS arm64，完全本地运行；保留已经确认的翻校、搜索替换、交换和图片管理能力。
 - 业务归路由，多个页面的共享业务提升至共同父路由；Rust 承担 I/O，前端只通过 bridge 使用生成契约，不保留重复的 API/model 示例。
 - 完成范围以源码和实际检查记录为准，不能用规格替代运行门禁。提交与发布属于独立交付步骤。
 - 技术失败优先在既定规范内解决，不自动升级 Tailwind 4.1、取消 Orchestra、关闭类型检查或扩大支持平台。确实无法满足已有要求时报告具体冲突，而非再拆一轮偏好问卷。
@@ -65,7 +77,7 @@
 
 | 输入 | 本地映射 |
 | --- | --- |
-| server 根 comic_title、chapter_subtitle | 项目标题、副标题；作者缺失为空，导入预览可修改资料 |
+| server 根 comic_title、chapter_subtitle | 漫画标题、章节名称；作者缺失为空，新漫画导入预览可修改资料 |
 | Web 根 comicTitle、chapterSubtitle | 同上，先统一命名；exportedAt 等导出元信息不写入本地内容时间 |
 | server/Web 页和单元序号 | 页序须连续完整；旧单元序号允许有间隔，唯一非负后按序重编为连续序号 |
 | 双阶段文本和校对确认 | 分别映射，不按当前模式过滤；合法的缺失／null 文本转为空字符串 |
@@ -101,7 +113,7 @@ Exported by PopRaKo Native
 - LP 输出预检拒绝 NUL 和会被页／单元解析器识别为结构或畸形结构的正文行；不发明私有转义让既有工具误读。原生 PRK 继续用 JSON 转义保留其能够表达的正文。语法依据为前述固定 server 版本的 `src/complex/chapter_port/export_translation.rs` 与 `src/complex/chapter_port/import_translation/label_plus.rs`。
 - LP 导出只写最终文本和四位小数坐标，是有损兼容格式；空行、精度、双阶段文本、关注与校对确认不能靠 LP 完整往返。PRK 始终是本地完整内容来源。
 - LP 的结构行与正文存在歧义，按参考解析器的识别规则预检；无法无歧义表示的正文返回具体页面／单元错误，不输出会被当成其他页面或单元的损坏 LP，也不静默改写正文。两文件 ZIP 的这项限制需要在导出预检结果中说明。
-- 两种 ZIP 均含 translation.prk.json、translation.lp.txt；含图包再含全部 images/ 原图。没有页面的 comic 可以输出资料、空页面数组和合法的空 LP 文档；已有页没有 unit 仍保留其页块。
+- 两种 ZIP 均含 translation.prk.json、translation.lp.txt；含图包再含全部 images/ 原图。没有页面的 chapter 可以输出资料、空页面数组和合法的空 LP 文档；已有页没有 unit 仍保留其页块。
 - 只识别一个明确的根译文入口。PRK 优先，存在但损坏就失败；不能自动退回 LP。旧 assignments.txt 可忽略，不转为成员或 workflow。
 - 归一化条目名称后拒绝重复／大小写或 NFC 冲突、绝对路径、..、驱动器／UNC 路径、符号链接及加密条目。逻辑路径用于匹配，实际解压写入生成的 staging 文件名，不把条目路径直接拼到文件系统。
 - 只解压被选定译文引用的图片；未知附加文件不执行、不解压。核对 CRC、实际展开字节、声明长度和可用磁盘；限制解析元数据的工作空间，不仅按压缩包体积或压缩率推断安全。
@@ -115,18 +127,18 @@ Exported by PopRaKo Native
 
 | 用例组 | 输入 | 输出与原子性 |
 | --- | --- | --- |
-| list_comic_infos | 已枚举排序、分页游标、页大小 | 资料摘要、派生进度、封面句柄、最近位置；默认最近打开、其次最近修改、ID 打破平局，50 项一页 |
-| get_comic_detail | comic ID | 资料、全部页面摘要及派生计数；不返回全项目 unit 正文或原图字节 |
-| create_comic / update_comic_metadata / delete_comic | 明确的资料或目标 ID | 空项目允许；资料规范化；删除内容及工作位置原子完成，文件清理按资源契约后置 |
-| reorder_pages / remove_pages | comic ID、完整顺序或选中 ID 集合、读到的页序基线 | 校验实际集合和基线，事务重排／删除并修复工作位置；不信任只显示出来的列表 |
+| list_chapter_infos | comic ID | 章节摘要、派生进度、封面和最近工作；按保存章序返回 |
+| get_chapter_detail | chapter ID | 资料、全部页面摘要及派生计数；不返回全项目 unit 正文或原图字节 |
+| create_chapter / update_chapter_metadata / delete_chapter | 所属漫画、章序基线、章节名称或目标 ID | 空章允许；名称规范化；删除内容及工作位置原子完成，文件清理按资源契约后置 |
+| reorder_pages / remove_pages | chapter ID、完整顺序或选中 ID 集合、读到的页序基线 | 校验实际集合和基线，事务重排／删除并修复工作位置；不信任只显示出来的列表 |
 | get_page_editor | page ID | 完整单元集合、unit_revision、图片句柄和显示尺寸；完成前不允许提交快照 |
 | save_page_units | page ID、expected_revision、完整有序单元快照 | 规范化后的已提交单元、版本、时间；差异写入及父级时间同一事务 |
-| get_work_position / update_work_position | comic ID；明确的页／单元定位和模式 | 校验归属，真实缺失可为 null；浏览不改变内容时间 |
-| search_units | comic ID、文本阶段、查询串 | 先保存当前草稿，返回带页面版本的命中；大小写敏感字面子串、超过 100 条报错 |
+| get_work_position / update_work_position | chapter ID；明确的页／单元定位和模式 | 校验归属，真实缺失可为 null；浏览不改变内容时间 |
+| search_units | chapter ID、文本阶段、查询串 | 先保存当前草稿，返回带页面版本的命中；大小写敏感字面子串、超过 100 条报错 |
 | replace_unit_texts | 选中 ID、阶段、规则、预览涉及的页版本 | 整批事务提交，返回实际变更数及受影响页版本；统计来自实际变更，不把请求数当结果 |
 | prepare_import / confirm_import | 来源授权句柄、目标、新建资料或覆盖方式；确认用预览句柄 | Rust 持有已解析快照与受管副本；确认后整体应用，过期预览不写入 |
-| prepare_page_images / confirm_page_images | 目标 comic/page、增页或换图意图、来源句柄、保留／清空选择 | 完整准备与预览后提交；换图保留 page 身份，清空单元时推进 unit_revision |
-| export_comic | comic ID、译文／含图枚举、目标授权句柄 | 后台任务；返回可查询 task ID，不直接返回成功下载 |
+| prepare_page_images / confirm_page_images | 目标 chapter/page、增页或换图意图、来源句柄、保留／清空选择 | 完整准备与预览后提交；换图保留 page 身份，清空单元时推进 unit_revision |
+| export_archive | chapter ID、译文／含图枚举、目标授权句柄 | 后台任务；返回可查询 task ID，不直接返回成功下载 |
 | get_preference / update_preference | 完整强类型偏好及本会话读到的偏好基线 | 事务比较基线再写单行 JSON，返回规范化完整偏好；不另加偏好版本表，不暴露任意 key/value API |
 | choose_import_source / choose_export_destination | 有限用途枚举 | Rust 打开原生对话框；返回 cancelled 或 selected 判别联合，selected 为短期授权句柄 |
 | get_task / cancel_task | 当前进程的 task ID | 权威阶段与最终结果；取消是请求，不等于回滚；事件可丢失，查询可恢复状态 |
@@ -146,7 +158,7 @@ Exported by PopRaKo Native
 
 ### 3.2 偏好与默认值
 
-- 固定浅色；旧偏好中的 system／light／dark 经完整校验后移除 theme，其余设置保留，损坏数据不重置。编辑模式属于每个 comic 工作位置，不混进全局偏好。
+- 固定浅色；旧偏好中的 system／light／dark 经完整校验后移除 theme，其余设置保留，损坏数据不重置。编辑模式属于每个 chapter 工作位置，不混进全局偏好。
 - 快捷键由有限 action → binding 映射组成，binding 是 unbound 或 chord 判别联合；提供恢复默认和冲突检查。默认键位、顺序和动作直接复刻 `poprako-web@46dd776` 的 `src/route/_authenticated/translator/business/preference/use-shortcuts.ts`，Windows 与 macOS 均使用明确的 Ctrl，不转换为 Cmd。
 - Ctrl＋M 切换模式，Ctrl＋L 切换重定位，Ctrl＋X 切换标记显示／淡化，Tab／Shift＋Tab 循环选择下一个／上一个标记，Ctrl＋U／D 上一／下一页，Ctrl＋Q 输入最近一次符号（未使用过时取字符表首项），Alt＋1／2／3 输入前三个优选符号，Ctrl＋S 保存。标记导航在首尾循环，切页停在边界；Escape 取消单元选择。Ctrl＋X 与工具栏眼睛按钮共享暂态，不改写 marker_opacity 偏好。
 - 单元输入框中快捷键正常生效，选择标记后滚动并聚焦输入末尾；符号插入替换选区，在 DOM 提交时恢复光标并消费请求，返回页面不会重放，也支持从画布向已选单元插入。最近符号、标记显示／淡化等工作台状态跨页保留。其他输入框、组合输入、AltGr、已处理事件、弹窗、只读统计展开、切页锁和提交待核实状态不拦截工作台键位。WKWebView 会把正常 Option 数字键报为 keyCode 229；此时按 code 匹配，并以实际 composition 状态保护正在组合的输入。只读保留标记导航、切页、模式和透明度切换，屏蔽编辑操作。
@@ -223,3 +235,9 @@ UI 必须直接对照固定版本参考组件迁移：Translator 以 Web 为准�
 - macOS 包中包含英文、简体中文 `InfoPlist.strings`，声明开发语言、本地化语言与 Finder 本地化显示名称。启动时通过 Foundation 的安全接口读取系统解析后的 `CFBundleDisplayName`，同步 Tauri package name 与窗口标题，使默认应用菜单及关于窗口使用同一名称。Foundation 已在依赖树中，新增仅为 macOS 的显式依赖，不引入 unsafe 代码。[Apple 本地化 Info.plist 说明](https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/AboutInformationPropertyListFiles.html)
 - Linux 的 deb／rpm 使用统一 desktop 模板，包含 `Name=PopRaKo Native`、`Name[en]=PopRaKo Native`、`Name[zh_CN]=白杨子 N`；AppImage 通过 Tauri 的 Debian 数据目录生成流程复用该模板。[Desktop Entry 本地化规范](https://specifications.freedesktop.org/desktop-entry/latest/localized-keys.html)
 - Windows 默认仅生成 NSIS 包，支持 English／SimpChinese，安装时按系统语言选择。安装完成后设置应用列表 DisplayName，并将本安装拥有的开始菜单／桌面快捷方式调整到相应名称；处理 Finish 页晚于 POSTINSTALL 创建的桌面快捷方式、重复安装和卸载清理，升级时保留快捷方式。注册表身份保持英文固定名称。系统语言切换后已有快捷方式／应用列表不会自动改名，需按新语言重新安装；前端名称始终保持中文。钩子依赖现有 `poprako-native.exe` 和默认开始菜单根目录，改变 default-run 或 startMenuFolder 时需同步修改。[Tauri NSIS 配置说明](https://v2.tauri.app/reference/config/#nsisconfig)
+
+## Issue #3 验证记录
+
+层级升级使用版本化迁移 `202610190001_comic_chapter.sql`；旧迁移不改写。宿主自动化验证覆盖旧库无损升级、失败回滚、关闭连接后的备份恢复、重启一致性、创建首章原子性、章序冲突、移章后原图与工作位置保持，以及 PRK v1 使用目标漫画资料。
+
+Windows 10 22H2 x64、最低 macOS 13.3 arm64 的安装／升级及本次 Home 原生交互仍需目标环境实测；本记录不宣称平台门禁或完整性能验收通过。

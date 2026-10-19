@@ -22,7 +22,7 @@ impl EditorMode {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Type)]
 pub struct WorkPosition {
-    pub comic_id: String,
+    pub chapter_id: String,
     pub last_opened_at: i64,
     pub page_id: Option<String>,
     pub unit_id: Option<String>,

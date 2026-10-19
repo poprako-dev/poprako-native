@@ -6,7 +6,7 @@ use image::DynamicImage;
 use tempfile::TempDir;
 use uuid::Uuid;
 
-use crate::data::comic::ComicMetadata;
+use crate::data::comic::{ComicMetadata, NewComic};
 use crate::data::editor::{SavePageUnits, UnitDraft};
 use crate::data::image_import::{ImageImportTarget, ImageTaskPhase};
 use crate::data::page::PageBaseline;
@@ -15,24 +15,26 @@ use crate::implementation::coordinator::CommitFault;
 use crate::implementation::image_task::{commit, name, prepare, recovery};
 use crate::model::page::Page;
 use crate::result::{AppError, AppResult};
-use crate::usecase::{comic, editor};
+use crate::usecase::{chapter, editor};
 
 pub async fn setup() -> Result<(TempDir, Arc<Harness>, String), Box<dyn Error>> {
     let directory = tempfile::tempdir()?;
 
     let harness = Arc::new(Harness::open(directory.path().join("managed"))?);
 
-    let comic = comic::create_comic(
+    let chapter = crate::usecase::comic::create_comic(
         harness.database().await?,
-        ComicMetadata {
-            title: "Image workflow".to_owned(),
-            subtitle: String::new(),
-            author: String::new(),
+        NewComic {
+            comic: ComicMetadata {
+                title: "Image workflow".to_owned(),
+                author: String::new(),
+            },
+            chapter_title: "第1章".to_owned(),
         },
     )
     .await?;
 
-    Ok((directory, harness, comic.id))
+    Ok((directory, harness, chapter.id))
 }
 
 fn baseline(page: &Page) -> PageBaseline {
@@ -82,7 +84,7 @@ pub async fn stage(
 
 #[tokio::test]
 async fn append_preserves_bytes_and_natural_order() -> Result<(), Box<dyn Error>> {
-    let (directory, harness, comic_id) = setup().await?;
+    let (directory, harness, chapter_id) = setup().await?;
 
     let a = directory.path().join("10.png");
 
@@ -97,7 +99,7 @@ async fn append_preserves_bytes_and_natural_order() -> Result<(), Box<dyn Error>
     let task_id = stage(
         &harness,
         ImageImportTarget::Append {
-            comic_id: comic_id.clone(),
+            chapter_id: chapter_id.clone(),
             baseline: Vec::new(),
         },
         vec![a, b],
@@ -125,7 +127,7 @@ async fn append_preserves_bytes_and_natural_order() -> Result<(), Box<dyn Error>
 
     let path = harness.resource.resolve(
         &pages[0].image.reference,
-        Uuid::parse_str(&comic_id)?,
+        Uuid::parse_str(&chapter_id)?,
         Uuid::parse_str(&pages[0].id)?,
     )?;
 
@@ -156,7 +158,7 @@ async fn append_preserves_bytes_and_natural_order() -> Result<(), Box<dyn Error>
 
 #[tokio::test]
 async fn stale_revision_rejects_whole_image_replacement() -> Result<(), Box<dyn Error>> {
-    let (directory, harness, comic_id) = setup().await?;
+    let (directory, harness, chapter_id) = setup().await?;
 
     let source = directory.path().join("source.png");
 
@@ -165,7 +167,7 @@ async fn stale_revision_rejects_whole_image_replacement() -> Result<(), Box<dyn 
     let task = stage(
         &harness,
         ImageImportTarget::Append {
-            comic_id: comic_id.clone(),
+            chapter_id: chapter_id.clone(),
             baseline: Vec::new(),
         },
         vec![source.clone()],
@@ -179,7 +181,7 @@ async fn stale_revision_rejects_whole_image_replacement() -> Result<(), Box<dyn 
     let replacement = stage(
         &harness,
         ImageImportTarget::Replace {
-            comic_id: comic_id.clone(),
+            chapter_id: chapter_id.clone(),
             baseline: baseline(page),
         },
         vec![source],
@@ -189,7 +191,7 @@ async fn stale_revision_rejects_whole_image_replacement() -> Result<(), Box<dyn 
     editor::save_page_units(
         harness.database().await?,
         SavePageUnits {
-            comic_id: comic_id.clone(),
+            chapter_id: chapter_id.clone(),
             page_id: page.id.clone(),
             expected_revision: 0,
             units: vec![UnitDraft {
@@ -211,7 +213,7 @@ async fn stale_revision_rejects_whole_image_replacement() -> Result<(), Box<dyn 
         Err(AppError::Conflict)
     );
 
-    let current = editor::get_page_editor(harness.database().await?, &comic_id, &page.id).await?;
+    let current = editor::get_page_editor(harness.database().await?, &chapter_id, &page.id).await?;
 
     assert_eq!(current.page.image, page.image);
 
@@ -230,7 +232,7 @@ async fn stale_revision_rejects_whole_image_replacement() -> Result<(), Box<dyn 
 #[tokio::test]
 async fn partial_prepare_failure_and_early_cancel_release_resources() -> Result<(), Box<dyn Error>>
 {
-    let (directory, harness, comic_id) = setup().await?;
+    let (directory, harness, chapter_id) = setup().await?;
 
     let good = directory.path().join("1.png");
 
@@ -241,7 +243,7 @@ async fn partial_prepare_failure_and_early_cancel_release_resources() -> Result<
     std::fs::write(&bad, b"not an image")?;
 
     let target = ImageImportTarget::Append {
-        comic_id,
+        chapter_id,
         baseline: Vec::new(),
     };
 
@@ -287,7 +289,7 @@ async fn partial_prepare_failure_and_early_cancel_release_resources() -> Result<
 #[tokio::test]
 async fn unknown_commit_preserves_published_originals_and_blocks_gc() -> Result<(), Box<dyn Error>>
 {
-    let (directory, harness, comic_id) = setup().await?;
+    let (directory, harness, chapter_id) = setup().await?;
 
     let source = directory.path().join("source.png");
 
@@ -296,7 +298,7 @@ async fn unknown_commit_preserves_published_originals_and_blocks_gc() -> Result<
     let task_id = stage(
         &harness,
         ImageImportTarget::Append {
-            comic_id: comic_id.clone(),
+            chapter_id: chapter_id.clone(),
             baseline: Vec::new(),
         },
         vec![source],
@@ -325,7 +327,7 @@ async fn unknown_commit_preserves_published_originals_and_blocks_gc() -> Result<
         Err(AppError::Busy)
     );
 
-    let detail = comic::get_comic_detail(harness.database().await?, &comic_id).await?;
+    let detail = chapter::get_chapter_detail(harness.database().await?, &chapter_id).await?;
 
     let page = &detail.pages[0].page;
 
@@ -334,7 +336,7 @@ async fn unknown_commit_preserves_published_originals_and_blocks_gc() -> Result<
             .resource
             .resolve(
                 &page.image.reference,
-                Uuid::parse_str(&comic_id)?,
+                Uuid::parse_str(&chapter_id)?,
                 Uuid::parse_str(&page.id)?
             )
             .is_ok()

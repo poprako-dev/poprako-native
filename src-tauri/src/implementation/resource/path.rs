@@ -21,10 +21,10 @@ pub fn valid_id(value: &str) -> Result<Uuid, ImageError> {
 /// Requires a canonical immutable original reference scoped to its owning page.
 pub fn original_reference(
     reference: &str,
-    comic_id: Uuid,
+    chapter_id: Uuid,
     page_id: Uuid,
 ) -> Result<PathBuf, ImageError> {
-    valid_id(&comic_id.to_string())?;
+    valid_id(&chapter_id.to_string())?;
 
     valid_id(&page_id.to_string())?;
 
@@ -32,7 +32,7 @@ pub fn original_reference(
 
     if parts.len() != 4
         || parts[0] != "library"
-        || parts[1] != comic_id.to_string()
+        || parts[1] != chapter_id.to_string()
         || parts[2] != page_id.to_string()
     {
         return Err(ImageError::InvalidReference);

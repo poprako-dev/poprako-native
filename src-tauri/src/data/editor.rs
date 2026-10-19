@@ -35,7 +35,7 @@ impl From<&Unit> for UnitDraft {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Type)]
 #[serde(deny_unknown_fields)]
 pub struct SavePageUnits {
-    pub comic_id: String,
+    pub chapter_id: String,
     pub page_id: String,
     pub expected_revision: i64,
     pub units: Vec<UnitDraft>,

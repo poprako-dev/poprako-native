@@ -1,16 +1,16 @@
 use poprako_orchestra::Oper;
 
-use crate::data::import::{ExistingComicImport, NewComicImport};
-use crate::model::comic::Comic;
+use crate::data::import::{ExistingChapterImport, NewChapterImport};
+use crate::model::chapter::Chapter;
 
 #[derive(Oper)]
-#[oper(output = Comic)]
-pub struct CreateImportedComic {
-    pub input: NewComicImport,
+#[oper(output = Chapter)]
+pub struct CreateImportedChapter {
+    pub input: NewChapterImport,
 }
 
 #[derive(Oper)]
 #[oper(output = Vec<String>)]
-pub struct ApplyComicImport {
-    pub input: ExistingComicImport,
+pub struct ApplyChapterImport {
+    pub input: ExistingChapterImport,
 }

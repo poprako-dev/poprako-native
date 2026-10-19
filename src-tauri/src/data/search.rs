@@ -11,7 +11,7 @@ pub enum TextStage {
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 #[serde(deny_unknown_fields)]
 pub struct SearchUnits {
-    pub comic_id: String,
+    pub chapter_id: String,
     pub stage: TextStage,
     pub query: String,
 }
@@ -43,7 +43,7 @@ pub struct UnitReplacement {
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 #[serde(deny_unknown_fields)]
 pub struct ReplaceUnits {
-    pub comic_id: String,
+    pub chapter_id: String,
     pub stage: TextStage,
     pub units: Vec<UnitReplacement>,
 }
