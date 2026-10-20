@@ -1,4 +1,4 @@
-use crate::data::comic::ComicMetadata;
+use crate::data::archive::ArchiveComic;
 use crate::data::editor::UnitDraft;
 use crate::data::page::{NewPage, PageBaseline};
 
@@ -9,9 +9,30 @@ pub struct PreparedImportPage {
 }
 
 #[derive(Debug, Clone)]
-pub struct NewComicImport {
-    pub comic_id: String,
-    pub metadata: ComicMetadata,
+pub enum ImportParent {
+    New {
+        comic_id: String,
+    },
+    Existing {
+        comic_id: String,
+        baseline: Vec<String>,
+    },
+}
+
+impl ImportParent {
+    #[must_use]
+    pub fn comic_id(&self) -> &str {
+        match self {
+            Self::New { comic_id } | Self::Existing { comic_id, .. } => comic_id,
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct NewChapterImport {
+    pub parent: ImportParent,
+    pub chapter_id: String,
+    pub metadata: ArchiveComic,
     pub pages: Vec<PreparedImportPage>,
 }
 
@@ -22,8 +43,8 @@ pub enum ImportMode {
 }
 
 #[derive(Debug, Clone)]
-pub struct ExistingComicImport {
-    pub comic_id: String,
+pub struct ExistingChapterImport {
+    pub chapter_id: String,
     pub baseline: Vec<PageBaseline>,
     pub pages: Vec<Vec<UnitDraft>>,
     pub mode: ImportMode,

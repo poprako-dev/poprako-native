@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO comic (id, title, author, created_at, updated_at) VALUES (?, 'original', '', 1, 1)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "be73a1d8fe1137d8539f92a1bca18912ec9f04562959915554386fb6aa5d663e"
+}

@@ -23,7 +23,7 @@ pub struct PreparedFile {
 #[derive(Clone)]
 pub struct PublishedImage {
     pub reference: String,
-    pub comic_id: Uuid,
+    pub chapter_id: Uuid,
     pub page_id: Uuid,
 }
 

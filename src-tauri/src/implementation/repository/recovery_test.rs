@@ -3,15 +3,15 @@ use std::path::PathBuf;
 
 use uuid::Uuid;
 
-use crate::data::comic::ComicMetadata;
+use crate::data::archive::ArchiveComic;
 use crate::data::editor::{PageEditor, SavePageUnits, UnitDraft};
-use crate::data::import::{NewComicImport, PreparedImportPage};
+use crate::data::import::{NewChapterImport, PreparedImportPage};
 use crate::data::page::NewPage;
 use crate::implementation::coordinator::database;
 use crate::implementation::coordinator::{CommitFault, SqliteCoordinator};
 use crate::model::work_position::{EditorMode, WorkPosition};
 use crate::result::AppError;
-use crate::usecase::{comic, editor, import, work_position};
+use crate::usecase::{chapter, editor, import, work_position};
 use crate::value::image::{Image, ImageFormat};
 
 async fn fixture() -> Result<(SqliteCoordinator, PathBuf, PageEditor), Box<dyn Error>> {
@@ -23,11 +23,14 @@ async fn fixture() -> Result<(SqliteCoordinator, PathBuf, PageEditor), Box<dyn E
 
     let unit_id = Uuid::new_v4().to_string();
 
-    let imported = import::create_comic_from_import(
+    let imported = import::create_chapter_from_import(
         &coordinator,
-        NewComicImport {
-            comic_id: Uuid::new_v4().to_string(),
-            metadata: ComicMetadata {
+        NewChapterImport {
+            parent: crate::data::import::ImportParent::New {
+                comic_id: Uuid::new_v4().to_string(),
+            },
+            chapter_id: Uuid::new_v4().to_string(),
+            metadata: ArchiveComic {
                 title: "Recovery".to_owned(),
                 subtitle: String::new(),
                 author: String::new(),
@@ -61,7 +64,7 @@ async fn fixture() -> Result<(SqliteCoordinator, PathBuf, PageEditor), Box<dyn E
     work_position::update_work_position(
         &coordinator,
         WorkPosition {
-            comic_id: imported.id.clone(),
+            chapter_id: imported.id.clone(),
             page_id: Some(page_id.clone()),
             unit_id: Some(unit_id),
             mode: EditorMode::Translation,
@@ -77,7 +80,7 @@ async fn fixture() -> Result<(SqliteCoordinator, PathBuf, PageEditor), Box<dyn E
 
 fn clear_request(before: &PageEditor) -> SavePageUnits {
     SavePageUnits {
-        comic_id: before.page.comic_id.clone(),
+        chapter_id: before.page.chapter_id.clone(),
         page_id: before.page.id.clone(),
         expected_revision: before.page.unit_revision,
         units: Vec::new(),
@@ -98,7 +101,7 @@ async fn committed_receipt_loss_recovers_exact_saved_state() -> Result<(), Box<d
 
     assert!(!coordinator.is_halted());
 
-    let detail = comic::get_comic_detail(&coordinator, &before.page.comic_id).await?;
+    let detail = chapter::get_chapter_detail(&coordinator, &before.page.chapter_id).await?;
 
     assert_eq!(
         detail.work_position.and_then(|position| position.unit_id),
@@ -107,7 +110,7 @@ async fn committed_receipt_loss_recovers_exact_saved_state() -> Result<(), Box<d
 
     assert_eq!(
         saved,
-        editor::get_page_editor(&coordinator, &before.page.comic_id, &before.page.id).await?
+        editor::get_page_editor(&coordinator, &before.page.chapter_id, &before.page.id).await?
     );
 
     coordinator.pool().close().await;
@@ -131,12 +134,12 @@ async fn rolled_back_receipt_loss_does_not_claim_success() -> Result<(), Box<dyn
     assert!(!coordinator.is_halted());
 
     assert_eq!(
-        editor::get_page_editor(&coordinator, &before.page.comic_id, &before.page.id).await?,
+        editor::get_page_editor(&coordinator, &before.page.chapter_id, &before.page.id).await?,
         before
     );
 
     assert!(
-        comic::get_comic_detail(&coordinator, &before.page.comic_id)
+        chapter::get_chapter_detail(&coordinator, &before.page.chapter_id)
             .await?
             .work_position
             .and_then(|position| position.unit_id)
@@ -197,7 +200,7 @@ async fn unavailable_verification_preserves_halt() -> Result<(), Box<dyn Error>>
     assert!(!reopened.is_halted());
 
     assert!(
-        editor::get_page_editor(&reopened, &before.page.comic_id, &before.page.id)
+        editor::get_page_editor(&reopened, &before.page.chapter_id, &before.page.id)
             .await?
             .units
             .is_empty()

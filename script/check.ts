@@ -1,12 +1,12 @@
 import { run } from "./process.ts";
 
-await run("deno", ["task", "format:check"]);
-await run("deno", ["task", "typecheck"]);
-await run("deno", ["task", "lint"]);
-await run("deno", ["run", "-A", "script/check-license.ts"]);
-await run("deno", ["run", "-A", "script/check-release-version.ts"]);
-await run("deno", ["run", "-A", "script/check-style.ts"]);
-await run("deno", ["run", "-A", "script/generate.ts", "--check"]);
+await run("pnpm", ["run", "format:check"]);
+await run("pnpm", ["run", "typecheck"]);
+await run("pnpm", ["run", "lint"]);
+await run(process.execPath, ["script/check-license.ts"]);
+await run(process.execPath, ["script/check-release-version.ts"]);
+await run(process.execPath, ["script/check-style.ts"]);
+await run(process.execPath, ["script/generate.ts", "--check"]);
 await run("cargo", [
   "fmt",
   "--manifest-path",
@@ -33,4 +33,4 @@ await run("cargo", [
   "-D",
   "warnings",
 ]);
-await run("deno", ["task", "test"]);
+await run("pnpm", ["run", "test"]);

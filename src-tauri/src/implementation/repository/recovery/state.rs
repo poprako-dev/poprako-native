@@ -19,6 +19,7 @@ fn checked_integer(value: i64) -> AppResult<i64> {
 async fn capture_units(
     connection: &mut SqliteConnection,
     scope: &RecoveryScope,
+    chapter_ids: &str,
 ) -> AppResult<Vec<Unit>> {
     let page_ids =
         serde_json::to_string(&scope.unit_page_ids).map_err(|_| AppError::RecoveryRequired)?;
@@ -27,8 +28,8 @@ async fn capture_units(
         serde_json::to_string(&scope.unit_ids).map_err(|_| AppError::RecoveryRequired)?;
 
     let rows = sqlx::query!(
-        "SELECT id, page_id, position, x_coord, y_coord, is_bubble, is_flagged, translated_text, proofread_text, is_proofread, created_at, updated_at FROM unit WHERE (? AND page_id IN (SELECT id FROM page WHERE comic_id = ?)) OR page_id IN (SELECT value FROM json_each(?)) OR id IN (SELECT value FROM json_each(?)) ORDER BY id",
-        scope.comic_units, scope.comic_id, page_ids, unit_ids
+        "SELECT id, page_id, position, x_coord, y_coord, is_bubble, is_flagged, translated_text, proofread_text, is_proofread, created_at, updated_at FROM unit WHERE (? AND page_id IN (SELECT id FROM page WHERE chapter_id IN (SELECT value FROM json_each(?)))) OR page_id IN (SELECT value FROM json_each(?)) OR id IN (SELECT value FROM json_each(?)) ORDER BY id",
+        scope.chapter_units, chapter_ids, page_ids, unit_ids
     ).fetch_all(connection).await?;
 
     rows.into_iter()
@@ -57,37 +58,49 @@ pub async fn capture(
     connection: &mut SqliteConnection,
     scope: &RecoveryScope,
 ) -> AppResult<MutationState> {
-    let comic = match scope.comic_row {
-        true => sqlx::query_as!(
-            Comic,
-            "SELECT id, title, subtitle, author, created_at, updated_at FROM comic WHERE id = ?",
-            scope.comic_id
-        )
-        .fetch_optional(&mut *connection)
-        .await?,
-        false => None,
-    };
+    let parent_ids =
+        serde_json::to_string(&scope.comic_ids).map_err(|_| AppError::RecoveryRequired)?;
+
+    let comics = sqlx::query_as!(Comic,
+        "SELECT id, title, author, created_at, updated_at FROM comic WHERE id IN (SELECT value FROM json_each(?)) OR id = (SELECT comic_id FROM chapter WHERE id = ?) ORDER BY id",
+        parent_ids, scope.chapter_id).fetch_all(&mut *connection).await?;
+
+    let ids = sqlx::query_scalar!("SELECT id FROM chapter WHERE comic_id IN (SELECT value FROM json_each(?)) OR (? AND id = ?) ORDER BY id", parent_ids, scope.chapter_row, scope.chapter_id).fetch_all(&mut *connection).await?;
+
+    let mut chapters = Vec::new();
+
+    for id in &ids {
+        chapters
+            .push(crate::implementation::repository::catalog::read_chapter(connection, id).await?);
+    }
+
+    let chapter_ids = serde_json::to_string(&ids).map_err(|_| AppError::RecoveryRequired)?;
 
     let page_ids =
         serde_json::to_string(&scope.page_ids).map_err(|_| AppError::RecoveryRequired)?;
 
     let rows = sqlx::query!(
-        "SELECT id, comic_id FROM page WHERE (? AND comic_id = ?) OR id IN (SELECT value FROM json_each(?)) ORDER BY id",
-        scope.comic_pages, scope.comic_id, page_ids
+        "SELECT id, chapter_id FROM page WHERE (? AND chapter_id IN (SELECT value FROM json_each(?))) OR id IN (SELECT value FROM json_each(?)) ORDER BY id",
+        scope.chapter_pages, chapter_ids, page_ids
     ).fetch_all(&mut *connection).await?;
 
     let mut pages = Vec::with_capacity(rows.len());
 
     for row in rows {
-        pages.push(read::page(connection, &row.comic_id, &row.id).await?);
+        pages.push(read::page(connection, &row.chapter_id, &row.id).await?);
     }
 
-    let units = capture_units(connection, scope).await?;
+    let units = capture_units(connection, scope, &chapter_ids).await?;
 
-    let work_position = match (scope.work_position, &scope.comic_id) {
-        (true, Some(comic_id)) => read_position(connection, comic_id).await?,
-        _ => None,
-    };
+    let mut work_positions = Vec::new();
+
+    if scope.work_position {
+        for id in &ids {
+            if let Some(value) = read_position(connection, id).await? {
+                work_positions.push(value);
+            }
+        }
+    }
 
     let preference_payload = match scope.preference {
         true => {
@@ -99,10 +112,11 @@ pub async fn capture(
     };
 
     Ok(MutationState {
-        comic,
+        comics,
+        chapters,
         pages,
         units,
-        work_position,
+        work_positions,
         preference_payload,
     })
 }

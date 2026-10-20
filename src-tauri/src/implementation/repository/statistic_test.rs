@@ -2,12 +2,12 @@ use std::error::Error;
 
 use uuid::Uuid;
 
-use crate::data::comic::ComicMetadata;
+use crate::data::comic::{ComicMetadata, NewComic};
 use crate::data::editor::{SavePageUnits, UnitDraft};
 use crate::data::page::NewPage;
 use crate::implementation::coordinator::SqliteCoordinator;
 use crate::implementation::coordinator::database;
-use crate::usecase::{comic, editor, page};
+use crate::usecase::{chapter, editor, page};
 use crate::value::image::{Image, ImageFormat};
 
 fn image() -> NewPage {
@@ -44,22 +44,24 @@ async fn detail_statistics_include_edits_additions_and_empty_pages() -> Result<(
 
     let coordinator = SqliteCoordinator::new(database::open(&path).await?);
 
-    let comic = comic::create_comic(
+    let chapter = crate::usecase::comic::create_comic(
         &coordinator,
-        ComicMetadata {
-            title: "Statistics".to_owned(),
-            subtitle: String::new(),
-            author: String::new(),
+        NewComic {
+            comic: ComicMetadata {
+                title: "Statistics".to_owned(),
+                author: String::new(),
+            },
+            chapter_title: "第1章".to_owned(),
         },
     )
     .await?;
 
-    let pages = page::append_pages(&coordinator, &comic.id, &[], &[image(), image()]).await?;
+    let pages = page::append_pages(&coordinator, &chapter.id, &[], &[image(), image()]).await?;
 
     editor::save_page_units(
         &coordinator,
         SavePageUnits {
-            comic_id: comic.id.clone(),
+            chapter_id: chapter.id.clone(),
             page_id: pages[0].id.clone(),
             expected_revision: 0,
             units: vec![
@@ -72,7 +74,7 @@ async fn detail_statistics_include_edits_additions_and_empty_pages() -> Result<(
     )
     .await?;
 
-    let detail = comic::get_comic_detail(&coordinator, &comic.id).await?;
+    let detail = chapter::get_chapter_detail(&coordinator, &chapter.id).await?;
 
     assert_eq!(detail.pages[0].unit_count, 4);
 

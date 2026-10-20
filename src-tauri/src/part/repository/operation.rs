@@ -1,20 +1,22 @@
 use poprako_orchestra::Oper;
 
-use crate::data::comic::ComicMetadata;
+use crate::data::chapter::ChapterMetadata;
 use crate::data::editor::{PageEditor, SavePageUnits};
-use crate::model::comic::Comic;
+use crate::model::chapter::Chapter;
 
 #[derive(Oper)]
-#[oper(output = Comic)]
-pub struct CreateComic {
+#[oper(output = Chapter)]
+pub struct CreateChapter {
     pub id: String,
-    pub metadata: ComicMetadata,
+    pub comic_id: String,
+    pub baseline: Vec<String>,
+    pub metadata: ChapterMetadata,
 }
 
 #[derive(Oper)]
 #[oper(output = PageEditor)]
 pub struct ReadPageEditor {
-    pub comic_id: String,
+    pub chapter_id: String,
     pub page_id: String,
 }
 
@@ -25,29 +27,28 @@ pub struct PersistPageUnits {
 }
 
 #[derive(Oper)]
-#[oper(output = Vec<crate::data::comic::ComicInfo>)]
-pub struct ListComicInfos {
-    pub offset: u32,
-    pub limit: u32,
-}
-
-#[derive(Oper)]
-#[oper(output = crate::data::comic::ComicDetail)]
-pub struct ReadComicDetail {
+#[oper(output = Vec<crate::data::chapter::ChapterInfo>)]
+pub struct ListChapterInfos {
     pub comic_id: String,
 }
 
 #[derive(Oper)]
-#[oper(output = Comic)]
-pub struct UpdateComicMetadata {
-    pub comic_id: String,
-    pub metadata: ComicMetadata,
+#[oper(output = crate::data::chapter::ChapterDetail)]
+pub struct ReadChapterDetail {
+    pub chapter_id: String,
+}
+
+#[derive(Oper)]
+#[oper(output = Chapter)]
+pub struct UpdateChapterMetadata {
+    pub chapter_id: String,
+    pub metadata: ChapterMetadata,
 }
 
 #[derive(Oper)]
 #[oper(output = ())]
-pub struct DeleteComic {
-    pub comic_id: String,
+pub struct DeleteChapter {
+    pub chapter_id: String,
 }
 
 #[derive(Oper)]

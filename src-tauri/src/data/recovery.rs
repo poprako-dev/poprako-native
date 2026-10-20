@@ -1,6 +1,6 @@
 use std::sync::{Arc, Mutex};
 
-use crate::model::comic::Comic;
+use crate::model::chapter::Chapter;
 use crate::model::page::Page;
 use crate::model::unit::Unit;
 use crate::model::work_position::WorkPosition;
@@ -9,10 +9,11 @@ use crate::model::work_position::WorkPosition;
 #[allow(clippy::struct_excessive_bools)]
 #[derive(Debug, Clone, Default)]
 pub struct RecoveryScope {
-    pub comic_id: Option<String>,
-    pub comic_row: bool,
-    pub comic_pages: bool,
-    pub comic_units: bool,
+    pub comic_ids: Vec<String>,
+    pub chapter_id: Option<String>,
+    pub chapter_row: bool,
+    pub chapter_pages: bool,
+    pub chapter_units: bool,
     pub page_ids: Vec<String>,
     pub unit_page_ids: Vec<String>,
     pub unit_ids: Vec<String>,
@@ -22,10 +23,10 @@ pub struct RecoveryScope {
 
 impl RecoveryScope {
     #[must_use]
-    pub fn comic(comic_id: &str) -> Self {
+    pub fn chapter(chapter_id: &str) -> Self {
         Self {
-            comic_id: Some(comic_id.to_owned()),
-            comic_row: true,
+            chapter_id: Some(chapter_id.to_owned()),
+            chapter_row: true,
             ..Self::default()
         }
     }
@@ -33,10 +34,11 @@ impl RecoveryScope {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct MutationState {
-    pub comic: Option<Comic>,
+    pub comics: Vec<crate::model::comic::Comic>,
+    pub chapters: Vec<Chapter>,
     pub pages: Vec<Page>,
     pub units: Vec<Unit>,
-    pub work_position: Option<WorkPosition>,
+    pub work_positions: Vec<WorkPosition>,
     pub preference_payload: Option<String>,
 }
 

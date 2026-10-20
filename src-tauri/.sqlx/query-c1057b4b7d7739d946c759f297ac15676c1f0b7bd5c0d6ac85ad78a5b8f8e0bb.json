@@ -1,0 +1,138 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT c.id, c.comic_id, c.title, c.position, c.created_at, c.updated_at,\n            (SELECT COUNT(*) FROM page p WHERE p.chapter_id = c.id) AS \"page_count!: i64\",\n            (SELECT COUNT(*) FROM unit u JOIN page p ON p.id = u.page_id WHERE p.chapter_id = c.id) AS \"unit_count!: i64\",\n            (SELECT COUNT(*) FROM unit u JOIN page p ON p.id = u.page_id WHERE p.chapter_id = c.id AND u.translated_text != '') AS \"translated_count!: i64\",\n            (SELECT COUNT(*) FROM unit u JOIN page p ON p.id = u.page_id WHERE p.chapter_id = c.id AND u.is_proofread = 1) AS \"proofread_count!: i64\",\n            (SELECT id FROM page WHERE chapter_id = c.id ORDER BY position LIMIT 1) AS \"cover_page_id?: String\",\n            w.last_opened_at AS \"last_opened_at?: i64\"\n            FROM chapter c LEFT JOIN work_position w ON w.chapter_id = c.id\n            WHERE c.comic_id = ? ORDER BY c.position",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "chapter",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "name": "comic_id",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "chapter",
+            "name": "comic_id"
+          }
+        }
+      },
+      {
+        "name": "title",
+        "ordinal": 2,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "chapter",
+            "name": "title"
+          }
+        }
+      },
+      {
+        "name": "position",
+        "ordinal": 3,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "chapter",
+            "name": "position"
+          }
+        }
+      },
+      {
+        "name": "created_at",
+        "ordinal": 4,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "chapter",
+            "name": "created_at"
+          }
+        }
+      },
+      {
+        "name": "updated_at",
+        "ordinal": 5,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "chapter",
+            "name": "updated_at"
+          }
+        }
+      },
+      {
+        "name": "page_count!: i64",
+        "ordinal": 6,
+        "type_info": "Integer",
+        "origin": "Expression"
+      },
+      {
+        "name": "unit_count!: i64",
+        "ordinal": 7,
+        "type_info": "Integer",
+        "origin": "Expression"
+      },
+      {
+        "name": "translated_count!: i64",
+        "ordinal": 8,
+        "type_info": "Integer",
+        "origin": "Expression"
+      },
+      {
+        "name": "proofread_count!: i64",
+        "ordinal": 9,
+        "type_info": "Integer",
+        "origin": "Expression"
+      },
+      {
+        "name": "cover_page_id?: String",
+        "ordinal": 10,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "page",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "name": "last_opened_at?: i64",
+        "ordinal": 11,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "work_position",
+            "name": "last_opened_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "c1057b4b7d7739d946c759f297ac15676c1f0b7bd5c0d6ac85ad78a5b8f8e0bb"
+}

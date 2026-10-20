@@ -23,12 +23,12 @@ fn checked_position(value: i64) -> AppResult<u32> {
 /// Returns validation, missing-content, conflict, or storage errors without changing partial state.
 pub async fn page(
     connection: &mut SqliteConnection,
-    comic_id: &str,
+    chapter_id: &str,
     page_id: &str,
 ) -> AppResult<Page> {
     let row = sqlx::query!(
-        "SELECT id, comic_id, position, unit_revision, image_reference, image_original_name, image_format, image_width, image_height, created_at, updated_at FROM page WHERE id = ? AND comic_id = ?",
-        page_id, comic_id
+        "SELECT id, chapter_id, position, unit_revision, image_reference, image_original_name, image_format, image_width, image_height, created_at, updated_at FROM page WHERE id = ? AND chapter_id = ?",
+        page_id, chapter_id
     ).fetch_one(&mut *connection).await?;
 
     let format = match row.image_format.as_str() {
@@ -41,7 +41,7 @@ pub async fn page(
 
     Ok(Page {
         id: row.id,
-        comic_id: row.comic_id,
+        chapter_id: row.chapter_id,
         index: checked_position(row.position)?,
         unit_revision: checked_time(row.unit_revision)?,
         image: Image {
@@ -88,10 +88,10 @@ pub async fn units(connection: &mut SqliteConnection, page_id: &str) -> AppResul
 /// Returns validation, missing-content, conflict, or storage errors without changing partial state.
 pub async fn editor(
     connection: &mut SqliteConnection,
-    comic_id: &str,
+    chapter_id: &str,
     page_id: &str,
 ) -> AppResult<PageEditor> {
-    let page = page(connection, comic_id, page_id).await?;
+    let page = page(connection, chapter_id, page_id).await?;
 
     let units = units(connection, page_id).await?;
 

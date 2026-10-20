@@ -1,3 +1,4 @@
+pub mod comic;
 pub mod export;
 pub mod import;
 pub mod operation;

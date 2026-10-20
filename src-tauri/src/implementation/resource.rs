@@ -171,10 +171,10 @@ impl ResourceStore {
     pub fn publish(
         &self,
         image: &PreparedImage,
-        comic_id: Uuid,
+        chapter_id: Uuid,
         page_id: Uuid,
     ) -> Result<String, ImageError> {
-        valid_id(&comic_id.to_string())?;
+        valid_id(&chapter_id.to_string())?;
 
         valid_id(&page_id.to_string())?;
 
@@ -198,7 +198,7 @@ impl ResourceStore {
 
         let mut directory = PathBuf::from("library");
 
-        for id in [comic_id, page_id] {
+        for id in [chapter_id, page_id] {
             directory.push(id.to_string());
 
             let path = self.root.join(&directory);
@@ -225,10 +225,10 @@ impl ResourceStore {
     pub fn resolve(
         &self,
         reference: &str,
-        comic_id: Uuid,
+        chapter_id: Uuid,
         page_id: Uuid,
     ) -> Result<PathBuf, ImageError> {
-        let relative = original_reference(reference, comic_id, page_id)?;
+        let relative = original_reference(reference, chapter_id, page_id)?;
 
         checked_path(&self.root, &relative)
     }
@@ -239,12 +239,12 @@ impl ResourceStore {
     pub fn display(
         &self,
         reference: &str,
-        comic_id: Uuid,
+        chapter_id: Uuid,
         page_id: Uuid,
         request: DisplayRequest,
         pipeline: &ImagePipeline,
     ) -> Result<Vec<u8>, ImageError> {
-        let original = self.resolve(reference, comic_id, page_id)?;
+        let original = self.resolve(reference, chapter_id, page_id)?;
 
         let image_id = original
             .file_stem()
@@ -260,10 +260,10 @@ impl ResourceStore {
     pub fn open_original(
         &self,
         reference: &str,
-        comic_id: Uuid,
+        chapter_id: Uuid,
         page_id: Uuid,
     ) -> Result<lease::OriginalRead, ImageError> {
-        let path = self.resolve(reference, comic_id, page_id)?;
+        let path = self.resolve(reference, chapter_id, page_id)?;
 
         self.readers.acquire(reference, || Ok(File::open(path)?))
     }
@@ -300,10 +300,10 @@ impl ResourceStore {
     pub fn remove_unreferenced(
         &self,
         reference: &str,
-        comic_id: Uuid,
+        chapter_id: Uuid,
         page_id: Uuid,
     ) -> Result<(), ImageError> {
-        let relative = original_reference(reference, comic_id, page_id)?;
+        let relative = original_reference(reference, chapter_id, page_id)?;
 
         self.readers.remove(reference, || {
             let Some(path) = cleanup_path(&self.root, &relative)? else {

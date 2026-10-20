@@ -3,10 +3,10 @@ use std::sync::Arc;
 use tauri::{AppHandle, State};
 
 use crate::bridge::error::CommandResult;
+use crate::data::archive::ArchiveComic;
 use crate::data::archive_task::{
     ArchiveCompletion, ArchiveImportMode, ArchiveSelection, ArchiveTarget, ArchiveTask,
 };
-use crate::data::comic::ComicMetadata;
 use crate::data::search::TextStage;
 use crate::harness::Harness;
 use crate::implementation::archive_task::{commit, export, picker, prepare};
@@ -95,7 +95,7 @@ pub async fn acknowledge_archive_task(
 pub async fn confirm_archive_import(
     state: State<'_, Arc<Harness>>,
     task_id: String,
-    metadata: ComicMetadata,
+    metadata: ArchiveComic,
     mode: ArchiveImportMode,
     request: WriteRequest,
 ) -> CommandResult<ArchiveCompletion> {
@@ -118,7 +118,7 @@ pub async fn confirm_archive_import(
 pub async fn export_archive(
     app: AppHandle,
     state: State<'_, Arc<Harness>>,
-    comic_id: String,
+    chapter_id: String,
     include_images: bool,
 ) -> CommandResult<ArchiveSelection> {
     let state = Arc::clone(&state);
@@ -142,7 +142,7 @@ pub async fn export_archive(
     tokio::spawn(export::run(
         state,
         id.clone(),
-        comic_id,
+        chapter_id,
         target,
         include_images,
         overwrite,

@@ -14,7 +14,7 @@ import {
   record,
   stableVersion,
 } from "./release-version.ts";
-import { checkDenoVersion } from "./toolchain.ts";
+import { checkNodeVersion } from "./toolchain.ts";
 
 type Platform = "macos-arm64" | "windows-x64";
 
@@ -152,7 +152,7 @@ async function verify(
   await writeFile(join(directory, "SHA256SUMS"), `${sums.join("\n")}\n`);
 }
 
-checkDenoVersion();
+checkNodeVersion();
 const directory = required("RELEASE_DIRECTORY");
 const tag = required("RELEASE_TAG");
 if (!tag.startsWith("v")) throw new Error("Release tag must start with v.");

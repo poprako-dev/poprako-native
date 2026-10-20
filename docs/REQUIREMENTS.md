@@ -10,7 +10,7 @@
 
 | 范围 | 选型与约束 |
 | --- | --- |
-| 包管理与任务 | Deno；统一通过 `deno task` 执行项目任务 |
+| 包管理与任务 | pnpm；统一通过 `pnpm run` 执行项目任务 |
 | 前端构建 | Vite + TypeScript + React |
 | 样式与组件 | Tailwind CSS 4.1、shadcn/ui、Lucide |
 | 路由 | TanStack Router，采用文件路由 |
@@ -23,8 +23,8 @@
 | 前端质量工具 | ESLint、typescript-eslint、Prettier、Vitest、React Testing Library |
 | Rust 质量工具 | rustfmt、Clippy、Cargo 测试及项目专项检查 |
 
-- Deno 可以消费 npm 生态包；禁止混用 npm、pnpm、Yarn 或 Bun 的安装流程与锁文件。
-- 提交 `deno.lock` 和 `Cargo.lock`，固定开发工具链与生成工具版本；依赖升级必须同步验证类型、生成结果和构建。
+- 运行时使用独立安装且不含 npm 的 Node.js 26，包管理仅使用独立 pnpm；工具链遵循 `$js-environment`。
+- 提交 `pnpm-lock.yaml` 和 `Cargo.lock`，固定开发工具链与生成工具版本；依赖升级必须同步验证类型、生成结果和构建。
 - Orchestra 使用 registry 依赖；`poprako-server` 和 `poprako-orchestra` 的本地副本仅作为阅读参考，不得成为构建所需的相邻目录。
 - Tauri Specta 的 Tauri 2 集成仍有预发布版本约束。精确固定兼容的 Specta、Tauri Specta 及相关生成依赖，受控升级，不自动跟随预发布版本。[版本与安装说明](https://github.com/specta-rs/tauri-specta)
 
@@ -240,18 +240,18 @@ docs/
 
 ### 6.3 统一任务与工作流
 
-项目任务提供下列职责；实际入口由 `deno.json` 定义。
+项目任务提供下列职责；实际入口由 `package.json` 定义。
 
 | 入口 | 职责 |
 | --- | --- |
-| `deno task dev` | 启动 Vite 前端开发服务器 |
-| `deno task desktop` | 启动 Tauri 开发环境，允许 Tauri 调用前端 `dev` |
-| `deno task build` | 前端类型检查与生产构建 |
-| `deno task check` | 只读执行格式、类型、lint、项目专项、生成一致性、SQL 元数据检查及测试 |
-| `deno task test` | 执行前端与 Rust 测试 |
-| `deno task format` | 格式化手写源码 |
-| `deno task generate` | 按依赖顺序更新 SQL 元数据、IPC 契约及路由树 |
-| `deno task package` | 执行 Tauri 打包，由 Tauri 调用前端 `build` |
+| `pnpm run dev` | 启动 Vite 前端开发服务器 |
+| `pnpm run desktop` | 启动 Tauri 开发环境，允许 Tauri 调用前端 `dev` |
+| `pnpm run build` | 前端类型检查与生产构建 |
+| `pnpm run check` | 只读执行格式、类型、lint、项目专项、生成一致性、SQL 元数据检查及测试 |
+| `pnpm run test` | 执行前端与 Rust 测试 |
+| `pnpm run format` | 格式化手写源码 |
+| `pnpm run generate` | 按依赖顺序更新 SQL 元数据、IPC 契约及路由树 |
+| `pnpm run package` | 执行 Tauri 打包，由 Tauri 调用前端 `build` |
 
 - Tauri 前置任务不能反向调用自身，避免 `desktop/dev` 或 `package/build` 形成递归。
 - Rust 检查至少包含 `cargo fmt --all --check`、`cargo check --workspace --all-targets`、`cargo clippy --workspace --all-targets -- -D warnings` 及相应测试，在 `src-tauri` crate 上下文执行。
@@ -271,7 +271,7 @@ docs/
 - 首期不承诺 Linux、独立浏览器应用、移动端、Windows ARM64 或 Intel Mac 支持。
 - 系统版本与 WebView 能力分别验证。Windows 使用满足前端栈能力要求的 WebView2，macOS 验证系统 WKWebView；最低目标系统必须实测，不以 Tauri 自身最低版本替代项目验证。[Tailwind 兼容性](https://tailwindcss.com/docs/compatibility)、[Tauri WebView 说明](https://v2.tauri.app/reference/webview-versions/)
 - 项目许可证为 **AGPL-3.0-or-later**。后续 LICENSE、包元数据与发布说明使用同一标识，并保留适用的第三方许可证信息。
-- 根目录 LICENSE 只保留 GNU 官方 AGPL v3 完整原文，项目授权声明位于 README 和包元数据；`deno task check` 校验正文摘要。修改许可证文件须运行 Licensee 实际核验识别结果。
+- 根目录 LICENSE 只保留 GNU 官方 AGPL v3 完整原文，项目授权声明位于 README 和包元数据；`pnpm run check` 校验正文摘要。修改许可证文件须运行 Licensee 实际核验识别结果。
 
 ### 7.2 权限、凭据与日志
 

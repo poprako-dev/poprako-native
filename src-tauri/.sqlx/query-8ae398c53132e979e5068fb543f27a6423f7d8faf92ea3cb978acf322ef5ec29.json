@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE chapter SET position = ?, updated_at = ? WHERE id = ? AND comic_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": []
+  },
+  "hash": "8ae398c53132e979e5068fb543f27a6423f7d8faf92ea3cb978acf322ef5ec29"
+}

@@ -142,22 +142,22 @@ fn managed_publication_preserves_bytes_and_rejects_escape() -> Result<(), Box<dy
 
     let prepared = store.prepare(&source, Uuid::new_v4(), &pipeline)?;
 
-    let comic_id = Uuid::new_v4();
+    let chapter_id = Uuid::new_v4();
 
     let page_id = Uuid::new_v4();
 
-    let reference = store.publish(&prepared, comic_id, page_id)?;
+    let reference = store.publish(&prepared, chapter_id, page_id)?;
 
     assert_eq!(
-        fs::read(store.resolve(&reference, comic_id, page_id)?)?,
+        fs::read(store.resolve(&reference, chapter_id, page_id)?)?,
         original
     );
 
-    assert!(store.publish(&prepared, comic_id, page_id).is_err());
+    assert!(store.publish(&prepared, chapter_id, page_id).is_err());
 
     assert!(
         store
-            .resolve("../../source.png", comic_id, page_id)
+            .resolve("../../source.png", chapter_id, page_id)
             .is_err()
     );
 

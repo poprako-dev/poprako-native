@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO work_position (chapter_id, last_opened_at, page_id, unit_id, mode) VALUES (?, ?, ?, ?, ?) ON CONFLICT(chapter_id) DO UPDATE SET last_opened_at = excluded.last_opened_at, page_id = excluded.page_id, unit_id = excluded.unit_id, mode = excluded.mode",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 5
+    },
+    "nullable": []
+  },
+  "hash": "042bd00dcf690d9bd9040d6ce1f41a8ac3c93e70981a6f2ba1cd56fc7a4cf9e0"
+}

@@ -14,17 +14,20 @@ use uuid::Uuid;
 
 use crate::data::archive::ArchiveDocument;
 use crate::data::archive_task::ArchiveTask;
-use crate::data::import::ExistingComicImport;
+use crate::data::import::ExistingChapterImport;
 use crate::data::page::PageBaseline;
 use crate::implementation::archive::import::PublishedArchive;
 use crate::implementation::archive::source::PreparedArchive;
 use crate::result::{AppError, AppResult};
 
 pub enum ImportArtifact {
-    New(PreparedArchive),
+    New {
+        prepared: PreparedArchive,
+        parent: crate::data::import::ImportParent,
+    },
     Existing {
         document: ArchiveDocument,
-        comic_id: String,
+        chapter_id: String,
         baseline: Vec<PageBaseline>,
         target_pages: Vec<(String, u32)>,
     },
@@ -32,7 +35,7 @@ pub enum ImportArtifact {
 
 pub enum UncertainArtifact {
     New(Box<PublishedArchive>),
-    Existing(ExistingComicImport),
+    Existing(ExistingChapterImport),
 }
 
 pub struct ArchiveRecord {
@@ -172,3 +175,6 @@ pub fn check_cancel(cancel: &AtomicBool) -> AppResult<()> {
 
     Ok(())
 }
+
+#[cfg(test)]
+mod hierarchy_test;

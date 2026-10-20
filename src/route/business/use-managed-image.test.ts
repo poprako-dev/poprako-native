@@ -6,7 +6,7 @@ import { useManagedImage } from "@/route/business/use-managed-image";
 type ImageReply = { status: "ok"; data: ImageResource };
 const mock = vi.hoisted(() => ({
   get: vi.fn<
-    (comic: string, page: string, kind: ImageKind) => Promise<ImageReply>
+    (chapter: string, page: string, kind: ImageKind) => Promise<ImageReply>
   >(),
   release:
     vi.fn<(handles: string[]) => Promise<{ status: "ok"; data: null }>>(),
@@ -34,7 +34,7 @@ describe("managed image ownership", () => {
     });
     const { result, rerender } = renderHook(
       ({ visible }) =>
-        useManagedImage("comic", "page", "image", "thumbnail", visible),
+        useManagedImage("chapter", "page", "image", "thumbnail", visible),
       { initialProps: { visible: false } },
     );
     expect(mock.get).not.toHaveBeenCalled();
@@ -59,7 +59,7 @@ describe("managed image ownership", () => {
       data: { handle: "current", width: 20, height: 30 },
     });
     const { result, rerender, unmount } = renderHook(
-      ({ page }) => useManagedImage("comic", page, "image", "preview", true),
+      ({ page }) => useManagedImage("chapter", page, "image", "preview", true),
       { initialProps: { page: "old" } },
     );
     rerender({ page: "new" });

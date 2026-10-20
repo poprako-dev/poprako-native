@@ -3,72 +3,50 @@ use std::sync::Arc;
 use tauri::State;
 
 use crate::bridge::error::CommandResult;
-use crate::data::comic::{ComicDetail, ComicInfo, ComicMetadata};
+use crate::data::chapter::{ChapterDetail, ChapterInfo, ChapterMetadata};
 use crate::data::editor::PageEditor;
 use crate::data::search::{ReplaceUnits, ReplacementResult, SearchHit, SearchUnits};
 use crate::harness::Harness;
 use crate::implementation::write::{WriteRequest, execute};
-use crate::model::comic::Comic;
+use crate::model::chapter::Chapter;
 use crate::model::preference::ApplicationPreference;
 use crate::model::work_position::WorkPosition;
-use crate::usecase::{comic, editor, preference, work_position};
+use crate::usecase::{chapter, editor, preference, work_position};
 
 /// # Errors
 /// Rejects invalid pagination or unavailable local storage.
 #[tauri::command]
 #[specta::specta]
-pub async fn list_comic_infos(
+pub async fn list_chapter_infos(
     state: State<'_, Arc<Harness>>,
-    offset: u32,
-    limit: u32,
-) -> CommandResult<Vec<ComicInfo>> {
-    Ok(comic::list_comic_infos(state.database().await?, offset, limit).await?)
+    comic_id: String,
+) -> CommandResult<Vec<ChapterInfo>> {
+    Ok(chapter::list_chapter_infos(state.database().await?, &comic_id).await?)
 }
 
 /// # Errors
 /// Reports invalid identifiers, missing projects, or unreadable storage.
 #[tauri::command]
 #[specta::specta]
-pub async fn get_comic_detail(
+pub async fn get_chapter_detail(
     state: State<'_, Arc<Harness>>,
-    comic_id: String,
-) -> CommandResult<ComicDetail> {
-    Ok(comic::get_comic_detail(state.database().await?, &comic_id).await?)
+    chapter_id: String,
+) -> CommandResult<ChapterDetail> {
+    Ok(chapter::get_chapter_detail(state.database().await?, &chapter_id).await?)
 }
 
 /// # Errors
 /// Rejects invalid metadata or conflicting write requests; preserves uncertain results.
 #[tauri::command]
 #[specta::specta]
-pub async fn create_comic(
-    state: State<'_, Arc<Harness>>,
-    metadata: ComicMetadata,
-    request: WriteRequest,
-) -> CommandResult<Comic> {
-    let payload = serde_json::json!(["create_comic", metadata]);
-
-    let harness = Arc::clone(state.inner());
-
-    Ok(execute(
-        Arc::clone(&harness.write),
-        request,
-        payload,
-        move || async move { comic::create_comic(harness.database().await?, metadata).await },
-    )
-    .await?)
-}
-
-/// # Errors
-/// Reports invalid metadata, missing projects, or unresolved writes.
-#[tauri::command]
-#[specta::specta]
-pub async fn update_comic_metadata(
+pub async fn create_chapter(
     state: State<'_, Arc<Harness>>,
     comic_id: String,
-    metadata: ComicMetadata,
+    baseline: Vec<String>,
+    metadata: ChapterMetadata,
     request: WriteRequest,
-) -> CommandResult<Comic> {
-    let payload = serde_json::json!(["update_comic_metadata", comic_id, metadata]);
+) -> CommandResult<Chapter> {
+    let payload = serde_json::json!(["create_chapter", comic_id, baseline, metadata]);
 
     let harness = Arc::clone(state.inner());
 
@@ -77,7 +55,32 @@ pub async fn update_comic_metadata(
         request,
         payload,
         move || async move {
-            comic::update_comic_metadata(harness.database().await?, &comic_id, metadata).await
+            chapter::create_chapter(harness.database().await?, &comic_id, baseline, metadata).await
+        },
+    )
+    .await?)
+}
+
+/// # Errors
+/// Reports invalid metadata, missing projects, or unresolved writes.
+#[tauri::command]
+#[specta::specta]
+pub async fn update_chapter_metadata(
+    state: State<'_, Arc<Harness>>,
+    chapter_id: String,
+    metadata: ChapterMetadata,
+    request: WriteRequest,
+) -> CommandResult<Chapter> {
+    let payload = serde_json::json!(["update_chapter_metadata", chapter_id, metadata]);
+
+    let harness = Arc::clone(state.inner());
+
+    Ok(execute(
+        Arc::clone(&harness.write),
+        request,
+        payload,
+        move || async move {
+            chapter::update_chapter_metadata(harness.database().await?, &chapter_id, metadata).await
         },
     )
     .await?)
@@ -87,12 +90,12 @@ pub async fn update_comic_metadata(
 /// Reports missing projects, conflicting requests, or unresolved deletion.
 #[tauri::command]
 #[specta::specta]
-pub async fn delete_comic(
+pub async fn delete_chapter(
     state: State<'_, Arc<Harness>>,
-    comic_id: String,
+    chapter_id: String,
     request: WriteRequest,
 ) -> CommandResult<()> {
-    let payload = serde_json::json!(["delete_comic", comic_id]);
+    let payload = serde_json::json!(["delete_chapter", chapter_id]);
 
     let harness = Arc::clone(state.inner());
 
@@ -100,7 +103,7 @@ pub async fn delete_comic(
         Arc::clone(&harness.write),
         request,
         payload,
-        move || async move { comic::delete_comic(harness.database().await?, &comic_id).await },
+        move || async move { chapter::delete_chapter(harness.database().await?, &chapter_id).await },
     )
     .await?)
 }
@@ -111,10 +114,10 @@ pub async fn delete_comic(
 #[specta::specta]
 pub async fn get_page_editor(
     state: State<'_, Arc<Harness>>,
-    comic_id: String,
+    chapter_id: String,
     page_id: String,
 ) -> CommandResult<PageEditor> {
-    Ok(editor::get_page_editor(state.database().await?, &comic_id, &page_id).await?)
+    Ok(editor::get_page_editor(state.database().await?, &chapter_id, &page_id).await?)
 }
 
 /// # Errors

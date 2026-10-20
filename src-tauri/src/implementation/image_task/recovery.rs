@@ -35,7 +35,7 @@ pub async fn recover(harness: Arc<Harness>) -> AppResult<()> {
     for candidate in candidates {
         let referenced = match page::get_page(
             coordinator,
-            &candidate.comic_id.to_string(),
+            &candidate.chapter_id.to_string(),
             &candidate.page_id.to_string(),
         )
         .await
@@ -56,7 +56,11 @@ pub async fn recover(harness: Arc<Harness>) -> AppResult<()> {
         for candidate in unused {
             worker
                 .resource
-                .remove_unreferenced(&candidate.reference, candidate.comic_id, candidate.page_id)
+                .remove_unreferenced(
+                    &candidate.reference,
+                    candidate.chapter_id,
+                    candidate.page_id,
+                )
                 .map_err(|_| AppError::Storage)?;
         }
 
@@ -74,7 +78,7 @@ pub async fn recover(harness: Arc<Harness>) -> AppResult<()> {
 /// Deletes only this known old immutable reference after successful commit and reread.
 pub async fn cleanup_old(
     harness: &Harness,
-    comic_id: &str,
+    chapter_id: &str,
     page_id: &str,
     reference: &str,
 ) -> AppResult<()> {
@@ -86,7 +90,7 @@ pub async fn cleanup_old(
         return Err(AppError::RecoveryRequired);
     }
 
-    let referenced = match page::get_page(coordinator, comic_id, page_id).await {
+    let referenced = match page::get_page(coordinator, chapter_id, page_id).await {
         Ok(current) => current.image.reference == reference,
         Err(AppError::NotFound) => false,
         Err(error) => return Err(error),
@@ -96,13 +100,13 @@ pub async fn cleanup_old(
         return Err(AppError::Busy);
     }
 
-    let comic_id = uuid::Uuid::parse_str(comic_id).map_err(|_| AppError::InvalidInput)?;
+    let chapter_id = uuid::Uuid::parse_str(chapter_id).map_err(|_| AppError::InvalidInput)?;
 
     let page_id = uuid::Uuid::parse_str(page_id).map_err(|_| AppError::InvalidInput)?;
 
     harness
         .resource
-        .remove_unreferenced(reference, comic_id, page_id)
+        .remove_unreferenced(reference, chapter_id, page_id)
         .map_err(|_| AppError::Storage)
 }
 
@@ -117,7 +121,7 @@ async fn retry_images(
     for image in images {
         if let Err(error) = cleanup_old(
             harness,
-            &image.comic_id.to_string(),
+            &image.chapter_id.to_string(),
             &image.page_id.to_string(),
             &image.reference,
         )

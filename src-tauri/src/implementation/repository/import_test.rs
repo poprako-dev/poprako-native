@@ -2,14 +2,16 @@ use std::error::Error;
 
 use uuid::Uuid;
 
-use crate::data::comic::ComicMetadata;
+use crate::data::archive::ArchiveComic;
 use crate::data::editor::UnitDraft;
-use crate::data::import::{ExistingComicImport, ImportMode, NewComicImport, PreparedImportPage};
+use crate::data::import::{
+    ExistingChapterImport, ImportMode, NewChapterImport, PreparedImportPage,
+};
 use crate::data::page::{NewPage, PageBaseline};
 use crate::implementation::coordinator::SqliteCoordinator;
 use crate::implementation::coordinator::database;
 use crate::result::AppError;
-use crate::usecase::{comic, editor, import};
+use crate::usecase::{chapter, editor, import};
 use crate::value::image::{Image, ImageFormat};
 
 fn unit() -> UnitDraft {
@@ -43,10 +45,13 @@ fn page(units: Vec<UnitDraft>) -> PreparedImportPage {
     }
 }
 
-fn document(pages: Vec<PreparedImportPage>) -> NewComicImport {
-    NewComicImport {
-        comic_id: Uuid::new_v4().to_string(),
-        metadata: ComicMetadata {
+fn document(pages: Vec<PreparedImportPage>) -> NewChapterImport {
+    NewChapterImport {
+        parent: crate::data::import::ImportParent::New {
+            comic_id: Uuid::new_v4().to_string(),
+        },
+        chapter_id: Uuid::new_v4().to_string(),
+        metadata: ArchiveComic {
             title: "Imported".to_owned(),
             subtitle: String::new(),
             author: String::new(),
@@ -66,19 +71,19 @@ async fn import_is_atomic_and_new_initial_revisions_are_zero() -> Result<(), Box
     let invalid = document(vec![page(vec![duplicate.clone()]), page(vec![duplicate])]);
 
     assert_eq!(
-        import::create_comic_from_import(&coordinator, invalid).await,
+        import::create_chapter_from_import(&coordinator, invalid).await,
         Err(AppError::Conflict)
     );
 
     assert!(
-        comic::list_comic_infos(&coordinator, 0, 50)
+        crate::usecase::comic::list_comic_infos(&coordinator, 0, 50)
             .await?
             .is_empty()
     );
 
     let input = document(vec![page(vec![unit()]), page(Vec::new())]);
 
-    let created = import::create_comic_from_import(&coordinator, input.clone()).await?;
+    let created = import::create_chapter_from_import(&coordinator, input.clone()).await?;
 
     let saved = editor::get_page_editor(&coordinator, &created.id, &input.pages[0].page.id).await?;
 
@@ -90,7 +95,7 @@ async fn import_is_atomic_and_new_initial_revisions_are_zero() -> Result<(), Box
 
     assert_eq!(saved.page.created_at, created.created_at);
 
-    let detail = comic::get_comic_detail(&coordinator, &created.id).await?;
+    let detail = chapter::get_chapter_detail(&coordinator, &created.id).await?;
 
     let baseline: Vec<_> = detail
         .pages
@@ -102,10 +107,10 @@ async fn import_is_atomic_and_new_initial_revisions_are_zero() -> Result<(), Box
         })
         .collect();
 
-    let affected = import::apply_comic_import(
+    let affected = import::apply_chapter_import(
         &coordinator,
-        ExistingComicImport {
-            comic_id: created.id.clone(),
+        ExistingChapterImport {
+            chapter_id: created.id.clone(),
             baseline: baseline.clone(),
             pages: vec![Vec::new(), vec![unit()]],
             mode: ImportMode::FillEmpty,
@@ -121,10 +126,10 @@ async fn import_is_atomic_and_new_initial_revisions_are_zero() -> Result<(), Box
     );
 
     assert_eq!(
-        import::apply_comic_import(
+        import::apply_chapter_import(
             &coordinator,
-            ExistingComicImport {
-                comic_id: created.id.clone(),
+            ExistingChapterImport {
+                chapter_id: created.id.clone(),
                 baseline,
                 pages: vec![Vec::new(), Vec::new()],
                 mode: ImportMode::ReplaceAll
@@ -134,7 +139,7 @@ async fn import_is_atomic_and_new_initial_revisions_are_zero() -> Result<(), Box
         Err(AppError::Conflict)
     );
 
-    let detail = comic::get_comic_detail(&coordinator, &created.id).await?;
+    let detail = chapter::get_chapter_detail(&coordinator, &created.id).await?;
 
     let baseline: Vec<_> = detail
         .pages
@@ -147,10 +152,10 @@ async fn import_is_atomic_and_new_initial_revisions_are_zero() -> Result<(), Box
         .collect();
 
     assert_eq!(
-        import::apply_comic_import(
+        import::apply_chapter_import(
             &coordinator,
-            ExistingComicImport {
-                comic_id: created.id.clone(),
+            ExistingChapterImport {
+                chapter_id: created.id.clone(),
                 baseline,
                 pages: vec![Vec::new(), Vec::new()],
                 mode: ImportMode::ReplaceAll

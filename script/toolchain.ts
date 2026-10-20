@@ -1,20 +1,20 @@
 import { readFileSync } from "node:fs";
 
-export function assertDenoVersion(
+export function assertNodeVersion(
   actual: string | undefined,
   required: string,
 ): void {
   if (actual !== required) {
     throw new Error(
-      `This project requires Deno ${required}; current runtime is ${actual ?? "not Deno"}. Install the pinned version before running project tasks.`,
+      `This project requires Node.js ${required}; current runtime is ${actual ?? "not Node.js"}. Install the pinned version before running project tasks.`,
     );
   }
 }
 
-export function checkDenoVersion(): void {
+export function checkNodeVersion(): void {
   const required = readFileSync(
-    new URL("../.deno-version", import.meta.url),
+    new URL("../.node-version", import.meta.url),
     "utf8",
   ).trim();
-  assertDenoVersion(process.versions["deno"], required);
+  assertNodeVersion(process.versions.node, required);
 }

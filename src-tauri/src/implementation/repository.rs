@@ -1,7 +1,10 @@
+pub mod chapter_order;
+pub mod comic;
+pub mod library;
 use sqlx::SqlitePool;
 
 pub mod catalog;
-pub mod comic;
+pub mod chapter;
 pub mod editor;
 pub mod export;
 pub mod import;
@@ -34,3 +37,9 @@ impl SqliteRepository {
         Self { pool }
     }
 }
+
+#[cfg(test)]
+mod hierarchy_test;
+
+#[cfg(test)]
+mod chapter_move_test;

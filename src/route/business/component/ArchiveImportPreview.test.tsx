@@ -4,7 +4,7 @@ import { afterEach, expect, it, vi } from "vitest";
 import type {
   ArchiveImportMode,
   ArchivePreview,
-  ComicMetadata,
+  ArchiveComic,
 } from "@/bridge/generated/bindings";
 import { ArchiveImportPreview } from "@/route/business/component/ArchiveImportPreview";
 
@@ -13,8 +13,9 @@ afterEach(cleanup);
 it("previews skipped nonblank pages and requires the explicit replacement choice", async () => {
   const user = userEvent.setup();
   const submit =
-    vi.fn<(metadata: ComicMetadata, mode: ArchiveImportMode) => void>();
+    vi.fn<(metadata: ArchiveComic, mode: ArchiveImportMode) => void>();
   const preview: ArchivePreview = {
+    target_comic: null,
     metadata: { title: "输入资料", subtitle: "", author: "" },
     page_count: 1,
     unit_count: 3,

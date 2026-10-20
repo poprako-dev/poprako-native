@@ -1,19 +1,20 @@
 use poprako_orchestra::Run;
 use uuid::Uuid;
 
-use crate::data::comic::{ComicDetail, ComicInfo, ComicMetadata};
+use crate::data::comic::{ChapterOrder, ComicInfo, ComicMetadata, MoveChapter, NewComic};
 use crate::data::recovery::{EvidenceHandle, RecoveryScope, evidence_handle};
 use crate::implementation::coordinator::SqliteCoordinator;
 use crate::implementation::repository::SqliteRepository;
+use crate::model::chapter::Chapter;
 use crate::model::comic::Comic;
-use crate::part::repository::operation::{
-    CreateComic, DeleteComic, ListComicInfos, ReadComicDetail, UpdateComicMetadata,
+use crate::part::repository::comic::{
+    CreateComic, DeleteComic, ListComicInfos, RelocateChapter, ReorderChapters, UpdateComicMetadata,
 };
 use crate::result::AppResult;
 use crate::usecase::recovery::execute;
 
 /// # Errors
-/// Reports invalid pagination or unavailable storage.
+/// Rejects invalid pagination or unavailable storage.
 pub async fn list_comic_infos(
     coordinator: &SqliteCoordinator,
     offset: u32,
@@ -25,91 +26,27 @@ pub async fn list_comic_infos(
 }
 
 /// # Errors
-/// Reports invalid identity, missing content, or unavailable storage.
-pub async fn get_comic_detail(
-    coordinator: &SqliteCoordinator,
-    comic_id: &str,
-) -> AppResult<ComicDetail> {
-    SqliteRepository::new(coordinator.pool().clone())
-        .run(&ReadComicDetail {
-            comic_id: comic_id.to_owned(),
-        })
-        .await
-}
-
-/// # Errors
-/// Retains exact creation evidence on commit or rollback uncertainty.
+/// Retains both new identities when the atomic creation outcome is uncertain.
 pub async fn create_comic_with_evidence(
     coordinator: &SqliteCoordinator,
-    metadata: ComicMetadata,
-    evidence: EvidenceHandle<Comic>,
-) -> AppResult<Comic> {
+    input: NewComic,
+    evidence: EvidenceHandle<Chapter>,
+) -> AppResult<Chapter> {
     let id = Uuid::new_v4().to_string();
 
-    let scope = RecoveryScope::comic(&id);
+    let chapter_id = Uuid::new_v4().to_string();
 
-    execute(coordinator, CreateComic { id, metadata }, scope, evidence).await
-}
-
-/// # Errors
-/// Rejects invalid metadata or unavailable storage.
-pub async fn create_comic(
-    coordinator: &SqliteCoordinator,
-    metadata: ComicMetadata,
-) -> AppResult<Comic> {
-    create_comic_with_evidence(coordinator, metadata, evidence_handle()).await
-}
-
-/// # Errors
-/// Reports invalid identity, missing content, or uncertain storage outcomes.
-pub async fn update_comic_metadata_with_evidence(
-    coordinator: &SqliteCoordinator,
-    comic_id: &str,
-    metadata: ComicMetadata,
-    evidence: EvidenceHandle<Comic>,
-) -> AppResult<Comic> {
-    let operation = UpdateComicMetadata {
-        comic_id: comic_id.to_owned(),
-        metadata,
-    };
-
-    execute(
-        coordinator,
-        operation,
-        RecoveryScope::comic(comic_id),
-        evidence,
-    )
-    .await
-}
-
-/// # Errors
-/// Rejects invalid metadata or unavailable storage.
-pub async fn update_comic_metadata(
-    coordinator: &SqliteCoordinator,
-    comic_id: &str,
-    metadata: ComicMetadata,
-) -> AppResult<Comic> {
-    update_comic_metadata_with_evidence(coordinator, comic_id, metadata, evidence_handle()).await
-}
-
-/// # Errors
-/// Records the deleted aggregate and work position so cascading deletion can be verified exactly.
-pub async fn delete_comic_with_evidence(
-    coordinator: &SqliteCoordinator,
-    comic_id: &str,
-    evidence: EvidenceHandle<()>,
-) -> AppResult<()> {
     let scope = RecoveryScope {
-        comic_pages: true,
-        comic_units: true,
-        work_position: true,
-        ..RecoveryScope::comic(comic_id)
+        comic_ids: vec![id.clone()],
+        ..RecoveryScope::chapter(&chapter_id)
     };
 
     execute(
         coordinator,
-        DeleteComic {
-            comic_id: comic_id.to_owned(),
+        CreateComic {
+            id,
+            chapter_id,
+            input,
         },
         scope,
         evidence,
@@ -118,7 +55,102 @@ pub async fn delete_comic_with_evidence(
 }
 
 /// # Errors
-/// Reports missing content or uncertain storage outcomes.
+/// Creates the comic and mandatory first chapter atomically.
+pub async fn create_comic(coordinator: &SqliteCoordinator, input: NewComic) -> AppResult<Chapter> {
+    create_comic_with_evidence(coordinator, input, evidence_handle()).await
+}
+
+/// # Errors
+/// Rejects missing parents and invalid metadata.
+pub async fn update_comic_metadata(
+    coordinator: &SqliteCoordinator,
+    comic_id: &str,
+    metadata: ComicMetadata,
+) -> AppResult<Comic> {
+    execute(
+        coordinator,
+        UpdateComicMetadata {
+            comic_id: comic_id.to_owned(),
+            metadata,
+        },
+        RecoveryScope {
+            comic_ids: vec![comic_id.to_owned()],
+            ..RecoveryScope::default()
+        },
+        evidence_handle(),
+    )
+    .await
+}
+
+/// # Errors
+/// Captures all descendant identities and work positions before cascading deletion.
 pub async fn delete_comic(coordinator: &SqliteCoordinator, comic_id: &str) -> AppResult<()> {
-    delete_comic_with_evidence(coordinator, comic_id, evidence_handle()).await
+    let scope = RecoveryScope {
+        comic_ids: vec![comic_id.to_owned()],
+        chapter_pages: true,
+        chapter_units: true,
+        work_position: true,
+        ..RecoveryScope::default()
+    };
+
+    execute(
+        coordinator,
+        DeleteComic {
+            comic_id: comic_id.to_owned(),
+        },
+        scope,
+        evidence_handle(),
+    )
+    .await
+}
+
+/// # Errors
+/// Rejects partial, invalid or stale chapter orders.
+pub async fn reorder_chapters(
+    coordinator: &SqliteCoordinator,
+    input: ChapterOrder,
+) -> AppResult<()> {
+    let scope = RecoveryScope {
+        comic_ids: vec![input.comic_id.clone()],
+        ..RecoveryScope::default()
+    };
+
+    execute(
+        coordinator,
+        ReorderChapters { input },
+        scope,
+        evidence_handle(),
+    )
+    .await
+}
+
+/// # Errors
+/// Verifies both parent collections; no page or original image is relocated.
+pub async fn move_chapter(
+    coordinator: &SqliteCoordinator,
+    input: MoveChapter,
+) -> AppResult<Chapter> {
+    let scope = RecoveryScope {
+        comic_ids: vec![input.source_comic_id.clone(), input.target_comic_id.clone()],
+        work_position: true,
+        ..RecoveryScope::chapter(&input.chapter_id)
+    };
+
+    execute(
+        coordinator,
+        RelocateChapter { input },
+        scope,
+        evidence_handle(),
+    )
+    .await
+}
+
+/// # Errors
+/// Reads the current parent metadata without changing activity timestamps.
+pub async fn get_comic(coordinator: &SqliteCoordinator, comic_id: &str) -> AppResult<Comic> {
+    SqliteRepository::new(coordinator.pool().clone())
+        .run(&crate::part::repository::comic::ReadComic {
+            comic_id: comic_id.to_owned(),
+        })
+        .await
 }

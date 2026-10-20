@@ -80,7 +80,7 @@ async fn migration_failure_preserves_prior_data() -> Result<(), Box<dyn Error>> 
 
     let id = Uuid::new_v4().to_string();
 
-    sqlx::query!("INSERT INTO comic (id, title, subtitle, author, created_at, updated_at) VALUES (?, 'original', '', '', 1, 1)", id).execute(&pool).await?;
+    sqlx::query!("INSERT INTO comic (id, title, author, created_at, updated_at) VALUES (?, 'original', '', 1, 1)", id).execute(&pool).await?;
 
     std::fs::write(
         directory.join("202609260001_initial.sql"),

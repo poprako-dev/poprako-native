@@ -148,14 +148,14 @@ impl Run<ReadPageEditor> for SqliteRepository {
     type Error = AppError;
 
     async fn run(&self, operation: &ReadPageEditor) -> AppResult<PageEditor> {
-        validate_id(&operation.comic_id)?;
+        validate_id(&operation.chapter_id)?;
 
         validate_id(&operation.page_id)?;
 
         let mut transaction = self.pool.begin().await?;
 
         let result =
-            read::editor(&mut transaction, &operation.comic_id, &operation.page_id).await?;
+            read::editor(&mut transaction, &operation.chapter_id, &operation.page_id).await?;
 
         transaction.commit().await?;
 
@@ -174,13 +174,13 @@ impl Step<PersistPageUnits, SqliteContext> for SqliteRepository {
     ) -> AppResult<PageEditor> {
         let input = &operation.snapshot;
 
-        validate_id(&input.comic_id)?;
+        validate_id(&input.chapter_id)?;
 
         validate_id(&input.page_id)?;
 
         let target = normalize(&input.units)?;
 
-        let before = read::editor(&mut context.0, &input.comic_id, &input.page_id).await?;
+        let before = read::editor(&mut context.0, &input.chapter_id, &input.page_id).await?;
 
         if before.page.unit_revision != input.expected_revision {
             return Err(AppError::Conflict);
@@ -243,14 +243,9 @@ impl Step<PersistPageUnits, SqliteContext> for SqliteRepository {
         .execute(&mut *context.0)
         .await?;
 
-        sqlx::query!(
-            "UPDATE comic SET updated_at = ? WHERE id = ?",
-            now,
-            input.comic_id
-        )
-        .execute(&mut *context.0)
-        .await?;
+        crate::implementation::repository::chapter::touch(&mut context.0, &input.chapter_id, now)
+            .await?;
 
-        read::editor(&mut context.0, &input.comic_id, &input.page_id).await
+        read::editor(&mut context.0, &input.chapter_id, &input.page_id).await
     }
 }

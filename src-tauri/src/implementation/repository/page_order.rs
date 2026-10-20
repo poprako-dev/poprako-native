@@ -27,7 +27,7 @@ fn validate_baseline(pages: &[Page], baseline: &[PageBaseline]) -> AppResult<()>
 
 async fn reorder(
     connection: &mut SqliteConnection,
-    comic_id: &str,
+    chapter_id: &str,
     old: &[Page],
     ids: &[String],
     now: i64,
@@ -58,10 +58,10 @@ async fn reorder(
             .ok_or(AppError::InvalidInput)?;
 
         sqlx::query!(
-            "UPDATE page SET position = ? WHERE id = ? AND comic_id = ?",
+            "UPDATE page SET position = ? WHERE id = ? AND chapter_id = ?",
             temporary,
             id,
-            comic_id
+            chapter_id
         )
         .execute(&mut *connection)
         .await?;
@@ -71,11 +71,11 @@ async fn reorder(
 
     for (id, index) in changes {
         sqlx::query!(
-            "UPDATE page SET position = ?, updated_at = ? WHERE id = ? AND comic_id = ?",
+            "UPDATE page SET position = ?, updated_at = ? WHERE id = ? AND chapter_id = ?",
             index,
             now,
             id,
-            comic_id
+            chapter_id
         )
         .execute(&mut *connection)
         .await?;
@@ -95,7 +95,7 @@ impl Step<PersistPageOrder, SqliteContext> for SqliteRepository {
     ) -> AppResult<Vec<Page>> {
         let input = &operation.input;
 
-        let before = read_pages(&mut context.0, &input.comic_id).await?;
+        let before = read_pages(&mut context.0, &input.chapter_id).await?;
 
         validate_baseline(&before, &input.baseline)?;
 
@@ -115,22 +115,17 @@ impl Step<PersistPageOrder, SqliteContext> for SqliteRepository {
 
         reorder(
             &mut context.0,
-            &input.comic_id,
+            &input.chapter_id,
             &before,
             &input.page_ids,
             now,
         )
         .await?;
 
-        sqlx::query!(
-            "UPDATE comic SET updated_at = ? WHERE id = ?",
-            now,
-            input.comic_id
-        )
-        .execute(&mut *context.0)
-        .await?;
+        crate::implementation::repository::chapter::touch(&mut context.0, &input.chapter_id, now)
+            .await?;
 
-        read_pages(&mut context.0, &input.comic_id).await
+        read_pages(&mut context.0, &input.chapter_id).await
     }
 }
 
@@ -145,7 +140,7 @@ impl Step<DeletePages, SqliteContext> for SqliteRepository {
     ) -> AppResult<Vec<Page>> {
         let input = &operation.input;
 
-        let before = read_pages(&mut context.0, &input.comic_id).await?;
+        let before = read_pages(&mut context.0, &input.chapter_id).await?;
 
         validate_baseline(&before, &input.baseline)?;
 
@@ -180,29 +175,24 @@ impl Step<DeletePages, SqliteContext> for SqliteRepository {
             .await?;
 
             sqlx::query!(
-                "DELETE FROM page WHERE id = ? AND comic_id = ?",
+                "DELETE FROM page WHERE id = ? AND chapter_id = ?",
                 id,
-                input.comic_id
+                input.chapter_id
             )
             .execute(&mut *context.0)
             .await?;
         }
 
-        reorder(&mut context.0, &input.comic_id, &before, &survivors, now).await?;
+        reorder(&mut context.0, &input.chapter_id, &before, &survivors, now).await?;
 
         let first = survivors.first();
 
-        sqlx::query!("UPDATE work_position SET page_id = ?, unit_id = NULL WHERE comic_id = ? AND page_id IS NULL", first, input.comic_id)
+        sqlx::query!("UPDATE work_position SET page_id = ?, unit_id = NULL WHERE chapter_id = ? AND page_id IS NULL", first, input.chapter_id)
             .execute(&mut *context.0).await?;
 
-        sqlx::query!(
-            "UPDATE comic SET updated_at = ? WHERE id = ?",
-            now,
-            input.comic_id
-        )
-        .execute(&mut *context.0)
-        .await?;
+        crate::implementation::repository::chapter::touch(&mut context.0, &input.chapter_id, now)
+            .await?;
 
-        read_pages(&mut context.0, &input.comic_id).await
+        read_pages(&mut context.0, &input.chapter_id).await
     }
 }

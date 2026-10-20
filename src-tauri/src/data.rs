@@ -1,5 +1,6 @@
 pub mod archive;
 pub mod archive_task;
+pub mod chapter;
 pub mod comic;
 pub mod editor;
 pub mod export;

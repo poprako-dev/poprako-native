@@ -1,0 +1,11 @@
+name: Setup JavaScript
+description: Install independent Node.js without npm and standalone pnpm.
+runs:
+  using: composite
+  steps:
+    - if: runner.os != 'Windows'
+      shell: bash
+      run: sh script/setup-js.sh "$RUNNER_TEMP/native-js"
+    - if: runner.os == 'Windows'
+      shell: pwsh
+      run: ./script/setup-js.ps1

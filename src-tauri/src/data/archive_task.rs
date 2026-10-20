@@ -1,13 +1,19 @@
 use serde::{Deserialize, Serialize};
 use specta::Type;
 
-use crate::data::comic::ComicMetadata;
+use crate::data::archive::ArchiveComic;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 #[serde(tag = "kind", rename_all = "snake_case")]
 pub enum ArchiveTarget {
     New,
-    Existing { comic_id: String },
+    NewChapter {
+        comic_id: String,
+        baseline: Vec<String>,
+    },
+    Existing {
+        chapter_id: String,
+    },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
@@ -35,8 +41,9 @@ pub struct ArchivePagePreview {
 
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct ArchivePreview {
+    pub target_comic: Option<crate::model::comic::Comic>,
     pub pages: Vec<ArchivePagePreview>,
-    pub metadata: ComicMetadata,
+    pub metadata: ArchiveComic,
     pub page_count: u32,
     pub unit_count: u32,
     pub warnings: Vec<String>,
@@ -44,7 +51,7 @@ pub struct ArchivePreview {
 
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct ArchiveCompletion {
-    pub comic_id: String,
+    pub chapter_id: String,
     pub warnings: Vec<String>,
 }
 

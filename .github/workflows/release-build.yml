@@ -46,7 +46,7 @@ jobs:
           ref: ${{ inputs.sha }}
           persist-credentials: false
       - uses: ./.github/actions/setup
-      - run: deno task check
+      - run: pnpm run check
       - name: Check tracked files remain unchanged
         run: git diff --exit-code
       - name: Check Apple signing configuration
@@ -75,7 +75,7 @@ jobs:
         env:
           APPLE_SIGNING_IDENTITY: "-"
         with:
-          tauriScript: deno task tauri
+          tauriScript: pnpm run tauri
           args: --target aarch64-apple-darwin --bundles app,dmg -- --locked
       - name: Build signed macOS installer
         if: matrix.platform == 'macos-arm64' && env.RELEASE_SIGNING == 'true'
@@ -88,7 +88,7 @@ jobs:
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         with:
-          tauriScript: deno task tauri
+          tauriScript: pnpm run tauri
           args: --target aarch64-apple-darwin --bundles app,dmg -- --locked
       - name: Verify ad-hoc macOS signature
         if: matrix.platform == 'macos-arm64' && env.RELEASE_SIGNING != 'true'
@@ -137,7 +137,7 @@ jobs:
         if: matrix.platform == 'windows-x64'
         uses: tauri-apps/tauri-action@1deb371b0cd8bd54025b384f1cd735e725c4060f # v1
         with:
-          tauriScript: deno task tauri
+          tauriScript: pnpm run tauri
           args: >-
             --target x86_64-pc-windows-msvc --bundles nsis
             ${{ env.RELEASE_SIGNING == 'true' && format('--config "{0}"', env.WINDOWS_SIGNING_CONFIG) || '' }}
@@ -159,7 +159,7 @@ jobs:
       - name: Collect installer and provenance
         env:
           RELEASE_DIRECTORY: ${{ runner.temp }}/release-output
-        run: deno run -A script/release-artifact.ts collect
+        run: node script/release-artifact.ts collect
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: release-${{ inputs.tag }}-${{ matrix.platform }}
@@ -189,9 +189,7 @@ jobs:
         with:
           ref: ${{ inputs.sha }}
           persist-credentials: false
-      - uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed # v2
-        with:
-          deno-version-file: .deno-version
+      - uses: ./.github/actions/setup-js
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           pattern: release-${{ inputs.tag }}-*
@@ -200,7 +198,7 @@ jobs:
       - name: Verify complete artifact set
         env:
           RELEASE_DIRECTORY: ${{ runner.temp }}/release-output
-        run: deno run --allow-read --allow-write --allow-env script/release-artifact.ts verify
+        run: node script/release-artifact.ts verify
       - name: Upload to draft and publish when enabled
         uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
         env:

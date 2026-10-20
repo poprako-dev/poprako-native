@@ -5,6 +5,42 @@ import { write } from "./write";
 
 export const commands = {
   ...native,
+  moveChapter(
+    input: Parameters<typeof native.moveChapter>[0],
+  ): ReturnType<typeof native.moveChapter> {
+    return write("moveChapter", [input], (request) =>
+      native.moveChapter(input, request),
+    );
+  },
+  reorderChapters(
+    input: Parameters<typeof native.reorderChapters>[0],
+  ): ReturnType<typeof native.reorderChapters> {
+    return write("reorderChapters", [input], (request) =>
+      native.reorderChapters(input, request),
+    );
+  },
+  deleteComic(
+    comicId: Parameters<typeof native.deleteComic>[0],
+  ): ReturnType<typeof native.deleteComic> {
+    return write("deleteComic", [comicId], (request) =>
+      native.deleteComic(comicId, request),
+    );
+  },
+  updateComicMetadata(
+    comicId: Parameters<typeof native.updateComicMetadata>[0],
+    metadata: Parameters<typeof native.updateComicMetadata>[1],
+  ): ReturnType<typeof native.updateComicMetadata> {
+    return write("updateComicMetadata", [comicId, metadata], (request) =>
+      native.updateComicMetadata(comicId, metadata, request),
+    );
+  },
+  createComic(
+    input: Parameters<typeof native.createComic>[0],
+  ): ReturnType<typeof native.createComic> {
+    return write("createComic", [input], (request) =>
+      native.createComic(input, request),
+    );
+  },
   confirmArchiveImport(
     taskId: Parameters<typeof native.confirmArchiveImport>[0],
     metadata: Parameters<typeof native.confirmArchiveImport>[1],
@@ -36,26 +72,28 @@ export const commands = {
       native.reorderPages(input, request),
     );
   },
-  createComic(
-    metadata: Parameters<typeof native.createComic>[0],
-  ): ReturnType<typeof native.createComic> {
-    return write("createComic", [metadata], (request) =>
-      native.createComic(metadata, request),
+  createChapter(
+    comicId: Parameters<typeof native.createChapter>[0],
+    baseline: Parameters<typeof native.createChapter>[1],
+    metadata: Parameters<typeof native.createChapter>[2],
+  ): ReturnType<typeof native.createChapter> {
+    return write("createChapter", [comicId, baseline, metadata], (request) =>
+      native.createChapter(comicId, baseline, metadata, request),
     );
   },
-  updateComicMetadata(
-    comicId: Parameters<typeof native.updateComicMetadata>[0],
-    metadata: Parameters<typeof native.updateComicMetadata>[1],
-  ): ReturnType<typeof native.updateComicMetadata> {
-    return write("updateComicMetadata", [comicId, metadata], (request) =>
-      native.updateComicMetadata(comicId, metadata, request),
+  updateChapterMetadata(
+    chapterId: Parameters<typeof native.updateChapterMetadata>[0],
+    metadata: Parameters<typeof native.updateChapterMetadata>[1],
+  ): ReturnType<typeof native.updateChapterMetadata> {
+    return write("updateChapterMetadata", [chapterId, metadata], (request) =>
+      native.updateChapterMetadata(chapterId, metadata, request),
     );
   },
-  deleteComic(
-    comicId: Parameters<typeof native.deleteComic>[0],
-  ): ReturnType<typeof native.deleteComic> {
-    return write("deleteComic", [comicId], (request) =>
-      native.deleteComic(comicId, request),
+  deleteChapter(
+    chapterId: Parameters<typeof native.deleteChapter>[0],
+  ): ReturnType<typeof native.deleteChapter> {
+    return write("deleteChapter", [chapterId], (request) =>
+      native.deleteChapter(chapterId, request),
     );
   },
   savePageUnits(

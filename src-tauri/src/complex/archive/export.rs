@@ -57,7 +57,7 @@ pub fn document(snapshot: &ExportSnapshot) -> ArchiveDocument {
     ArchiveDocument {
         comic: ArchiveComic {
             title: snapshot.comic.title.clone(),
-            subtitle: snapshot.comic.subtitle.clone(),
+            subtitle: snapshot.chapter.title.clone(),
             author: snapshot.comic.author.clone(),
         },
         pages,

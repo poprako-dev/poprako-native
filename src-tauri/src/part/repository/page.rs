@@ -7,7 +7,7 @@ use crate::value::image::Image;
 #[derive(Oper)]
 #[oper(output = Vec<Page>)]
 pub struct AppendPages {
-    pub comic_id: String,
+    pub chapter_id: String,
     pub baseline: Vec<PageBaseline>,
     pub pages: Vec<crate::data::page::NewPage>,
 }
@@ -27,7 +27,7 @@ pub struct DeletePages {
 #[derive(Oper)]
 #[oper(output = Page)]
 pub struct ReplacePageImage {
-    pub comic_id: String,
+    pub chapter_id: String,
     pub baseline: PageBaseline,
     pub image: Image,
     pub clear_units: bool,
@@ -36,6 +36,6 @@ pub struct ReplacePageImage {
 #[derive(Oper)]
 #[oper(output = Page)]
 pub struct ReadPage {
-    pub comic_id: String,
+    pub chapter_id: String,
     pub page_id: String,
 }

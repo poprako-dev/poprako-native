@@ -1,4 +1,5 @@
 pub mod archive;
+pub mod comic;
 pub mod content;
 pub mod error;
 pub mod image;
@@ -27,13 +28,19 @@ pub fn builder() -> Builder<tauri::Wry> {
         archive::export_archive,
         page::reorder_pages,
         page::remove_pages,
-        content::list_comic_infos,
+        comic::list_comic_infos,
+        comic::create_comic,
+        comic::update_comic_metadata,
+        comic::delete_comic,
+        comic::reorder_chapters,
+        comic::move_chapter,
+        content::list_chapter_infos,
         content::search_units,
         content::replace_units,
-        content::get_comic_detail,
-        content::create_comic,
-        content::update_comic_metadata,
-        content::delete_comic,
+        content::get_chapter_detail,
+        content::create_chapter,
+        content::update_chapter_metadata,
+        content::delete_chapter,
         content::get_page_editor,
         save::save_page_units,
         content::get_preference,

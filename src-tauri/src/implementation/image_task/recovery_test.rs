@@ -11,7 +11,7 @@ use crate::implementation::image_task::{commit, recovery};
 
 #[tokio::test]
 async fn recovery_preserves_references_and_unknown_files() -> Result<(), Box<dyn Error>> {
-    let (directory, harness, comic_id) = setup().await?;
+    let (directory, harness, chapter_id) = setup().await?;
 
     let source = directory.path().join("source.png");
 
@@ -22,7 +22,7 @@ async fn recovery_preserves_references_and_unknown_files() -> Result<(), Box<dyn
     let task = stage(
         &harness,
         ImageImportTarget::Append {
-            comic_id: comic_id.clone(),
+            chapter_id: chapter_id.clone(),
             baseline: Vec::new(),
         },
         vec![source.clone()],
@@ -33,17 +33,17 @@ async fn recovery_preserves_references_and_unknown_files() -> Result<(), Box<dyn
 
     let page_id = Uuid::parse_str(&pages[0].id)?;
 
-    let comic_id = Uuid::parse_str(&comic_id)?;
+    let chapter_id = Uuid::parse_str(&chapter_id)?;
 
     let orphan = harness
         .resource
         .prepare(&source, Uuid::new_v4(), &harness.image)?;
 
-    let orphan_reference = harness.resource.publish(&orphan, comic_id, page_id)?;
+    let orphan_reference = harness.resource.publish(&orphan, chapter_id, page_id)?;
 
     let orphan_path = harness
         .resource
-        .resolve(&orphan_reference, comic_id, page_id)?;
+        .resolve(&orphan_reference, chapter_id, page_id)?;
 
     let unknown = harness
         .resource
@@ -65,7 +65,7 @@ async fn recovery_preserves_references_and_unknown_files() -> Result<(), Box<dyn
         std::fs::read(
             harness
                 .resource
-                .resolve(&pages[0].image.reference, comic_id, page_id)?
+                .resolve(&pages[0].image.reference, chapter_id, page_id)?
         )?,
         original
     );
@@ -87,7 +87,7 @@ async fn recovery_preserves_references_and_unknown_files() -> Result<(), Box<dyn
 #[tokio::test]
 async fn original_lease_blocks_removal_until_export_reader_finishes() -> Result<(), Box<dyn Error>>
 {
-    let (directory, harness, comic_id) = setup().await?;
+    let (directory, harness, chapter_id) = setup().await?;
 
     let source = directory.path().join("source.png");
 
@@ -99,20 +99,20 @@ async fn original_lease_blocks_removal_until_export_reader_finishes() -> Result<
         .resource
         .prepare(&source, Uuid::new_v4(), &harness.image)?;
 
-    let comic_id = Uuid::parse_str(&comic_id)?;
+    let chapter_id = Uuid::parse_str(&chapter_id)?;
 
     let page_id = Uuid::new_v4();
 
-    let reference = harness.resource.publish(&prepared, comic_id, page_id)?;
+    let reference = harness.resource.publish(&prepared, chapter_id, page_id)?;
 
     let mut lease = harness
         .resource
-        .open_original(&reference, comic_id, page_id)?;
+        .open_original(&reference, chapter_id, page_id)?;
 
     assert!(
         harness
             .resource
-            .remove_unreferenced(&reference, comic_id, page_id)
+            .remove_unreferenced(&reference, chapter_id, page_id)
             .is_err()
     );
 
@@ -126,12 +126,12 @@ async fn original_lease_blocks_removal_until_export_reader_finishes() -> Result<
 
     harness
         .resource
-        .remove_unreferenced(&reference, comic_id, page_id)?;
+        .remove_unreferenced(&reference, chapter_id, page_id)?;
 
     assert!(
         harness
             .resource
-            .resolve(&reference, comic_id, page_id)
+            .resolve(&reference, chapter_id, page_id)
             .is_err()
     );
 
@@ -142,7 +142,7 @@ async fn original_lease_blocks_removal_until_export_reader_finishes() -> Result<
 
 #[tokio::test]
 async fn database_unavailable_never_turns_into_delete_all() -> Result<(), Box<dyn Error>> {
-    let (directory, harness, comic_id) = setup().await?;
+    let (directory, harness, chapter_id) = setup().await?;
 
     let source = directory.path().join("source.png");
 
@@ -152,13 +152,13 @@ async fn database_unavailable_never_turns_into_delete_all() -> Result<(), Box<dy
         .resource
         .prepare(&source, Uuid::new_v4(), &harness.image)?;
 
-    let comic_id = Uuid::parse_str(&comic_id)?;
+    let chapter_id = Uuid::parse_str(&chapter_id)?;
 
     let page_id = Uuid::new_v4();
 
-    let reference = harness.resource.publish(&prepared, comic_id, page_id)?;
+    let reference = harness.resource.publish(&prepared, chapter_id, page_id)?;
 
-    let path = harness.resource.resolve(&reference, comic_id, page_id)?;
+    let path = harness.resource.resolve(&reference, chapter_id, page_id)?;
 
     harness.database().await?.pool().close().await;
 

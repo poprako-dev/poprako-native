@@ -9,7 +9,7 @@ import { Dialog } from "@/shared/component/Dialog";
 type ArchiveImportDialogProps = {
   target: ArchiveTarget;
   onClose: () => void;
-  onComplete: (comicId: string) => void;
+  onComplete: (chapterId: string) => void;
 };
 
 export function ArchiveImportDialog({
@@ -31,7 +31,7 @@ export function ArchiveImportDialog({
         await commands.chooseArchiveImport(
           target,
           stage,
-          target.kind === "new" && pairImages,
+          target.kind !== "existing" && pairImages,
         ),
       );
       if (result.status === "selected") {
@@ -67,7 +67,13 @@ export function ArchiveImportDialog({
           onClose();
         }
       }}
-      title={target.kind === "new" ? "导入本地项目" : "导入项目译文"}
+      title={
+        target.kind === "new"
+          ? "导入漫画与首章"
+          : target.kind === "new_chapter"
+            ? "导入为新章节"
+            : "导入章节译文"
+      }
       description=""
       className=""
     >
@@ -98,7 +104,7 @@ export function ArchiveImportDialog({
           校对文本（不自动确认校对）
         </label>
       </fieldset>
-      {target.kind === "new" && (
+      {target.kind !== "existing" && (
         <fieldset disabled={busy} className="space-y-2 text-sm">
           <legend className="mb-2 font-medium">配套图片</legend>
           <label className="flex gap-2">

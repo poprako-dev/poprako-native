@@ -52,7 +52,7 @@ it("shows committed cleanup warnings and allows closing without replaying the wr
     <ImageImportDialog
       target={{
         kind: "replace",
-        comic_id: "comic",
+        chapter_id: "chapter",
         baseline: { id: "page", unit_revision: 0, image_reference: "old" },
       }}
       onClose={() => undefined}
@@ -84,7 +84,7 @@ it("keeps a successful write completed when the following status read fails", as
   const complete = vi.fn<() => void>();
   render(
     <ImageImportDialog
-      target={{ kind: "append", comic_id: "comic", baseline: [] }}
+      target={{ kind: "append", chapter_id: "chapter", baseline: [] }}
       onClose={() => undefined}
       onComplete={complete}
     />,
@@ -113,7 +113,7 @@ it("ignores an older ready response after the write completes", async () => {
   mock.status.mockReturnValueOnce(older);
   render(
     <ImageImportDialog
-      target={{ kind: "append", comic_id: "comic", baseline: [] }}
+      target={{ kind: "append", chapter_id: "chapter", baseline: [] }}
       onClose={() => undefined}
       onComplete={() => undefined}
     />,
@@ -149,7 +149,7 @@ it("resumes status polling after cancellation returns stopping", async () => {
   });
   render(
     <ImageImportDialog
-      target={{ kind: "append", comic_id: "comic", baseline: [] }}
+      target={{ kind: "append", chapter_id: "chapter", baseline: [] }}
       onClose={() => undefined}
       onComplete={() => undefined}
     />,

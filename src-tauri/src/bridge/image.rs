@@ -28,7 +28,7 @@ pub struct ImageResource {
 
 async fn acquire(
     state: &Harness,
-    comic_id: String,
+    chapter_id: String,
     page_id: String,
     request: DisplayRequest,
 ) -> CommandResult<ImageResource> {
@@ -36,10 +36,10 @@ async fn acquire(
 
     let _barrier = coordinator.recovery_barrier().await;
 
-    let page = page::get_page(coordinator, &comic_id, &page_id).await?;
+    let page = page::get_page(coordinator, &chapter_id, &page_id).await?;
 
     let grant = ImageGrant {
-        comic_id: Uuid::parse_str(&comic_id).map_err(|_| AppError::InvalidInput)?,
+        chapter_id: Uuid::parse_str(&chapter_id).map_err(|_| AppError::InvalidInput)?,
         page_id: Uuid::parse_str(&page_id).map_err(|_| AppError::InvalidInput)?,
         reference: page.image.reference,
         request,
@@ -60,7 +60,7 @@ async fn acquire(
 #[specta::specta]
 pub async fn get_image_resource(
     state: State<'_, Arc<Harness>>,
-    comic_id: String,
+    chapter_id: String,
     page_id: String,
     kind: ImageKind,
 ) -> CommandResult<ImageResource> {
@@ -69,7 +69,7 @@ pub async fn get_image_resource(
         ImageKind::Preview => DisplayRequest::Preview,
     };
 
-    acquire(&state, comic_id, page_id, request).await
+    acquire(&state, chapter_id, page_id, request).await
 }
 
 /// # Errors
@@ -78,7 +78,7 @@ pub async fn get_image_resource(
 #[specta::specta]
 pub async fn get_image_tile(
     state: State<'_, Arc<Harness>>,
-    comic_id: String,
+    chapter_id: String,
     page_id: String,
     x: u32,
     y: u32,
@@ -91,7 +91,7 @@ pub async fn get_image_tile(
 
     acquire(
         &state,
-        comic_id,
+        chapter_id,
         page_id,
         DisplayRequest::Tile {
             x,

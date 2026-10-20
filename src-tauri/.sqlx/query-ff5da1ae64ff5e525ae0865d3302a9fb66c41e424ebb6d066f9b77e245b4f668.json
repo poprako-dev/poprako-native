@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO page (id, chapter_id, position, unit_revision, image_reference, image_original_name, image_format, image_width, image_height, created_at, updated_at) VALUES (?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 10
+    },
+    "nullable": []
+  },
+  "hash": "ff5da1ae64ff5e525ae0865d3302a9fb66c41e424ebb6d066f9b77e245b4f668"
+}

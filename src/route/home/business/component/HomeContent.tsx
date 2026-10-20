@@ -1,105 +1,119 @@
-import { Settings, Trash2 } from "lucide-react";
-import { IconButton } from "@/shared/component/IconButton";
+import {
+  ChevronDown,
+  ChevronRight,
+  FolderInput,
+  Plus,
+  Settings,
+  Trash2,
+} from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import type { ReactElement } from "react";
-import { commands, NativeCommandError, unwrap } from "@/bridge";
-import type { ComicInfo, ComicMetadata } from "@/bridge/generated/bindings";
+import { commands, unwrap } from "@/bridge";
+import type {
+  ArchiveTarget,
+  Comic,
+  ComicInfo,
+} from "@/bridge/generated/bindings";
 import { ArchiveImportDialog } from "@/route/business/component/ArchiveImportDialog";
-import { ComicDeleteDialog } from "@/route/business/component/ComicDeleteDialog";
-import { MetadataForm } from "@/route/business/component/MetadataForm";
+import { LibraryMetadataDialog } from "@/route/business/component/LibraryMetadataDialog";
+import type { MetadataTarget } from "@/route/business/component/LibraryMetadataDialog";
 import { PreferenceDialog } from "@/route/business/component/PreferenceDialog";
-import { ComicItem } from "@/route/home/business/component/ComicItem";
+import { ChapterList } from "@/route/home/business/component/ChapterList";
+import { ComicDeleteDialog } from "@/route/home/business/component/ComicDeleteDialog";
 import { HomeLayout } from "@/route/home/business/component/HomeLayout";
 import { QuickActions } from "@/route/home/business/component/QuickActions";
 import { Button } from "@/shared/component/Button";
-import { Dialog } from "@/shared/component/Dialog";
+import { IconButton } from "@/shared/component/IconButton";
 import { StatePanel } from "@/shared/component/StatePanel";
 
-type HomeContentProps = {
+type Props = {
   comics: ComicInfo[];
-  offset: number;
   latest: ComicInfo | null;
+  offset: number;
+  expanded: ReadonlySet<string>;
+  onToggle: (id: string) => void;
   onReload: () => void;
   onOffsetChange: (offset: number) => void;
 };
-
 export function HomeContent({
   comics,
-  offset,
   latest,
+  offset,
+  expanded,
+  onToggle,
   onReload,
   onOffsetChange,
-}: HomeContentProps): ReactElement {
+}: Props): ReactElement {
   const navigate = useNavigate();
-  const [creating, setCreating] = useState(false);
+  const [editing, setEditing] = useState<MetadataTarget | null>(null);
+  const [deleting, setDeleting] = useState<Comic | null>(null);
+  const [importing, setImporting] = useState<ArchiveTarget | null>(null);
+  const [preparingChapter, setPreparingChapter] = useState(false);
   const [settings, setSettings] = useState(false);
-  const [importing, setImporting] = useState(false);
-  const [deleting, setDeleting] = useState<ComicInfo | null>(null);
-  const [pending, setPending] = useState<ComicMetadata | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
-  const [now] = useState(Date.now);
-
-  function open(comicId: string, continueWork: boolean): void {
+  function open(chapterId: string, continueWork: boolean): void {
     navigate({
-      to: continueWork ? "/comic/$comicId/translator" : "/comic/$comicId",
-      params: { comicId },
+      to: continueWork
+        ? "/chapter/$chapterId/translator"
+        : "/chapter/$chapterId",
+      params: { chapterId },
     }).catch(() => {
-      setNotice("无法打开项目，请重试。");
+      setNotice("无法打开章节，请重试。");
     });
   }
-
-  async function create(
-    title: string,
-    subtitle: string,
-    author: string,
-  ): Promise<void> {
-    setBusy(true);
-    setError("");
-    const metadata = pending ?? { title, subtitle, author };
-    try {
-      const comic = unwrap(await commands.createComic(metadata));
-      setCreating(false);
-      setPending(null);
-      open(comic.id, false);
-    } catch (cause) {
-      if (
-        !(cause instanceof NativeCommandError) ||
-        cause.detail.recovery === "wait_for_confirmation"
-      ) {
-        setPending(metadata);
-      }
-      setError(
-        cause instanceof NativeCommandError
-          ? cause.detail.message
-          : "创建结果未确认，请保留窗口并核实。",
-      );
-    } finally {
-      setBusy(false);
-    }
+  function prepareChapter(comic: Comic, action: "create" | "import"): void {
+    if (preparingChapter) return;
+    setPreparingChapter(true);
+    setNotice("");
+    commands
+      .listChapterInfos(comic.id)
+      .then((result) => {
+        const baseline = unwrap(result).map((info) => info.chapter.id);
+        if (action === "create") {
+          setEditing({
+            kind: "new_chapter",
+            comicId: comic.id,
+            comicTitle: comic.title,
+            baseline,
+          });
+        } else {
+          setImporting({ kind: "new_chapter", comic_id: comic.id, baseline });
+        }
+      })
+      .catch(() => {
+        setNotice("无法读取漫画的章节信息，请重试新增或导入。");
+      })
+      .finally(() => {
+        setPreparingChapter(false);
+      });
   }
-
+  function continueLatest(): void {
+    const id = latest?.latest_chapter_id;
+    if (id === null || id === undefined) return;
+    commands
+      .getChapterDetail(id)
+      .then((result) => {
+        const detail = unwrap(result);
+        open(id, detail.pages.length > 0);
+      })
+      .catch(() => {
+        setNotice("最近章节无法读取，请重试。");
+      });
+  }
   return (
     <>
       <HomeLayout
         action={
           <QuickActions
             latestTitle={latest?.comic.title ?? ""}
-            canContinue={latest !== null}
-            busy={busy}
-            onContinue={() => {
-              if (latest !== null) {
-                open(latest.comic.id, latest.page_count > 0);
-              }
-            }}
+            canContinue={latest?.latest_chapter_id != null}
+            onContinue={continueLatest}
             onCreate={() => {
-              setError("");
-              setCreating(true);
+              setEditing({ kind: "new_comic" });
             }}
             onImport={() => {
-              setImporting(true);
+              setImporting({ kind: "new" });
             }}
           />
         }
@@ -111,7 +125,7 @@ export function HomeContent({
               setSettings(true);
             }}
           >
-            <Settings size={16} strokeWidth={1.5} aria-hidden="true" />
+            <Settings size={16} strokeWidth={1.5} />
           </IconButton>
         </div>
         {notice !== "" && (
@@ -121,37 +135,83 @@ export function HomeContent({
         )}
         <div className="flex flex-col gap-2">
           {comics.map((info) => {
-            const activityAt = info.last_opened_at ?? info.comic.updated_at;
-            const days = Math.max(0, (now - activityAt) / 86400000);
+            const isExpanded = expanded.has(info.comic.id);
             return (
-              <div
-                key={info.comic.id}
-                className="group flex items-center gap-1 rounded-md border border-border bg-card pr-1 transition-colors hover:bg-accent focus-within:bg-accent"
-              >
-                <ComicItem
-                  title={info.comic.title}
-                  subtitle={info.comic.subtitle}
-                  activityAt={activityAt}
-                  activity={
-                    days <= 7 ? "recent" : days <= 30 ? "past" : "inactive"
-                  }
-                  pageCount={info.page_count}
-                  unitCount={info.unit_count}
-                  translatedCount={info.translated_count}
-                  confirmedCount={info.proofread_count}
-                  onOpen={() => {
-                    open(info.comic.id, false);
-                  }}
-                />
-                <IconButton
-                  className="opacity-0 transition-opacity group-hover:text-foreground group-hover:opacity-100 group-focus-within:text-foreground group-focus-within:opacity-100 hover:bg-transparent focus-visible:opacity-100"
-                  label={`删除项目 ${info.comic.title}`}
-                  onClick={() => {
-                    setDeleting(info);
-                  }}
-                >
-                  <Trash2 size={14} strokeWidth={1.5} aria-hidden="true" />
-                </IconButton>
+              <div key={info.comic.id} className="py-1">
+                <div className="flex items-center gap-1 rounded-md border border-border bg-card pr-1 transition-colors hover:bg-accent focus-within:bg-accent">
+                  <button
+                    type="button"
+                    aria-expanded={isExpanded}
+                    onClick={() => {
+                      onToggle(info.comic.id);
+                    }}
+                    className="flex min-h-12 min-w-0 flex-1 items-center gap-3 rounded-md px-2 py-3 text-left focus-visible:outline-2 focus-visible:outline-ring"
+                  >
+                    {isExpanded ? (
+                      <ChevronDown
+                        className="size-4 shrink-0"
+                        aria-hidden="true"
+                      />
+                    ) : (
+                      <ChevronRight
+                        className="size-4 shrink-0"
+                        aria-hidden="true"
+                      />
+                    )}
+                    <span className="truncate text-base font-medium">
+                      {info.comic.title}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {info.chapter_count} 章
+                    </span>
+                    {info.comic.author !== "" && (
+                      <span className="truncate text-xs text-muted-foreground">
+                        {info.comic.author}
+                      </span>
+                    )}
+                  </button>
+                  <IconButton
+                    label={`在 ${info.comic.title} 中新增章节`}
+                    disabled={preparingChapter}
+                    onClick={() => {
+                      prepareChapter(info.comic, "create");
+                    }}
+                  >
+                    <Plus size={16} />
+                  </IconButton>
+                  <IconButton
+                    label={`向 ${info.comic.title} 导入章节`}
+                    disabled={preparingChapter}
+                    onClick={() => {
+                      prepareChapter(info.comic, "import");
+                    }}
+                  >
+                    <FolderInput size={16} />
+                  </IconButton>
+                  <IconButton
+                    label={`编辑漫画 ${info.comic.title}`}
+                    onClick={() => {
+                      setEditing({ kind: "comic", comic: info.comic });
+                    }}
+                  >
+                    <Settings size={14} />
+                  </IconButton>
+                  <IconButton
+                    label={`删除漫画 ${info.comic.title}`}
+                    onClick={() => {
+                      setDeleting(info.comic);
+                    }}
+                  >
+                    <Trash2 size={14} />
+                  </IconButton>
+                </div>
+                {isExpanded && (
+                  <ChapterList
+                    comic={info.comic}
+                    onReload={onReload}
+                    onOpen={open}
+                  />
+                )}
               </div>
             );
           })}
@@ -159,12 +219,12 @@ export function HomeContent({
         {comics.length === 0 && (
           <StatePanel
             state="empty"
-            message="暂无项目，创建一个项目开始翻校。"
+            message="暂无漫画，新建漫画与首章开始翻校。"
           />
         )}
         {(offset > 0 || comics.length === 50) && (
           <nav
-            aria-label="项目列表分页"
+            aria-label="漫画列表分页"
             className="flex justify-center gap-3 py-4"
           >
             <Button
@@ -188,78 +248,40 @@ export function HomeContent({
           </nav>
         )}
       </HomeLayout>
-      <Dialog
-        open={creating}
-        onOpenChange={(openState) => {
-          if (!busy && pending === null) {
-            setCreating(openState);
-          }
-        }}
-        title="创建项目"
-        description=""
-        className=""
-      >
-        <MetadataForm
-          title=""
-          subtitle=""
-          author=""
-          busy={busy || pending !== null}
-          error={error}
-          submitLabel="创建项目"
-          onCancel={() => {
-            setCreating(false);
-          }}
-          onSubmit={(title, subtitle, author) => {
-            create(title, subtitle, author).catch(() => {
-              setError("创建未完成，请重试。");
-            });
-          }}
-        />
-        {pending !== null && (
-          <Button
-            variant="primary"
-            disabled={busy}
-            onClick={() => {
-              create(pending.title, pending.subtitle, pending.author).catch(
-                () => {
-                  setError("创建结果未确认，请核实。");
-                },
-              );
-            }}
-          >
-            核实原创建结果
-          </Button>
-        )}
-      </Dialog>
-      {settings && (
-        <PreferenceDialog
+      {editing !== null && (
+        <LibraryMetadataDialog
+          target={editing}
           onClose={() => {
-            setSettings(false);
+            setEditing(null);
           }}
-        />
-      )}
-      {importing && (
-        <ArchiveImportDialog
-          target={{ kind: "new" }}
-          onClose={() => {
-            setImporting(false);
-          }}
-          onComplete={(comicId) => {
-            setImporting(false);
-            open(comicId, false);
-          }}
+          onComplete={onReload}
         />
       )}
       {deleting !== null && (
         <ComicDeleteDialog
-          comicId={deleting.comic.id}
-          title={deleting.comic.title}
+          comic={deleting}
           onClose={() => {
             setDeleting(null);
           }}
-          onComplete={() => {
-            setDeleting(null);
-            onReload();
+          onComplete={onReload}
+        />
+      )}
+      {importing !== null && (
+        <ArchiveImportDialog
+          target={importing}
+          onClose={() => {
+            setImporting(null);
+          }}
+          onComplete={(id) => {
+            setImporting(null);
+            open(id, false);
+          }}
+        />
+      )}
+      {settings && (
+        <PreferenceDialog
+          onClose={() => {
+            setSettings(false);
           }}
         />
       )}

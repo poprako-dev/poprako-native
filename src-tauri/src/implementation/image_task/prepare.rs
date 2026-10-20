@@ -11,12 +11,13 @@ use crate::implementation::image::error::ImageError;
 use crate::implementation::image_task::PreparedFile;
 use crate::implementation::image_task::name::sort_sources;
 use crate::result::{AppError, AppResult};
-use crate::usecase::comic;
+use crate::usecase::chapter;
 
 /// # Errors
 /// Requires the complete preparation baseline to still describe the current target.
 pub async fn validate_target(harness: &Harness, target: &ImageImportTarget) -> AppResult<()> {
-    let detail = comic::get_comic_detail(harness.database().await?, target.comic_id()).await?;
+    let detail =
+        chapter::get_chapter_detail(harness.database().await?, target.chapter_id()).await?;
 
     let matches = |page: &crate::model::page::Page, baseline: &crate::data::page::PageBaseline| {
         page.id == baseline.id

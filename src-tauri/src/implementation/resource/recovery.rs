@@ -8,7 +8,7 @@ use crate::implementation::resource::ResourceStore;
 use crate::implementation::resource::path::{checked_path, valid_id};
 
 pub struct OriginalCandidate {
-    pub comic_id: Uuid,
+    pub chapter_id: Uuid,
     pub page_id: Uuid,
     pub reference: String,
 }
@@ -53,8 +53,8 @@ fn owned_directories(
 pub fn original_candidates(store: &ResourceStore) -> Result<Vec<OriginalCandidate>, ImageError> {
     let mut candidates = Vec::new();
 
-    for (comic_id, comic_path) in owned_directories(store.root(), Path::new("library"))? {
-        for (page_id, page_path) in owned_directories(store.root(), &comic_path)? {
+    for (chapter_id, chapter_path) in owned_directories(store.root(), Path::new("library"))? {
+        for (page_id, page_path) in owned_directories(store.root(), &chapter_path)? {
             for entry in fs::read_dir(store.root().join(&page_path))? {
                 let entry = entry?;
 
@@ -70,12 +70,12 @@ pub fn original_candidates(store: &ResourceStore) -> Result<Vec<OriginalCandidat
 
                 let reference = reference.replace('\\', "/");
 
-                if store.resolve(&reference, comic_id, page_id).is_err() {
+                if store.resolve(&reference, chapter_id, page_id).is_err() {
                     continue;
                 }
 
                 candidates.push(OriginalCandidate {
-                    comic_id,
+                    chapter_id,
                     page_id,
                     reference,
                 });

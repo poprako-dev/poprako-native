@@ -29,13 +29,13 @@ impl std::io::Read for CancellableOriginal {
 async fn write(
     state: Arc<Harness>,
     id: String,
-    comic_id: String,
+    chapter_id: String,
     target: PathBuf,
     include_images: bool,
     overwrite: bool,
     cancel: Arc<AtomicBool>,
 ) -> AppResult<ArchiveCompletion> {
-    let snapshot = crate::usecase::export::snapshot(state.database().await?, &comic_id).await?;
+    let snapshot = crate::usecase::export::snapshot(state.database().await?, &chapter_id).await?;
 
     tokio::task::spawn_blocking(move || {
         let document = crate::complex::archive::export::document(&snapshot);
@@ -51,7 +51,7 @@ async fn write(
                         .resource
                         .open_original(
                             &page.page.image.reference,
-                            Uuid::parse_str(&comic_id).map_err(|_| AppError::InvalidInput)?,
+                            Uuid::parse_str(&chapter_id).map_err(|_| AppError::InvalidInput)?,
                             Uuid::parse_str(&page.page.id).map_err(|_| AppError::InvalidInput)?,
                         )
                         .map_err(|_| AppError::Storage)?,
@@ -101,7 +101,7 @@ async fn write(
         )?;
 
         Ok(ArchiveCompletion {
-            comic_id,
+            chapter_id,
             warnings: vec!["已导出完整 PRK 与有损兼容 LP".to_owned()],
         })
     })
@@ -113,7 +113,7 @@ async fn write(
 pub async fn run(
     state: Arc<Harness>,
     id: String,
-    comic_id: String,
+    chapter_id: String,
     target: PathBuf,
     include_images: bool,
     overwrite: bool,
@@ -122,7 +122,7 @@ pub async fn run(
     let result = write(
         Arc::clone(&state),
         id.clone(),
-        comic_id,
+        chapter_id,
         target,
         include_images,
         overwrite,

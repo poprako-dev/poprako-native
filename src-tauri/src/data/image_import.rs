@@ -7,20 +7,20 @@ use crate::data::page::PageBaseline;
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
 pub enum ImageImportTarget {
     Append {
-        comic_id: String,
+        chapter_id: String,
         baseline: Vec<PageBaseline>,
     },
     Replace {
-        comic_id: String,
+        chapter_id: String,
         baseline: PageBaseline,
     },
 }
 
 impl ImageImportTarget {
     #[must_use]
-    pub fn comic_id(&self) -> &str {
+    pub fn chapter_id(&self) -> &str {
         match self {
-            Self::Append { comic_id, .. } | Self::Replace { comic_id, .. } => comic_id,
+            Self::Append { chapter_id, .. } | Self::Replace { chapter_id, .. } => chapter_id,
         }
     }
 }

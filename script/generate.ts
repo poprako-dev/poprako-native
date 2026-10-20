@@ -25,9 +25,7 @@ const check = process.argv.includes("--check");
 const root = process.cwd();
 const temporary = await mkdtemp(join(tmpdir(), "poprako-generate-"));
 try {
-  await run("deno", [
-    "run",
-    "-A",
+  await run(process.execPath, [
     "script/sql-metadata.ts",
     ...(check ? ["--check"] : []),
   ]);

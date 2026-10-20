@@ -173,3 +173,6 @@ mod preference_migration_test;
 
 #[cfg(test)]
 mod shortcut_migration_test;
+
+#[cfg(test)]
+mod hierarchy_migration_test;

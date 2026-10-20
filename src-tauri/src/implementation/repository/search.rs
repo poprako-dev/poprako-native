@@ -7,7 +7,7 @@ use crate::data::editor::{SavePageUnits, UnitDraft};
 use crate::data::search::{ReplacementResult, SearchHit, TextStage};
 use crate::implementation::coordinator::{Immediate, SqliteContext};
 use crate::implementation::repository::SqliteRepository;
-use crate::implementation::repository::catalog::read_comic;
+use crate::implementation::repository::catalog::read_chapter;
 use crate::implementation::repository::read;
 use crate::part::repository::operation::PersistPageUnits;
 use crate::part::repository::search::{Replace, Search};
@@ -20,7 +20,7 @@ impl Run<Search> for SqliteRepository {
     async fn run(&self, operation: &Search) -> AppResult<Vec<SearchHit>> {
         let input = &operation.input;
 
-        validate_id(&input.comic_id)?;
+        validate_id(&input.chapter_id)?;
 
         let query = input.query.trim();
 
@@ -30,7 +30,7 @@ impl Run<Search> for SqliteRepository {
 
         let mut transaction = self.pool.begin().await?;
 
-        read_comic(&mut transaction, &input.comic_id).await?;
+        read_chapter(&mut transaction, &input.chapter_id).await?;
 
         if query.contains('\0') {
             return Ok(Vec::new());
@@ -42,9 +42,9 @@ impl Run<Search> for SqliteRepository {
             "SELECT u.id, u.page_id, u.position AS unit_index, p.position AS page_index, p.unit_revision,
             CASE WHEN ? THEN u.proofread_text ELSE u.translated_text END AS \"text!: String\"
             FROM unit u JOIN page p ON p.id = u.page_id
-            WHERE p.comic_id = ? AND instr(CASE WHEN ? THEN u.proofread_text ELSE u.translated_text END, ?) > 0
+            WHERE p.chapter_id = ? AND instr(CASE WHEN ? THEN u.proofread_text ELSE u.translated_text END, ?) > 0
             ORDER BY p.position, u.position LIMIT 101",
-            proofreading, input.comic_id, proofreading, query
+            proofreading, input.chapter_id, proofreading, query
         ).fetch_all(&mut *transaction).await?;
 
         if rows.len() > 100 {
@@ -81,7 +81,7 @@ impl Step<Replace, SqliteContext> for SqliteRepository {
     ) -> AppResult<ReplacementResult> {
         let input = &operation.input;
 
-        validate_id(&input.comic_id)?;
+        validate_id(&input.chapter_id)?;
 
         if input.units.is_empty() || input.units.len() > 100 {
             return Err(AppError::InvalidInput);
@@ -112,7 +112,7 @@ impl Step<Replace, SqliteContext> for SqliteRepository {
         };
 
         for (page_id, replacements) in grouped {
-            let editor = read::editor(&mut context.0, &input.comic_id, page_id).await?;
+            let editor = read::editor(&mut context.0, &input.chapter_id, page_id).await?;
 
             let mut drafts: Vec<_> = editor.units.iter().map(UnitDraft::from).collect();
 
@@ -156,7 +156,7 @@ impl Step<Replace, SqliteContext> for SqliteRepository {
                 context,
                 &PersistPageUnits {
                     snapshot: SavePageUnits {
-                        comic_id: input.comic_id.clone(),
+                        chapter_id: input.chapter_id.clone(),
                         page_id: page_id.clone(),
                         expected_revision: editor.page.unit_revision,
                         units: drafts,

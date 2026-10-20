@@ -56,7 +56,7 @@ pub fn respond(
                         .resource
                         .display(
                             &grant.reference,
-                            grant.comic_id,
+                            grant.chapter_id,
                             grant.page_id,
                             grant.request,
                             &state.image,

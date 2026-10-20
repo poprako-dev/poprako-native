@@ -1,0 +1,74 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT chapter_id, last_opened_at, page_id, unit_id, mode FROM work_position WHERE chapter_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "chapter_id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "work_position",
+            "name": "chapter_id"
+          }
+        }
+      },
+      {
+        "name": "last_opened_at",
+        "ordinal": 1,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "work_position",
+            "name": "last_opened_at"
+          }
+        }
+      },
+      {
+        "name": "page_id",
+        "ordinal": 2,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "work_position",
+            "name": "page_id"
+          }
+        }
+      },
+      {
+        "name": "unit_id",
+        "ordinal": 3,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "work_position",
+            "name": "unit_id"
+          }
+        }
+      },
+      {
+        "name": "mode",
+        "ordinal": 4,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "work_position",
+            "name": "mode"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true,
+      false
+    ]
+  },
+  "hash": "7c8635b26a42f81455e86698ebc7fd9847b84211c61d4688dc7f9616bb1ebe37"
+}

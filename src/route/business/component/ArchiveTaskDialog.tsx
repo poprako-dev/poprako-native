@@ -3,7 +3,7 @@ import type { ReactElement } from "react";
 import { commands, NativeCommandError, unwrap } from "@/bridge";
 import type {
   ArchiveImportMode,
-  ComicMetadata,
+  ArchiveComic,
 } from "@/bridge/generated/bindings";
 import { ArchiveImportPreview } from "@/route/business/component/ArchiveImportPreview";
 import { useArchiveTask } from "@/route/business/use-archive-task";
@@ -15,9 +15,9 @@ type ArchiveTaskDialogProps = {
   intent: "import" | "export";
   existing: boolean;
   onClose: () => void;
-  onComplete: (comicId: string) => void;
+  onComplete: (chapterId: string) => void;
 };
-type PendingImport = { metadata: ComicMetadata; mode: ArchiveImportMode };
+type PendingImport = { metadata: ArchiveComic; mode: ArchiveImportMode };
 
 export function ArchiveTaskDialog({
   taskId,
@@ -39,9 +39,9 @@ export function ArchiveTaskDialog({
     task?.phase === "committing" ||
     task?.phase === "cleaning";
 
-  async function consume(comicId: string): Promise<void> {
+  async function consume(chapterId: string): Promise<void> {
     unwrap(await commands.acknowledgeArchiveTask(taskId));
-    onComplete(comicId);
+    onComplete(chapterId);
   }
 
   async function close(): Promise<void> {
@@ -49,7 +49,7 @@ export function ArchiveTaskDialog({
     setError("");
     try {
       if (task?.phase === "completed") {
-        await consume(task.result.comic_id);
+        await consume(task.result.chapter_id);
         return;
       }
       if (task?.phase === "failed" || task?.phase === "cancelled") {
@@ -71,7 +71,7 @@ export function ArchiveTaskDialog({
   }
 
   async function confirm(
-    metadata: ComicMetadata,
+    metadata: ArchiveComic,
     mode: ArchiveImportMode,
   ): Promise<void> {
     setBusy(true);
