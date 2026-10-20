@@ -69,6 +69,9 @@ export function useEditorShortcuts(options: Options): void {
         return;
       event.preventDefault();
       switch (shortcut.action) {
+        case "undo":
+          if (!event.repeat) session.undo();
+          return;
         case "save":
           void session.save();
           return;

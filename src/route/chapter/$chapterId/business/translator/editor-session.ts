@@ -7,6 +7,8 @@ import type {
   UnitDraft,
 } from "@/bridge/generated/bindings";
 
+import { createUnitHistory } from "./unit-history";
+
 export interface EditorApi {
   save(snapshot: SavePageUnits): Promise<PageEditor>;
 }
@@ -15,6 +17,7 @@ export type EditorState = {
   baseline: PageEditor;
   draft: UnitDraft[];
   generation: number;
+  canUndo: boolean;
   mode: EditorMode;
   selected: string;
   recentSymbol: string;
@@ -26,6 +29,8 @@ export type EditorState = {
 };
 
 export interface EditorActions {
+  undo(): void;
+  clearHistory(): void;
   edit(id: string, patch: Partial<UnitDraft>): void;
   replace(units: UnitDraft[]): void;
   select(id: string): void;
@@ -82,6 +87,7 @@ export function createEditorSession(
     baseline: initial,
     draft: initial.units.map(unitDraft),
     generation: 0,
+    canUndo: false,
     mode,
     selected: "",
     recentSymbol: "",
@@ -94,6 +100,7 @@ export function createEditorSession(
   let timer: ReturnType<typeof setTimeout> | undefined;
   let inflight: Promise<boolean> | undefined;
   const suspension = new Set<string>();
+  const history = createUnitHistory();
   let disposed = false;
   let uncertainSubmission: EditorState | null = null;
 
@@ -127,7 +134,12 @@ export function createEditorSession(
       state.mode === "readonly"
     )
       return;
-    store.setState({ draft, generation: state.generation + 1 });
+    if (!history.record(state.draft, draft)) return;
+    store.setState({
+      draft,
+      generation: state.generation + 1,
+      canUndo: history.canUndo(),
+    });
     schedule();
   }
 
@@ -143,15 +155,10 @@ export function createEditorSession(
         units: submitted.draft.map(normalizedDraft),
       });
       if (disposed) return false;
-      const current = store.getState();
       // A receipt advances only the submitted baseline, never subsequent edits.
       uncertainSubmission = null;
       store.setState({
         baseline: result,
-        draft:
-          current.generation === submitted.generation
-            ? result.units.map(unitDraft)
-            : current.draft,
         busy: false,
         error: "",
         uncertain: false,
@@ -205,6 +212,32 @@ export function createEditorSession(
     replace,
     save,
     flush,
+    clearHistory(): void {
+      history.clear();
+      store.setState({ canUndo: false });
+    },
+    undo(): void {
+      const state = store.getState();
+      if (
+        disposed ||
+        state.locked ||
+        state.uncertain ||
+        state.mode === "readonly" ||
+        suspension.size > 0
+      )
+        return;
+      const draft = history.undo(state.draft);
+      if (!draft) return;
+      store.setState({
+        draft,
+        generation: state.generation + 1,
+        canUndo: history.canUndo(),
+        selected: draft.some((unit) => unit.id === state.selected)
+          ? state.selected
+          : "",
+      });
+      schedule();
+    },
     edit(id, patch): void {
       replace(
         store
@@ -229,7 +262,14 @@ export function createEditorSession(
     reload(page): void {
       if (store.getState().busy || uncertainSubmission) return;
       clearTimer();
+      history.clear();
       store.setState({
+        canUndo: false,
+        selected: page.units.some(
+          (unit) => unit.id === store.getState().selected,
+        )
+          ? store.getState().selected
+          : "",
         baseline: page,
         draft: page.units.map(unitDraft),
         generation: store.getState().generation + 1,
@@ -257,7 +297,14 @@ export function createEditorSession(
       const state = store.getState();
       if (state.busy || state.uncertain) return false;
       clearTimer();
+      history.clear();
       store.setState({
+        canUndo: false,
+        selected: state.baseline.units.some(
+          (unit) => unit.id === state.selected,
+        )
+          ? state.selected
+          : "",
         draft: state.baseline.units.map(unitDraft),
         error: "",
         locked: false,
@@ -271,6 +318,8 @@ export function createEditorSession(
     dispose(): void {
       disposed = true;
       clearTimer();
+      history.clear();
+      store.setState({ canUndo: false });
     },
   };
 }

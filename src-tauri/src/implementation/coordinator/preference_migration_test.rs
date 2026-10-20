@@ -6,7 +6,7 @@ use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
 use uuid::Uuid;
 
 use crate::implementation::coordinator::database;
-use crate::model::preference::ApplicationPreference;
+use crate::model::preference::{ApplicationPreference, ShortcutAction};
 
 pub async fn database_before_shortcuts(
     payload: &str,
@@ -66,7 +66,13 @@ fn legacy_payload(theme: &str) -> Result<(ApplicationPreference, String), Box<dy
         ..ApplicationPreference::default()
     };
 
-    let mut json = serde_json::to_value(&preference)?;
+    let mut legacy = preference.clone();
+
+    legacy
+        .shortcut
+        .retain(|item| item.action != ShortcutAction::Undo);
+
+    let mut json = serde_json::to_value(&legacy)?;
 
     let Some(object) = json.as_object_mut() else {
         return Err("preference must serialize as an object".into());

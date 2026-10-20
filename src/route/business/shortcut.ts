@@ -5,6 +5,7 @@ import type {
 } from "@/bridge/generated/bindings";
 
 export const shortcutLabel: Record<ShortcutAction, string> = {
+  undo: "万能回退",
   save: "保存",
   cycle_mode: "切换模式",
   toggle_relocation: "启用重定位",
@@ -36,7 +37,7 @@ export function formatShortcut(binding: ShortcutBinding): string {
     binding.meta ? "Cmd" : "",
     binding.alt ? "Alt" : "",
     binding.shift ? "Shift" : "",
-    binding.key.replace(/^Key|^Digit/u, ""),
+    binding.key === "Period" ? "." : binding.key.replace(/^Key|^Digit/u, ""),
   ]
     .filter((part) => part !== "")
     .join(" + ");

@@ -29,7 +29,7 @@ type EditorWorkspaceProps = {
   detail: ChapterDetail;
   onPage: (id: string) => void;
   onExit: () => void;
-  onRefresh: () => Promise<void>;
+  onRefresh: (changedPageIds: string[]) => Promise<void>;
 };
 
 export function EditorWorkspace({
@@ -258,7 +258,7 @@ export function EditorWorkspace({
           if (!open) setDeleting("");
         }}
         title="删除单元？"
-        description="标记及翻译、校对文本将被删除，保存后无法恢复。"
+        description="标记及翻译、校对文本将被删除，可在当前页编辑会话内使用万能回退恢复；切页、离开或替换当前页内容后不可恢复。"
         className=""
       >
         <div className="flex justify-end gap-2">

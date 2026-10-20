@@ -159,7 +159,7 @@ Exported by PopRaKo Native
 ### 3.2 偏好与默认值
 
 - 固定浅色；旧偏好中的 system／light／dark 经完整校验后移除 theme，其余设置保留，损坏数据不重置。编辑模式属于每个 chapter 工作位置，不混进全局偏好。
-- 快捷键由有限 action → binding 映射组成，binding 是 unbound 或 chord 判别联合；提供恢复默认和冲突检查。默认键位、顺序和动作直接复刻 `poprako-web@46dd776` 的 `src/route/_authenticated/translator/business/preference/use-shortcuts.ts`，Windows 与 macOS 均使用明确的 Ctrl，不转换为 Cmd。
+- 快捷键由有限 action → binding 映射组成，binding 是 unbound 或 chord 判别联合；提供恢复默认和冲突检查。默认键位、顺序和动作直接复刻 `poprako-web@46dd776` 的 `src/route/_authenticated/translator/business/preference/use-shortcuts.ts`，这 12 个既有操作在 Windows 与 macOS 均使用明确的 Ctrl；新增万能回退是例外，见下方 Issue #2 说明。
 - Ctrl＋M 切换模式，Ctrl＋L 切换重定位，Ctrl＋X 切换标记显示／淡化，Tab／Shift＋Tab 循环选择下一个／上一个标记，Ctrl＋U／D 上一／下一页，Ctrl＋Q 输入最近一次符号（未使用过时取字符表首项），Alt＋1／2／3 输入前三个优选符号，Ctrl＋S 保存。标记导航在首尾循环，切页停在边界；Escape 取消单元选择。Ctrl＋X 与工具栏眼睛按钮共享暂态，不改写 marker_opacity 偏好。
 - 单元输入框中快捷键正常生效，选择标记后滚动并聚焦输入末尾；符号插入替换选区，在 DOM 提交时恢复光标并消费请求，返回页面不会重放，也支持从画布向已选单元插入。最近符号、标记显示／淡化等工作台状态跨页保留。其他输入框、组合输入、AltGr、已处理事件、弹窗、只读统计展开、切页锁和提交待核实状态不拦截工作台键位。WKWebView 会把正常 Option 数字键报为 keyCode 229；此时按 code 匹配，并以实际 composition 状态保护正在组合的输入。只读保留标记导航、切页、模式和透明度切换，屏蔽编辑操作。
 - 旧默认键位通过一次性偏好数据升级改为 Web 键位，与旧默认不同的自定义键位／解绑保留；旧默认未绑定的符号和显示操作补齐 Web 绑定，新默认与自定义冲突时自定义优先。旧 canvas_navigation 范围升级为 editor；旧 cycle_marker_opacity action 兼容读取并序列化为 toggle_proofread_preview。升级标记与偏好写入在同一事务中，重开不会再次覆盖用户配置。
@@ -241,3 +241,21 @@ UI 必须直接对照固定版本参考组件迁移：Translator 以 Web 为准�
 层级升级使用版本化迁移 `202610190001_comic_chapter.sql`；旧迁移不改写。宿主自动化验证覆盖旧库无损升级、失败回滚、关闭连接后的备份恢复、重启一致性、创建首章原子性、章序冲突、移章后原图与工作位置保持，以及 PRK v1 使用目标漫画资料。
 
 Windows 10 22H2 x64、最低 macOS 13.3 arm64 的安装／升级及本次 Home 原生交互仍需目标环境实测；本记录不宣称平台门禁或完整性能验收通过。
+
+## 万能回退（Issue #2）
+
+仅跟进 poprako-web@e5022518b8a8dab619723440e8f3e69078bcf593 的回退行为，不整体升级页面布局或其他能力。前端会话提供 canUndo、undo 和 clearHistory；历史、输入法隔离、保存回执及搜索替换边界见编辑保存契约。SQLite 保存接口与表结构保持，Rust ShortcutAction 增加 undo 并生成 IPC 类型。
+
+默认键为 Windows Ctrl+.、macOS Cmd+.；其他默认键位不变。设置显示「万能回退」，支持录制、解绑及冲突检查，不添加工具栏入口。
+
+偏好启动顺序为按升级记录严格预检 → 既有 SQL 迁移 → 旧 12 项 web_shortcuts 升级 → undo_shortcut 数据升级。复用 application_preference_upgrade，不改已发布迁移。旧设置必须完整包含旧 12 项；完成新升级后必须包含全部 13 项。新动作的默认键被占用时，保留原绑定并将回退设为未绑定；偏好正文和完成记录同事务提交，重开保留自定义和解绑。损坏数据、缺失动作或重复绑定不能被自动补齐或重置掩盖。
+
+本次不增加搜索结果定位、质量切换、redo 或跨会话历史；搜索替换不可回退。Windows/macOS 原生键位、中文输入、原生撤销、最低系统与性能门禁需分别实测，自动化测试不替代桌面验收。
+
+### Issue #2 验证记录（2026-10-20）
+
+宿主执行 `pnpm run generate`、完整 `pnpm run check` 和 `pnpm run build` 通过。完整检查含 26 个前端测试文件／116 项测试、85 项 Rust 应用测试及 5 项 Rust 风格检查器测试，以及格式、类型、lint、专项规则、SQL 元数据、IPC／路由生成一致性和 Clippy。开发服务器测试需本地监听权限，在允许该权限的环境中通过。
+
+新增自动化覆盖跨单元混合操作与不同保存顺序、在途删除／创建回退、保存失败与提交核实、原始空白历史、输入法预编辑及回执期间选区、快捷键隔离／重绑／解绑、按实际受影响页面清理搜索替换历史、刷新失败只重读、旧偏好冲突及事务回滚，以及已保存删除的原 UUID 恢复和关闭数据库后重开一致性。
+
+本次尚未在 Windows WebView2 与 macOS WKWebView 中实测新键位、中文输入法和输入框原生撤销；最低系统安装／升级及长编辑会话性能仍未验证，不将宿主自动化结果计作双平台原生验收通过。

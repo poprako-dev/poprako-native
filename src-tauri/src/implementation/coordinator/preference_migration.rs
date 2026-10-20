@@ -2,6 +2,7 @@ use serde::Deserialize;
 use sqlx::SqlitePool;
 
 use crate::complex::preference::validate;
+use crate::implementation::coordinator::undo_migration;
 use crate::model::preference::{ApplicationPreference, Shortcut, SpecialCharacter};
 use crate::result::{AppError, AppResult};
 
@@ -60,5 +61,11 @@ pub async fn preflight(pool: &SqlitePool) -> AppResult<()> {
         return Ok(());
     };
 
-    validate(&parse(&payload)?).map_err(|_| AppError::RecoveryRequired)
+    let preference = parse(&payload)?;
+
+    if undo_migration::completed(pool).await? {
+        return validate(&preference).map_err(|_| AppError::RecoveryRequired);
+    }
+
+    undo_migration::validate_legacy(&preference)
 }

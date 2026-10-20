@@ -4,6 +4,7 @@ use specta::Type;
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Type)]
 #[serde(rename_all = "snake_case")]
 pub enum ShortcutAction {
+    Undo,
     Save,
     CycleMode,
     ToggleRelocation,
@@ -55,6 +56,21 @@ pub struct SpecialCharacter {
     pub is_favorite: bool,
 }
 
+#[must_use]
+pub fn undo_shortcut(macos: bool) -> Shortcut {
+    Shortcut {
+        action: ShortcutAction::Undo,
+        binding: ShortcutBinding::Chord {
+            key: "Period".to_owned(),
+            control: !macos,
+            meta: macos,
+            alt: false,
+            shift: false,
+            scope: ShortcutScope::Editor,
+        },
+    }
+}
+
 fn shortcut(action: ShortcutAction, key: &str, control: bool, alt: bool, shift: bool) -> Shortcut {
     Shortcut {
         action,
@@ -81,6 +97,7 @@ pub struct ApplicationPreference {
 impl Default for ApplicationPreference {
     fn default() -> Self {
         let bindings = vec![
+            undo_shortcut(cfg!(target_os = "macos")),
             shortcut(ShortcutAction::CycleMode, "KeyM", true, false, false),
             shortcut(ShortcutAction::ToggleRelocation, "KeyL", true, false, false),
             shortcut(

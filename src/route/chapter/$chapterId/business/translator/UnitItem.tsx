@@ -8,7 +8,7 @@ import type {
 } from "@/bridge/generated/bindings";
 import type { EditorSession } from "./editor-session";
 import { TextDifference } from "./TextDifference";
-import { AutoResizeTextarea } from "./AutoResizeTextarea";
+import { UnitTextarea } from "./UnitTextarea";
 import { SpecialCharsBar } from "./SpecialCharsBar";
 import type { SymbolRequest } from "./SpecialCharsBar";
 import type { SpecialCharsBarController } from "./use-detachable-special-chars-bar";
@@ -109,7 +109,7 @@ export function UnitItem({
   const insert = useCallback(
     (text: string): void => {
       const textarea = input.current;
-      if (!textarea || readonly || !selected) return;
+      if (!textarea || readonly || !selected || session.isComposing()) return;
       session.useSymbol(text);
       const start = textarea.selectionStart;
       const end = textarea.selectionEnd;
@@ -218,7 +218,7 @@ export function UnitItem({
               </button>
             )}
             {mode === "translation" && (
-              <AutoResizeTextarea
+              <UnitTextarea
                 inputRef={input}
                 aria-label={`翻译 ${String(index + 1)}`}
                 rows={1}
@@ -229,15 +229,10 @@ export function UnitItem({
                 onFocus={() => {
                   session.select(unit.id);
                 }}
-                onCompositionStart={() => {
-                  session.suspend(true);
-                }}
-                onCompositionEnd={() => {
-                  session.suspend(false);
-                }}
-                onChange={(event) => {
+                session={session}
+                onTextChange={(value) => {
                   session.edit(unit.id, {
-                    translated_text: event.target.value,
+                    translated_text: value,
                   });
                 }}
               />
@@ -280,7 +275,7 @@ export function UnitItem({
           <>
             <div className="my-1 mr-10 h-[1.5px] bg-gray-300" />
             <div className="flex items-start gap-1">
-              <AutoResizeTextarea
+              <UnitTextarea
                 inputRef={input}
                 aria-label={`校对 ${String(index + 1)}`}
                 rows={1}
@@ -291,14 +286,9 @@ export function UnitItem({
                 onFocus={() => {
                   session.select(unit.id);
                 }}
-                onCompositionStart={() => {
-                  session.suspend(true);
-                }}
-                onCompositionEnd={() => {
-                  session.suspend(false);
-                }}
-                onChange={(event) => {
-                  session.edit(unit.id, { proofread_text: event.target.value });
+                session={session}
+                onTextChange={(value) => {
+                  session.edit(unit.id, { proofread_text: value });
                 }}
               />
               <div className="size-7 shrink-0">
