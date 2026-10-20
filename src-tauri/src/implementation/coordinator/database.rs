@@ -4,7 +4,9 @@ use std::time::Duration;
 use sqlx::SqlitePool;
 use sqlx::sqlite::{SqliteConnectOptions, SqliteJournalMode, SqlitePoolOptions, SqliteSynchronous};
 
-use crate::implementation::coordinator::{preference_migration, shortcut_migration};
+use crate::implementation::coordinator::{
+    preference_migration, shortcut_migration, undo_migration,
+};
 use crate::result::{AppError, AppResult};
 
 /// # Errors
@@ -36,6 +38,12 @@ pub async fn open(path: &Path) -> AppResult<SqlitePool> {
     }
 
     if let Err(error) = shortcut_migration::run(&pool).await {
+        pool.close().await;
+
+        return Err(error);
+    }
+
+    if let Err(error) = undo_migration::run(&pool).await {
         pool.close().await;
 
         return Err(error);

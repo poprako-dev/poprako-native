@@ -6,6 +6,7 @@ import type {
 import { editorFixture } from "./editor-test-fixture";
 
 const bindings: [ShortcutAction, string, boolean, boolean, boolean][] = [
+  ["undo", "Period", true, false, false],
   ["cycle_mode", "KeyM", true, false, false],
   ["toggle_relocation", "KeyL", true, false, false],
   ["toggle_proofread_preview", "KeyX", true, false, false],

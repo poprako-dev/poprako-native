@@ -473,7 +473,7 @@ export type Shortcut = {
 	binding: ShortcutBinding,
 };
 
-export type ShortcutAction = "save" | "cycle_mode" | "toggle_relocation" | "previous_unit" | "next_unit" | "previous_page" | "next_page" | "toggle_proofread_preview" | "insert_recent_symbol" | "insert_favorite_one" | "insert_favorite_two" | "insert_favorite_three";
+export type ShortcutAction = "undo" | "save" | "cycle_mode" | "toggle_relocation" | "previous_unit" | "next_unit" | "previous_page" | "next_page" | "toggle_proofread_preview" | "insert_recent_symbol" | "insert_favorite_one" | "insert_favorite_two" | "insert_favorite_three";
 
 export type ShortcutBinding = { kind: "unbound" } | { kind: "chord"; key: string; control: boolean; meta: boolean; alt: boolean; shift: boolean; scope: ShortcutScope };
 

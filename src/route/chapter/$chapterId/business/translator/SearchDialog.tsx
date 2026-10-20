@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ReactElement } from "react";
 import { commands, NativeCommandError, unwrap } from "@/bridge";
 import { registerExitGuard } from "@/bridge/exit";
@@ -14,7 +14,7 @@ import type { EditorSession } from "./editor-session";
 
 type SearchDialogProps = {
   session: EditorSession;
-  onRefresh: () => Promise<void>;
+  onRefresh: (changedPageIds: string[]) => Promise<void>;
   onClose: () => void;
 };
 type Phase = "idle" | "searching" | "replacing" | "refresh" | "uncertain";
@@ -35,6 +35,7 @@ export function SearchDialog({
   const [error, setError] = useState("");
   const [status, setStatus] = useState("");
   const [pending, setPending] = useState<ReplaceUnits | null>(null);
+  const changedPages = useRef<string[]>([]);
   const busy = phase !== "idle";
   const chapterId = session.store.getState().baseline.page.chapter_id;
   useEffect(() => registerExitGuard(() => Promise.resolve(!busy)), [busy]);
@@ -66,7 +67,7 @@ export function SearchDialog({
   async function refresh(): Promise<void> {
     setPhase("refresh");
     try {
-      await onRefresh();
+      await onRefresh(changedPages.current);
       const found = unwrap(
         await commands.searchUnits({ chapter_id: chapterId, stage, query }),
       );
@@ -94,6 +95,13 @@ export function SearchDialog({
       if (!(await session.flush()))
         throw new Error(session.store.getState().error || "当前内容尚未保存。");
       const result = unwrap(await commands.replaceUnits(request));
+      changedPages.current = result.changed_page_ids;
+      if (
+        result.changed_page_ids.includes(
+          session.store.getState().baseline.page.id,
+        )
+      )
+        session.clearHistory();
       setPending(null);
       setStatus(
         `已修改 ${String(result.changed_unit_count)} 个单元，校对确认状态保持不变。`,

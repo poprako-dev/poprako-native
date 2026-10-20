@@ -33,7 +33,7 @@ fn image() -> NewPage {
     }
 }
 
-fn draft(text: &str) -> UnitDraft {
+pub fn draft(text: &str) -> UnitDraft {
     UnitDraft {
         id: Uuid::new_v4().to_string(),
         x_coord: 0.5,
@@ -57,7 +57,7 @@ fn baseline(pages: &[Page]) -> Vec<PageBaseline> {
         .collect()
 }
 
-async fn fixture() -> Result<(SqliteCoordinator, PathBuf, String, Vec<Page>), Box<dyn Error>> {
+pub async fn fixture() -> Result<(SqliteCoordinator, PathBuf, String, Vec<Page>), Box<dyn Error>> {
     let path = std::env::temp_dir().join(format!("poprako-native-test-{}.sqlite", Uuid::new_v4()));
 
     let pool = database::open(&path).await?;
@@ -92,7 +92,7 @@ async fn fixture() -> Result<(SqliteCoordinator, PathBuf, String, Vec<Page>), Bo
     Ok((coordinator, path, chapter.id, pages))
 }
 
-async fn cleanup(coordinator: SqliteCoordinator, path: PathBuf) -> Result<(), Box<dyn Error>> {
+pub async fn cleanup(coordinator: SqliteCoordinator, path: PathBuf) -> Result<(), Box<dyn Error>> {
     coordinator.pool().close().await;
 
     std::fs::remove_file(path)?;

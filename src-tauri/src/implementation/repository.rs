@@ -43,3 +43,6 @@ mod hierarchy_test;
 
 #[cfg(test)]
 mod chapter_move_test;
+
+#[cfg(test)]
+mod undo_test;

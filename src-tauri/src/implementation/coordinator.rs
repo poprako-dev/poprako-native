@@ -10,6 +10,7 @@ use crate::result::AppError;
 pub mod database;
 pub mod preference_migration;
 pub mod shortcut_migration;
+pub mod undo_migration;
 
 pub struct Immediate;
 
@@ -176,3 +177,6 @@ mod shortcut_migration_test;
 
 #[cfg(test)]
 mod hierarchy_migration_test;
+
+#[cfg(test)]
+mod undo_migration_test;

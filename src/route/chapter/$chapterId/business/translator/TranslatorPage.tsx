@@ -203,15 +203,13 @@ function LoadedTranslator({ initial }: LoadedTranslatorProps): ReactElement {
     void changePage(id);
   }
 
-  async function refresh(): Promise<void> {
-    const page = unwrap(
-      await commands.getPageEditor(
-        chapterId,
-        session.store.getState().baseline.page.id,
-      ),
-    );
+  async function refresh(changedPageIds: string[]): Promise<void> {
+    const pageId = session.store.getState().baseline.page.id;
+    const page = changedPageIds.includes(pageId)
+      ? unwrap(await commands.getPageEditor(chapterId, pageId))
+      : null;
     const detail = unwrap(await commands.getChapterDetail(chapterId));
-    session.reload(page);
+    if (page) session.reload(page);
     setLoaded({ session, detail });
   }
 

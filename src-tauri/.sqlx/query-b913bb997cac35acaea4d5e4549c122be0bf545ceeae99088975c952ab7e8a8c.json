@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO application_preference_upgrade (name) VALUES ('undo_shortcut')",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "b913bb997cac35acaea4d5e4549c122be0bf545ceeae99088975c952ab7e8a8c"
+}

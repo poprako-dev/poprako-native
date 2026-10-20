@@ -1,6 +1,7 @@
 use sqlx::SqlitePool;
 
-use crate::complex::preference::{bindings_conflict, validate};
+use crate::complex::preference::bindings_conflict;
+use crate::implementation::coordinator::undo_migration::validate_legacy;
 use crate::model::preference::{
     ApplicationPreference, Shortcut, ShortcutAction, ShortcutBinding, ShortcutScope,
 };
@@ -45,6 +46,7 @@ fn upgrade(preference: &mut ApplicationPreference) {
     preference.shortcut = ApplicationPreference::default()
         .shortcut
         .into_iter()
+        .filter(|item| item.action != ShortcutAction::Undo)
         .map(|default| {
             let existing = preference
                 .shortcut
@@ -94,9 +96,11 @@ pub async fn run(pool: &SqlitePool) -> AppResult<()> {
         let mut preference: ApplicationPreference =
             serde_json::from_str(&payload).map_err(|_| AppError::RecoveryRequired)?;
 
+        validate_legacy(&preference)?;
+
         upgrade(&mut preference);
 
-        validate(&preference).map_err(|_| AppError::RecoveryRequired)?;
+        validate_legacy(&preference)?;
 
         let upgraded =
             serde_json::to_string(&preference).map_err(|_| AppError::RecoveryRequired)?;

@@ -9,6 +9,10 @@ use crate::model::preference::{
 fn legacy_preference(macos: bool) -> ApplicationPreference {
     let mut preference = ApplicationPreference::default();
 
+    preference
+        .shortcut
+        .retain(|item| item.action != ShortcutAction::Undo);
+
     for shortcut in &mut preference.shortcut {
         let (key, shift, navigation) = match shortcut.action {
             ShortcutAction::Save => ("KeyS", false, false),
@@ -151,7 +155,11 @@ async fn custom_bindings_win_conflicts_and_are_never_remigrated() -> Result<(), 
         );
     }
 
+    let undo = saved.shortcut.remove(0);
+
     saved.shortcut = original.shortcut;
+
+    saved.shortcut.insert(0, undo);
 
     let payload = serde_json::to_string(&saved)?;
 
@@ -222,7 +230,13 @@ fn defaults_match_the_web_on_every_platform() {
         (ShortcutAction::Save, "KeyS", true, false, false),
     ];
 
-    let defaults = ApplicationPreference::default();
+    let mut defaults = ApplicationPreference::default();
+
+    assert!(crate::complex::preference::validate(&defaults).is_ok());
+
+    defaults
+        .shortcut
+        .retain(|item| item.action != ShortcutAction::Undo);
 
     assert_eq!(defaults.shortcut.len(), expected.len());
 
@@ -241,6 +255,4 @@ fn defaults_match_the_web_on_every_platform() {
             }
         );
     }
-
-    assert!(crate::complex::preference::validate(&defaults).is_ok());
 }

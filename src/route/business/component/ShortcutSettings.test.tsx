@@ -1,5 +1,5 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, test, vi } from "vitest";
 import type { Shortcut } from "@/bridge/generated/bindings";
 import { preference } from "@/route/chapter/$chapterId/business/translator/editor-shortcut-test-fixture";
 import { ShortcutSettings } from "./ShortcutSettings";
@@ -90,4 +90,29 @@ describe("shortcut recording", () => {
       "快捷键冲突，已保留原有设置。",
     );
   });
+});
+
+test("undo binding displays punctuation and supports recording, conflict detection and clearing", () => {
+  const change = vi.fn<(value: Shortcut[]) => void>();
+  render(
+    <ShortcutSettings
+      value={preference.shortcut}
+      disabled={false}
+      onChange={change}
+    />,
+  );
+  const button = screen.getByRole("button", { name: "设置万能回退快捷键" });
+  expect(button.textContent).toBe("Ctrl + .");
+  fireEvent.click(button);
+  key(button, "s", { code: "KeyS", ctrlKey: true });
+  expect(change).not.toHaveBeenCalled();
+  fireEvent.click(button);
+  key(button, ".", { code: "Period", altKey: true });
+  expect(
+    change.mock.calls[0]?.[0].find((item) => item.action === "undo")?.binding,
+  ).toMatchObject({ key: "Period", alt: true, control: false });
+  fireEvent.click(screen.getByRole("button", { name: "清除万能回退快捷键" }));
+  expect(
+    change.mock.calls[1]?.[0].find((item) => item.action === "undo")?.binding,
+  ).toEqual({ kind: "unbound" });
 });
