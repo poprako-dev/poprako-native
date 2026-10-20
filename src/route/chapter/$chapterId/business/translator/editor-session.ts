@@ -64,10 +64,15 @@ export function unitDraft(unit: UnitDraft): UnitDraft {
 }
 
 export function normalizedDraft(unit: UnitDraft): UnitDraft {
+  // Match Rust char::is_whitespace; JavaScript trim also removes U+FEFF
+  // and misses U+0085. Keep nonblank content and the original draft intact.
+  const blank = /^\p{White_Space}*$/u;
   return {
     ...unitDraft(unit),
-    translated_text: unit.translated_text.trim() ? unit.translated_text : "",
-    proofread_text: unit.proofread_text.trim() ? unit.proofread_text : "",
+    translated_text: blank.test(unit.translated_text)
+      ? ""
+      : unit.translated_text,
+    proofread_text: blank.test(unit.proofread_text) ? "" : unit.proofread_text,
   };
 }
 
