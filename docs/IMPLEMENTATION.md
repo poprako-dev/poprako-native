@@ -184,7 +184,7 @@ Exported by PopRaKo Native
 
 | 门禁 | 实现约束 | 通过证据／失败处理 |
 | --- | --- | --- |
-| Node.js 与前端 | 固定 Node.js 26.11.1 和 pnpm 12.11.2、Vite 8.0.16、React 插件 6.0.2、TS 6.0.3；Tailwind 4.1.18 走 PostCSS | 安装、HMR、构建和严格类型通过；不用 peer 不覆盖 Vite 8 的旧 @tailwindcss/vite，不能偷升 Tailwind 4.2 |
+| Node.js 与前端 | 固定 Node.js 26.12.1 和 pnpm 12.11.2、Vite 8.0.16、React 插件 6.0.2、TS 6.0.3；Tailwind 4.1.18 走 PostCSS | 安装、HMR、构建和严格类型通过；不用 peer 不覆盖 Vite 8 的旧 @tailwindcss/vite，不能偷升 Tailwind 4.2 |
 | 路由生成 | src/route，business 子树忽略，生成文件在外部 | 嵌套路由正确、排除范围精确、生成检查只读；解决生成器抑制头，不手改生成物 |
 | IPC | 精确固定 tauri-specta/specta 2.0.0-rc.24 与 specta-typescript 0.0.11 | Rust/TS 实编译，Result/Option/枚举与 i64 安全整数生成一致，无重复 Specta 版本破坏接口 |
 | Orchestra / SQLx | 最小 command → usecase → Context 事务，临时文件库 | 实际 Future 满足 Tauri Send／生命周期，提交／回滚／取消边界可验证；不取消架构来掩盖泛型约束 |

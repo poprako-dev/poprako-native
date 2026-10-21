@@ -4,7 +4,7 @@ import { assertNodeVersion } from "./toolchain.ts";
 describe("Node.js toolchain pin", () => {
   it("accepts the pinned runtime", () => {
     expect(() => {
-      assertNodeVersion("26.11.1", "26.11.1");
+      assertNodeVersion("26.12.1", "26.12.1");
     }).not.toThrow();
   });
 
@@ -12,8 +12,8 @@ describe("Node.js toolchain pin", () => {
     "rejects a mismatched runtime (%s)",
     (actual) => {
       expect(() => {
-        assertNodeVersion(actual, "26.11.1");
-      }).toThrow("requires Node.js 26.11.1");
+        assertNodeVersion(actual, "26.12.1");
+      }).toThrow("requires Node.js 26.12.1");
     },
   );
 });
