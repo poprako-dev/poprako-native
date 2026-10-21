@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-delete-termbase"
+description = "Enables the delete_termbase command without any pre-configured scope."
+commands.allow = ["delete_termbase"]
+
+[[permission]]
+identifier = "deny-delete-termbase"
+description = "Denies the delete_termbase command without any pre-configured scope."
+commands.deny = ["delete_termbase"]

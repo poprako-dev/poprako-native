@@ -18,7 +18,7 @@ const PAGE: &str = "33333333-3333-4333-8333-333333333333";
 const UNIT: &str = "44444444-4444-4444-8444-444444444444";
 const REFERENCE: &str = "library/11111111-1111-4111-8111-111111111111/33333333-3333-4333-8333-333333333333/55555555-5555-4555-8555-555555555555.png";
 
-async fn connect(path: &Path) -> Result<SqlitePool, Box<dyn Error>> {
+pub async fn connect(path: &Path) -> Result<SqlitePool, Box<dyn Error>> {
     Ok(SqlitePoolOptions::new()
         .max_connections(1)
         .connect_with(
@@ -30,7 +30,7 @@ async fn connect(path: &Path) -> Result<SqlitePool, Box<dyn Error>> {
         .await?)
 }
 
-async fn legacy(root: &Path) -> Result<(PathBuf, PathBuf), Box<dyn Error>> {
+pub async fn legacy(root: &Path) -> Result<(PathBuf, PathBuf), Box<dyn Error>> {
     let migration = root.join("migration");
 
     fs::create_dir(&migration)?;

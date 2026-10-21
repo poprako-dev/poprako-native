@@ -7,6 +7,10 @@ use specta::Type;
 #[serde(rename_all = "snake_case")]
 pub enum AppError {
     InvalidInput,
+    DuplicateTermbase,
+    DuplicateTerm,
+    Clipboard,
+    TermbaseImport,
     NotFound,
     Conflict,
     Busy,
@@ -20,6 +24,12 @@ impl Display for AppError {
     fn fmt(&self, formatter: &mut Formatter<'_>) -> std::fmt::Result {
         let message = match self {
             Self::InvalidInput => "输入无效，请检查后重试",
+            Self::DuplicateTermbase => "此范围已有同名术语库，请修改名称",
+            Self::DuplicateTerm => "此术语库已有相同原文，请修改原文或编辑已有词条",
+            Self::Clipboard => "复制失败，请重试",
+            Self::TermbaseImport => {
+                "术语库文件无效，请检查 JSON 格式、库名及词条内容；文件最多 8 MiB"
+            }
             Self::NotFound => "内容已不存在，请刷新",
             Self::Conflict => "内容已变化，请保留草稿并重新载入",
             Self::Busy => "数据正在使用中，请稍后重试",

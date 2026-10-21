@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-list-termbase-infos"
+description = "Enables the list_termbase_infos command without any pre-configured scope."
+commands.allow = ["list_termbase_infos"]
+
+[[permission]]
+identifier = "deny-list-termbase-infos"
+description = "Denies the list_termbase_infos command without any pre-configured scope."
+commands.deny = ["list_termbase_infos"]

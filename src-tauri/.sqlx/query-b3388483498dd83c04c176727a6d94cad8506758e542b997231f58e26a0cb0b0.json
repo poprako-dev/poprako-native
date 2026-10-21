@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT comic_id FROM chapter WHERE id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "comic_id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "chapter",
+            "name": "comic_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "b3388483498dd83c04c176727a6d94cad8506758e542b997231f58e26a0cb0b0"
+}

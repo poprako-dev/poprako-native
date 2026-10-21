@@ -29,7 +29,7 @@ export function ComicDeleteDialog({
         if (!open && !write.locked) onClose();
       }}
       title="删除漫画"
-      description={`删除“${comic.title}”及其全部章节、页面和翻校内容？此操作无法撤销，原始导入目录中的图片不会被删除。`}
+      description={`删除“${comic.title}”及其术语库、全部术语、章节、页面和翻校内容？此操作无法撤销，原始导入目录中的图片不会被删除。`}
       className=""
     >
       {resource.state.status === "loading" && (

@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM termbase WHERE id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "265403609f3fbee4e6c8f62d7efd2e917a01af9dec9c6f413ec98ca960b5f60b"
+}

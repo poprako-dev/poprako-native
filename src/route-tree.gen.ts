@@ -7,8 +7,10 @@
 import { Route as rootRouteImport } from "./route/__root";
 import { Route as IndexRouteImport } from "./route/index";
 import { Route as HomeRouteRouteImport } from "./route/home/route";
+import { Route as TerminologyRouteRouteImport } from "./route/terminology/route";
 import { Route as ChapterChapterIdRouteRouteImport } from "./route/chapter/$chapterId/route";
 import { Route as HomeIndexRouteImport } from "./route/home/index";
+import { Route as TerminologyIndexRouteImport } from "./route/terminology/index";
 import { Route as ChapterChapterIdIndexRouteImport } from "./route/chapter/$chapterId/index";
 import { Route as ChapterChapterIdTranslatorRouteImport } from "./route/chapter/$chapterId/translator";
 
@@ -22,6 +24,11 @@ const HomeRouteRoute = HomeRouteRouteImport.update({
   path: "/home",
   getParentRoute: () => rootRouteImport,
 } as any);
+const TerminologyRouteRoute = TerminologyRouteRouteImport.update({
+  id: "/terminology",
+  path: "/terminology",
+  getParentRoute: () => rootRouteImport,
+} as any);
 const ChapterChapterIdRouteRoute = ChapterChapterIdRouteRouteImport.update({
   id: "/chapter/$chapterId",
   path: "/chapter/$chapterId",
@@ -31,6 +38,11 @@ const HomeIndexRoute = HomeIndexRouteImport.update({
   id: "/",
   path: "/",
   getParentRoute: () => HomeRouteRoute,
+} as any);
+const TerminologyIndexRoute = TerminologyIndexRouteImport.update({
+  id: "/",
+  path: "/",
+  getParentRoute: () => TerminologyRouteRoute,
 } as any);
 const ChapterChapterIdIndexRoute = ChapterChapterIdIndexRouteImport.update({
   id: "/",
@@ -47,14 +59,17 @@ const ChapterChapterIdTranslatorRoute =
 export interface FileRoutesByFullPath {
   "/": typeof IndexRoute;
   "/home": typeof HomeRouteRouteWithChildren;
+  "/terminology": typeof TerminologyRouteRouteWithChildren;
   "/chapter/$chapterId": typeof ChapterChapterIdRouteRouteWithChildren;
   "/home/": typeof HomeIndexRoute;
+  "/terminology/": typeof TerminologyIndexRoute;
   "/chapter/$chapterId/translator": typeof ChapterChapterIdTranslatorRoute;
   "/chapter/$chapterId/": typeof ChapterChapterIdIndexRoute;
 }
 export interface FileRoutesByTo {
   "/": typeof IndexRoute;
   "/home": typeof HomeIndexRoute;
+  "/terminology": typeof TerminologyIndexRoute;
   "/chapter/$chapterId/translator": typeof ChapterChapterIdTranslatorRoute;
   "/chapter/$chapterId": typeof ChapterChapterIdIndexRoute;
 }
@@ -62,8 +77,10 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport;
   "/": typeof IndexRoute;
   "/home": typeof HomeRouteRouteWithChildren;
+  "/terminology": typeof TerminologyRouteRouteWithChildren;
   "/chapter/$chapterId": typeof ChapterChapterIdRouteRouteWithChildren;
   "/home/": typeof HomeIndexRoute;
+  "/terminology/": typeof TerminologyIndexRoute;
   "/chapter/$chapterId/translator": typeof ChapterChapterIdTranslatorRoute;
   "/chapter/$chapterId/": typeof ChapterChapterIdIndexRoute;
 }
@@ -72,18 +89,27 @@ export interface FileRouteTypes {
   fullPaths:
     | "/"
     | "/home"
+    | "/terminology"
     | "/chapter/$chapterId"
     | "/home/"
+    | "/terminology/"
     | "/chapter/$chapterId/translator"
     | "/chapter/$chapterId/";
   fileRoutesByTo: FileRoutesByTo;
-  to: "/" | "/home" | "/chapter/$chapterId/translator" | "/chapter/$chapterId";
+  to:
+    | "/"
+    | "/home"
+    | "/terminology"
+    | "/chapter/$chapterId/translator"
+    | "/chapter/$chapterId";
   id:
     | "__root__"
     | "/"
     | "/home"
+    | "/terminology"
     | "/chapter/$chapterId"
     | "/home/"
+    | "/terminology/"
     | "/chapter/$chapterId/translator"
     | "/chapter/$chapterId/";
   fileRoutesById: FileRoutesById;
@@ -91,6 +117,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute;
   HomeRouteRoute: typeof HomeRouteRouteWithChildren;
+  TerminologyRouteRoute: typeof TerminologyRouteRouteWithChildren;
   ChapterChapterIdRouteRoute: typeof ChapterChapterIdRouteRouteWithChildren;
 }
 
@@ -110,6 +137,13 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof HomeRouteRouteImport;
       parentRoute: typeof rootRouteImport;
     };
+    "/terminology": {
+      id: "/terminology";
+      path: "/terminology";
+      fullPath: "/terminology";
+      preLoaderRoute: typeof TerminologyRouteRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
     "/chapter/$chapterId": {
       id: "/chapter/$chapterId";
       path: "/chapter/$chapterId";
@@ -123,6 +157,13 @@ declare module "@tanstack/react-router" {
       fullPath: "/home/";
       preLoaderRoute: typeof HomeIndexRouteImport;
       parentRoute: typeof HomeRouteRoute;
+    };
+    "/terminology/": {
+      id: "/terminology/";
+      path: "/";
+      fullPath: "/terminology/";
+      preLoaderRoute: typeof TerminologyIndexRouteImport;
+      parentRoute: typeof TerminologyRouteRoute;
     };
     "/chapter/$chapterId/": {
       id: "/chapter/$chapterId/";
@@ -153,6 +194,17 @@ const HomeRouteRouteWithChildren = HomeRouteRoute._addFileChildren(
   HomeRouteRouteChildren,
 );
 
+interface TerminologyRouteRouteChildren {
+  TerminologyIndexRoute: typeof TerminologyIndexRoute;
+}
+
+const TerminologyRouteRouteChildren: TerminologyRouteRouteChildren = {
+  TerminologyIndexRoute: TerminologyIndexRoute,
+};
+
+const TerminologyRouteRouteWithChildren =
+  TerminologyRouteRoute._addFileChildren(TerminologyRouteRouteChildren);
+
 interface ChapterChapterIdRouteRouteChildren {
   ChapterChapterIdTranslatorRoute: typeof ChapterChapterIdTranslatorRoute;
   ChapterChapterIdIndexRoute: typeof ChapterChapterIdIndexRoute;
@@ -171,6 +223,7 @@ const ChapterChapterIdRouteRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   HomeRouteRoute: HomeRouteRouteWithChildren,
+  TerminologyRouteRoute: TerminologyRouteRouteWithChildren,
   ChapterChapterIdRouteRoute: ChapterChapterIdRouteRouteWithChildren,
 };
 export const routeTree = rootRouteImport

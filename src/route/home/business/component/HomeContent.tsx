@@ -1,4 +1,5 @@
 import {
+  BookOpenText,
   ChevronDown,
   ChevronRight,
   FolderInput,
@@ -119,6 +120,16 @@ export function HomeContent({
         }
       >
         <div className="flex justify-end">
+          <IconButton
+            label="全局术语库"
+            onClick={() => {
+              void navigate({ to: "/terminology" }).catch(() => {
+                setNotice("无法打开术语库，请重试。");
+              });
+            }}
+          >
+            <BookOpenText size={16} strokeWidth={1.5} />
+          </IconButton>
           <IconButton
             label="应用设置"
             onClick={() => {

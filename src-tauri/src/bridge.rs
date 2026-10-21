@@ -8,6 +8,7 @@ pub mod lifecycle;
 pub mod page;
 pub mod protocol;
 pub mod save;
+pub mod terminology;
 pub mod write;
 
 use tauri_specta::{Builder, collect_commands};
@@ -15,6 +16,18 @@ use tauri_specta::{Builder, collect_commands};
 #[must_use]
 pub fn builder() -> Builder<tauri::Wry> {
     Builder::new().commands(collect_commands![
+        terminology::list_termbase_infos,
+        terminology::get_termbase,
+        terminology::list_term_infos,
+        terminology::copy_term_target,
+        terminology::termbase::create_termbase,
+        terminology::import::choose_termbase_import,
+        terminology::import::import_termbase,
+        terminology::termbase::update_termbase,
+        terminology::termbase::delete_termbase,
+        terminology::term::create_term,
+        terminology::term::update_term,
+        terminology::term::delete_term,
         image_import::select_images,
         image_import::select_image_folder,
         image_import::get_image_import,

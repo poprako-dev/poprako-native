@@ -1,0 +1,98 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT id, termbase_id, source, targets, comment, created_at, updated_at FROM term WHERE id IN (SELECT value FROM json_each(?)) OR (? AND termbase_id IN (SELECT value FROM json_each(?))) OR (? AND termbase_id IN (SELECT id FROM termbase WHERE comic_id IN (SELECT value FROM json_each(?)))) ORDER BY id",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "term",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "name": "termbase_id",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "term",
+            "name": "termbase_id"
+          }
+        }
+      },
+      {
+        "name": "source",
+        "ordinal": 2,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "term",
+            "name": "source"
+          }
+        }
+      },
+      {
+        "name": "targets",
+        "ordinal": 3,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "term",
+            "name": "targets"
+          }
+        }
+      },
+      {
+        "name": "comment",
+        "ordinal": 4,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "term",
+            "name": "comment"
+          }
+        }
+      },
+      {
+        "name": "created_at",
+        "ordinal": 5,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "term",
+            "name": "created_at"
+          }
+        }
+      },
+      {
+        "name": "updated_at",
+        "ordinal": 6,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "term",
+            "name": "updated_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 5
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "af2d424e0ad4bfde5de43cd6e48709de780238cd4ec2b916f3256aa1587ac036"
+}

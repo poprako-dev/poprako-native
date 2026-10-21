@@ -3,6 +3,7 @@ import type { ReactElement } from "react";
 import { useStore } from "zustand";
 import { SquareArrowRight } from "lucide-react";
 import type { ChapterDetail } from "@/bridge/generated/bindings";
+import { TerminologyLookup } from "@/route/business/terminology/TerminologyLookup";
 import { usePreference } from "@/route/business/preference-context";
 import { PreferenceDialog } from "@/route/business/component/PreferenceDialog";
 import { Button } from "@/shared/component/Button";
@@ -53,6 +54,7 @@ export function EditorWorkspace({
     "general" | "character" | "shortcut" | null
   >(null);
   const [search, setSearch] = useState(false);
+  const [terminologyActive, setTerminologyActive] = useState(false);
   const [symbolRequest, setSymbolRequest] = useState<SymbolRequest | null>(
     null,
   );
@@ -93,7 +95,8 @@ export function EditorWorkspace({
     session,
     detail,
     preference,
-    disabled: settings !== null || search || deleting !== "",
+    disabled:
+      settings !== null || search || deleting !== "" || terminologyActive,
     onPage,
     onRelocation: () => {
       void toggleRelocation();
@@ -107,7 +110,7 @@ export function EditorWorkspace({
       surface="translator"
       className="flex h-full w-full overflow-hidden portrait:flex-col"
     >
-      <div className="relative min-h-0 min-w-0 flex-1 bg-stone-100">
+      <div className="@container relative min-h-0 min-w-0 flex-1 bg-stone-100">
         <Canvas
           key={state.baseline.page.id}
           state={state}
@@ -121,6 +124,14 @@ export function EditorWorkspace({
           creationEnabled={creationEnabled}
           onDelete={setDeleting}
         />
+        {state.mode !== "readonly" && (
+          <TerminologyLookup
+            key={detail.chapter.id}
+            chapterId={detail.chapter.id}
+            locked={locked}
+            onInteraction={setTerminologyActive}
+          />
+        )}
         <div className="absolute top-2 left-2 flex items-center gap-2">
           <EditorToolbox
             readonly={state.mode === "readonly"}

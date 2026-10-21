@@ -6,6 +6,69 @@ import { invoke as __TAURI_INVOKE } from "@tauri-apps/api/core";
 export const commands = {
 	/**
 	 *  # Errors
+	 *  Lists libraries visible in the given context.
+	 */
+	listTermbaseInfos: (access: TerminologyContext, query: TerminologyQuery) => typedError<TermbaseInfo[], CommandError>(__TAURI_INVOKE("list_termbase_infos", { access, query })),
+	/**
+	 *  # Errors
+	 *  Rejects missing libraries or mismatched ownership.
+	 */
+	getTermbase: (access: TerminologyContext, id: string) => typedError<TermbaseInfo, CommandError>(__TAURI_INVOKE("get_termbase", { access, id })),
+	/**
+	 *  # Errors
+	 *  Lists a bounded page of matching terms from one visible library.
+	 */
+	listTermInfos: (access: TerminologyContext, termbaseId: string, query: TerminologyQuery) => typedError<Term[], CommandError>(__TAURI_INVOKE("list_term_infos", { access, termbaseId, query })),
+	/**
+	 *  # Errors
+	 *  Copies a validated library's preferred translation without modifying editor state.
+	 */
+	copyTermTarget: (access: TerminologyContext, id: string) => typedError<null, CommandError>(__TAURI_INVOKE("copy_term_target", { access, id })),
+	/**
+	 *  # Errors
+	 *  Validates scope and retains exact transaction evidence for retrying confirmation.
+	 */
+	createTermbase: (access: TerminologyContext, metadata: TermbaseMetadata, request: WriteRequest) => typedError<Termbase, CommandError>(__TAURI_INVOKE("create_termbase", { access, metadata, request })),
+	/**
+	 *  # Errors
+	 *  Reads and validates a native selection without changing the database or exposing paths.
+	 */
+	chooseTermbaseImport: () => typedError<{
+	metadata: TermbaseMetadata,
+	terms: TermMetadata[],
+} | null, CommandError>(__TAURI_INVOKE("choose_termbase_import")),
+	/**
+	 *  # Errors
+	 *  Imports the fixed selected document once; uncertain results only verify retained evidence.
+	 */
+	importTermbase: (access: TerminologyContext, document: TermbaseImport, request: WriteRequest) => typedError<Termbase, CommandError>(__TAURI_INVOKE("import_termbase", { access, document, request })),
+	/**
+	 *  # Errors
+	 *  Validates scope and retains exact transaction evidence for retrying confirmation.
+	 */
+	updateTermbase: (access: TerminologyContext, baseline: Termbase, metadata: TermbaseMetadata, request: WriteRequest) => typedError<Termbase, CommandError>(__TAURI_INVOKE("update_termbase", { access, baseline, metadata, request })),
+	/**
+	 *  # Errors
+	 *  Validates scope and retains exact transaction evidence for retrying confirmation.
+	 */
+	deleteTermbase: (access: TerminologyContext, baseline: Termbase, request: WriteRequest) => typedError<null, CommandError>(__TAURI_INVOKE("delete_termbase", { access, baseline, request })),
+	/**
+	 *  # Errors
+	 *  Validates scope and retains exact transaction evidence for retrying confirmation.
+	 */
+	createTerm: (access: TerminologyContext, termbaseId: string, metadata: TermMetadata, request: WriteRequest) => typedError<Term, CommandError>(__TAURI_INVOKE("create_term", { access, termbaseId, metadata, request })),
+	/**
+	 *  # Errors
+	 *  Validates scope and retains exact transaction evidence for retrying confirmation.
+	 */
+	updateTerm: (access: TerminologyContext, baseline: Term, metadata: TermMetadata, request: WriteRequest) => typedError<Term, CommandError>(__TAURI_INVOKE("update_term", { access, baseline, metadata, request })),
+	/**
+	 *  # Errors
+	 *  Validates scope and retains exact transaction evidence for retrying confirmation.
+	 */
+	deleteTerm: (access: TerminologyContext, baseline: Term, request: WriteRequest) => typedError<null, CommandError>(__TAURI_INVOKE("delete_term", { access, baseline, request })),
+	/**
+	 *  # Errors
 	 *  Returns validation, task state, or storage errors without discarding pending resources.
 	 */
 	selectImages: (target: ImageImportTarget) => typedError<{
@@ -216,7 +279,7 @@ export const commands = {
 };
 
 /* Types */
-export type AppError = "invalid_input" | "not_found" | "conflict" | "busy" | "storage" | "migration" | "commit_uncertain" | "recovery_required";
+export type AppError = "invalid_input" | "duplicate_termbase" | "duplicate_term" | "clipboard" | "termbase_import" | "not_found" | "conflict" | "busy" | "storage" | "migration" | "commit_uncertain" | "recovery_required";
 
 export type ApplicationPreference = {
 	shortcut: Shortcut[],
@@ -483,6 +546,56 @@ export type SpecialCharacter = {
 	id: string,
 	text: string,
 	is_favorite: boolean,
+};
+
+export type Term = {
+	id: string,
+	termbase_id: string,
+	source: string,
+	targets: string[],
+	comment: string,
+	created_at: number,
+	updated_at: number,
+};
+
+export type TermMetadata = {
+	source: string,
+	targets: string[],
+	comment: string,
+};
+
+export type Termbase = {
+	id: string,
+	scope: TermbaseScope,
+	name: string,
+	description: string,
+	created_at: number,
+	updated_at: number,
+};
+
+export type TermbaseImport = {
+	metadata: TermbaseMetadata,
+	terms: TermMetadata[],
+};
+
+export type TermbaseInfo = {
+	termbase: Termbase,
+	term_count: number,
+};
+
+export type TermbaseMetadata = {
+	name: string,
+	description: string,
+};
+
+export type TermbaseScope = { kind: "global" } | { kind: "comic"; comic_id: string };
+
+export type TerminologyContext = { kind: "global" } | { kind: "chapter"; chapter_id: string };
+
+export type TerminologyQuery = {
+	text: string,
+	offset: number,
+	limit: number,
 };
 
 export type TextStage = "translation" | "proofreading";

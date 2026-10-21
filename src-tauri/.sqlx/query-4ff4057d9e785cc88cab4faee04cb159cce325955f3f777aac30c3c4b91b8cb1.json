@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT id FROM termbase WHERE (scope = 'global' OR comic_id = ?) AND instr(name_key, ?) > 0 ORDER BY updated_at DESC, id LIMIT ? OFFSET ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "termbase",
+            "name": "id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "4ff4057d9e785cc88cab4faee04cb159cce325955f3f777aac30c3c4b91b8cb1"
+}

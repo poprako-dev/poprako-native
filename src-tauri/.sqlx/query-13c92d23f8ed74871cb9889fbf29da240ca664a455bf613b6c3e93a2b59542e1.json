@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE termbase SET name = ?, name_key = ?, description = ? WHERE id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": []
+  },
+  "hash": "13c92d23f8ed74871cb9889fbf29da240ca664a455bf613b6c3e93a2b59542e1"
+}
