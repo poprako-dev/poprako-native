@@ -259,3 +259,11 @@ Windows 10 22H2 x64、最低 macOS 13.3 arm64 的安装／升级及本次 Home �
 新增自动化覆盖跨单元混合操作与不同保存顺序、在途删除／创建回退、保存失败与提交核实、原始空白历史、输入法预编辑及回执期间选区、快捷键隔离／重绑／解绑、按实际受影响页面清理搜索替换历史、刷新失败只重读、旧偏好冲突及事务回滚，以及已保存删除的原 UUID 恢复和关闭数据库后重开一致性。
 
 本次尚未在 Windows WebView2 与 macOS WKWebView 中实测新键位、中文输入法和输入框原生撤销；最低系统安装／升级及长编辑会话性能仍未验证，不将宿主自动化结果计作双平台原生验收通过。
+
+### macOS 导入面板崩溃修复（2026-10-21）
+
+用户报告 `NSOpenPanel::openPanel` 返回空对象导致主线程 panic，随后 dialog 回调通道收到 `RecvError`。排查发现 SQL 元数据生成使用共享 target 执行 `cargo clean -p poprako-native`，删除了仍在运行的开发程序；崩溃当时的系统面板服务日志包含 `SecCodeCopyGuestWithAttributes failed`，且开发二进制已不存在。最小 AppKit 程序验证：文件存在时面板创建成功，删除运行中的可执行文件后重现相同的 `com.apple.view-bridge: Connection interrupted` 和空面板；原地替换文件的对照实验未复现。相关上游症状见 [Tauri #13047](https://github.com/tauri-apps/tauri/issues/13047)。
+
+SQL 元数据任务现在将编译、清理与检查统一放入专用 target 子目录，不再清理桌面产物。脚本回归在修复前因开发二进制缺失而失败，修复后默认／自定义 target 两种情况均通过。完整 `pnpm run check` 通过：34 个前端／脚本测试文件、167 项测试，93 项 Rust 应用测试及 5 项风格检查器测试。已重新构建开发程序，随后再次执行真实 `node script/sql-metadata.ts --check`，开发二进制 SHA-256 前后完全一致。
+
+修复针对本次检查脚本触发的可执行文件缺失；不改写系统安全设置或吞掉原生库 panic。崩溃进程需要重新启动。原生界面工具不可用，尚未以 UI 点击复测完整选文件导入流程。

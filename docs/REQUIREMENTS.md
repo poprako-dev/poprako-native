@@ -256,6 +256,7 @@ docs/
 - Tauri 前置任务不能反向调用自身，避免 `desktop/dev` 或 `package/build` 形成递归。
 - Rust 检查至少包含 `cargo fmt --all --check`、`cargo check --workspace --all-targets`、`cargo clippy --workspace --all-targets -- -D warnings` 及相应测试，在 `src-tauri` crate 上下文执行。
 - `check` 不改写受版本管理的文件；生成检查在临时输出中比较差异，SQL 验证使用由迁移建立的临时数据库，不操作用户数据库。
+- SQL 元数据的编译与包级清理必须使用独立 `CARGO_TARGET_DIR`：默认 `src-tauri/target/sql-metadata`，已有自定义 target 时使用其 `sql-metadata` 子目录。禁止清理桌面开发进程共用的产物目录；macOS 文件选择器会校验调用方可执行文件，删除运行中的二进制会使系统面板创建失败。
 - 辅助任务须可在 Windows 和 macOS 执行，不能将仅适用于某个开发者机器的路径或 shell 行为作为前提。
 - 工作流遵循计划 → 实施 → 复核；说明变化、原因、验证结果与实际限制。新约束或架构变化同步更新规范，重要且有取舍的决策使用简短 ADR。
 
