@@ -5,6 +5,7 @@ import type { ArchiveTarget, TextStage } from "@/bridge/generated/bindings";
 import { ArchiveTaskDialog } from "@/route/business/component/ArchiveTaskDialog";
 import { Button } from "@/shared/component/Button";
 import { Dialog } from "@/shared/component/Dialog";
+import { ButtonGroup } from "@/shared/component/ButtonGroup";
 
 type ArchiveImportDialogProps = {
   target: ArchiveTarget;
@@ -61,6 +62,7 @@ export function ArchiveImportDialog({
   }
   return (
     <Dialog
+      closeDisabled={busy}
       open={true}
       onOpenChange={(open) => {
         if (!open && !busy) {
@@ -139,10 +141,7 @@ export function ArchiveImportDialog({
           {error}
         </p>
       )}
-      <div className="flex justify-end gap-2">
-        <Button variant="ghost" disabled={busy} onClick={onClose}>
-          取消
-        </Button>
+      <ButtonGroup>
         <Button
           variant="primary"
           disabled={busy}
@@ -154,7 +153,7 @@ export function ArchiveImportDialog({
         >
           {busy ? "正在选择…" : "选择译文或项目包"}
         </Button>
-      </div>
+      </ButtonGroup>
     </Dialog>
   );
 }

@@ -3,6 +3,7 @@ import type { ReactElement } from "react";
 import { commands, NativeCommandError, unwrap } from "@/bridge";
 import { Button } from "@/shared/component/Button";
 import { Dialog } from "@/shared/component/Dialog";
+import { ButtonGroup } from "@/shared/component/ButtonGroup";
 
 type ChapterDeleteDialogProps = {
   chapterId: string;
@@ -45,6 +46,7 @@ export function ChapterDeleteDialog({
   }
   return (
     <Dialog
+      closeDisabled={busy || uncertain}
       open={true}
       onOpenChange={(open) => {
         if (!open && !busy && !uncertain) {
@@ -60,10 +62,7 @@ export function ChapterDeleteDialog({
           {error}
         </p>
       )}
-      <div className="flex justify-end gap-2">
-        <Button variant="ghost" disabled={busy || uncertain} onClick={onClose}>
-          取消
-        </Button>
+      <ButtonGroup>
         <Button
           variant="danger"
           disabled={busy}
@@ -75,7 +74,7 @@ export function ChapterDeleteDialog({
         >
           {busy ? "正在处理…" : uncertain ? "核实删除结果" : "删除章节"}
         </Button>
-      </div>
+      </ButtonGroup>
     </Dialog>
   );
 }

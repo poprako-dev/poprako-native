@@ -82,7 +82,7 @@ export function ShortcutSettings({
           key={shortcut.action}
         >
           <span className="text-xs">{shortcutLabel[shortcut.action]}</span>
-          <div className="flex gap-1">
+          <div className="grid w-1/2 min-w-0 grid-cols-2 gap-1 [&>button]:min-w-0 [&>button]:whitespace-normal">
             <Button
               variant="secondary"
               disabled={disabled}

@@ -6,6 +6,7 @@ import { registerExitGuard } from "@/bridge/exit";
 import { Button } from "@/shared/component/Button";
 import { Dialog } from "@/shared/component/Dialog";
 import type { EditorSession } from "./editor-session";
+import { ButtonGroup } from "@/shared/component/ButtonGroup";
 
 export interface LeaveAction {
   run(): Promise<boolean>;
@@ -75,22 +76,15 @@ export function LeaveGuard({
       }}
       title="修改尚未保存"
       description={
-        state.error || "请结束输入或拖动后重试保存，也可以取消离开。"
+        state.error ||
+        "请结束输入或拖动后重试保存，也可以点击右上角关闭以留在编辑页。"
       }
       className=""
     >
       {state.uncertain && (
         <p className="text-sm">请重试核实上次写入结果，确认前不能丢弃修改。</p>
       )}
-      <div className="flex flex-wrap justify-end gap-2">
-        <Button
-          variant="secondary"
-          onClick={() => {
-            finish(false);
-          }}
-        >
-          取消离开
-        </Button>
+      <ButtonGroup>
         <Button
           variant="primary"
           disabled={state.busy}
@@ -109,7 +103,7 @@ export function LeaveGuard({
         >
           放弃未保存修改并离开
         </Button>
-      </div>
+      </ButtonGroup>
     </Dialog>
   );
 }

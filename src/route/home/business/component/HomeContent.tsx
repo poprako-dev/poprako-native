@@ -225,7 +225,7 @@ export function HomeContent({
         {(offset > 0 || comics.length === 50) && (
           <nav
             aria-label="漫画列表分页"
-            className="flex justify-center gap-3 py-4"
+            className="grid grid-cols-2 gap-3 py-4"
           >
             <Button
               variant="ghost"

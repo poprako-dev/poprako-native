@@ -20,7 +20,7 @@ export function StatePanel(props: StatePanelProps): ReactElement {
       )}
       <p>{props.message}</p>
       {props.state === "error" && (
-        <Button variant="secondary" onClick={props.onRetry}>
+        <Button className="w-full" variant="secondary" onClick={props.onRetry}>
           重试
         </Button>
       )}

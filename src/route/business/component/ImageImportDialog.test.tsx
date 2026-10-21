@@ -73,7 +73,7 @@ it("shows committed cleanup warnings and allows closing without replaying the wr
   await user.click(screen.getByRole("button", { name: "确认导入" }));
   await screen.findByText(/下次导入时将自动重试清理/u);
   expect(complete).not.toHaveBeenCalled();
-  await user.click(screen.getByRole("button", { name: "完成" }));
+  await user.click(screen.getByRole("button", { name: "关闭弹窗" }));
   expect(complete).toHaveBeenCalledOnce();
   expect(mock.confirm).toHaveBeenCalledOnce();
   expect(mock.cancel).not.toHaveBeenCalled();
@@ -96,9 +96,9 @@ it("keeps a successful write completed when the following status read fails", as
   });
   mock.status.mockRejectedValue(new Error("status unavailable"));
   await user.click(screen.getByRole("button", { name: "确认导入" }));
-  await screen.findByRole("button", { name: "完成" });
+  await screen.findAllByText(/图片已保存/u);
   expect(screen.queryByRole("button", { name: "核实提交结果" })).toBeNull();
-  await user.click(screen.getByRole("button", { name: "完成" }));
+  await user.click(screen.getByRole("button", { name: "关闭弹窗" }));
   expect(complete).toHaveBeenCalledOnce();
   expect(mock.confirm).toHaveBeenCalledOnce();
 });
@@ -128,13 +128,13 @@ it("ignores an older ready response after the write completes", async () => {
     data: { ...ready, phase: "completed", cleanup_pending: true },
   });
   await user.click(screen.getByRole("button", { name: "确认导入" }));
-  await screen.findByRole("button", { name: "完成" });
+  await screen.findAllByText(/图片已保存/u);
   await act(async () => {
     resolve({ status: "ok", data: ready });
     await older;
   });
   expect(screen.queryByRole("button", { name: "确认导入" })).toBeNull();
-  expect(screen.getByRole("button", { name: "完成" })).toBeDefined();
+  expect(screen.getByRole("button", { name: "关闭弹窗" })).toBeDefined();
   expect(mock.confirm).toHaveBeenCalledOnce();
 });
 
@@ -162,7 +162,7 @@ it("resumes status polling after cancellation returns stopping", async () => {
     status: "ok",
     data: { ...ready, phase: "cancelled", message: "已取消选择" },
   });
-  await user.click(screen.getByRole("button", { name: "取消" }));
+  await user.click(screen.getByRole("button", { name: "关闭弹窗" }));
   await screen.findByText(/已取消选择/u);
   expect(screen.getByRole("button", { name: "选择图片" })).toBeDefined();
   expect(mock.cancel).toHaveBeenCalledOnce();

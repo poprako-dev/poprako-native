@@ -11,6 +11,7 @@ import type {
 import { Button } from "@/shared/component/Button";
 import { Dialog } from "@/shared/component/Dialog";
 import type { EditorSession } from "./editor-session";
+import { ButtonGroup } from "@/shared/component/ButtonGroup";
 
 type SearchDialogProps = {
   session: EditorSession;
@@ -129,6 +130,7 @@ export function SearchDialog({
 
   return (
     <Dialog
+      closeDisabled={busy}
       open={true}
       onOpenChange={(value) => {
         if (!value) close();
@@ -262,6 +264,7 @@ export function SearchDialog({
           </div>
         ))}
         <Button
+          className="w-full"
           variant="secondary"
           disabled={rules.length >= 20}
           onClick={() => {
@@ -271,10 +274,7 @@ export function SearchDialog({
           增加规则
         </Button>
       </fieldset>
-      <div className="flex justify-end gap-2">
-        <Button variant="secondary" disabled={busy} onClick={close}>
-          关闭
-        </Button>
+      <ButtonGroup>
         {phase === "refresh" ? (
           <Button
             variant="primary"
@@ -302,7 +302,7 @@ export function SearchDialog({
               : `替换所选 ${String(selected.size)} 个单元`}
           </Button>
         )}
-      </div>
+      </ButtonGroup>
     </Dialog>
   );
 }

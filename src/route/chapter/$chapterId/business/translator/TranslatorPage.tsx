@@ -4,6 +4,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { commands, unwrap } from "@/bridge";
 import type { ChapterDetail, EditorMode } from "@/bridge/generated/bindings";
 import { StatePanel } from "@/shared/component/StatePanel";
+import { ButtonGroup } from "@/shared/component/ButtonGroup";
 import { Button } from "@/shared/component/Button";
 import { createEditorSession } from "./editor-session";
 import type { EditorSession } from "./editor-session";
@@ -240,26 +241,28 @@ function LoadedTranslator({ initial }: LoadedTranslatorProps): ReactElement {
           className="absolute bottom-3 left-3 max-w-md rounded border border-destructive bg-background p-3 text-xs"
         >
           {error}
-          <Button
-            variant="ghost"
-            onClick={() => {
-              if (failedPage) openPage(failedPage);
-              else
-                void savePosition().then((success) => {
-                  if (success) setError("");
-                });
-            }}
-          >
-            重试
-          </Button>
-          <Button
-            variant="ghost"
-            onClick={() => {
-              setError("");
-            }}
-          >
-            关闭提示
-          </Button>
+          <ButtonGroup className="mt-2">
+            <Button
+              variant="ghost"
+              onClick={() => {
+                if (failedPage) openPage(failedPage);
+                else
+                  void savePosition().then((success) => {
+                    if (success) setError("");
+                  });
+              }}
+            >
+              重试
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setError("");
+              }}
+            >
+              关闭提示
+            </Button>
+          </ButtonGroup>
         </div>
       )}
     </div>

@@ -23,6 +23,7 @@ import { useDetachableSpecialCharsBar } from "./use-detachable-special-chars-bar
 import { SpecialCharsBar } from "./SpecialCharsBar";
 import type { SymbolRequest } from "./SpecialCharsBar";
 import { useEditorShortcuts } from "./use-editor-shortcuts";
+import { ButtonGroup } from "@/shared/component/ButtonGroup";
 
 type EditorWorkspaceProps = {
   session: EditorSession;
@@ -261,15 +262,7 @@ export function EditorWorkspace({
         description="标记及翻译、校对文本将被删除，可在当前页编辑会话内使用万能回退恢复；切页、离开或替换当前页内容后不可恢复。"
         className=""
       >
-        <div className="flex justify-end gap-2">
-          <Button
-            variant="ghost"
-            onClick={() => {
-              setDeleting("");
-            }}
-          >
-            取消
-          </Button>
+        <ButtonGroup>
           <Button
             variant="danger"
             disabled={locked || state.mode === "readonly"}
@@ -282,7 +275,7 @@ export function EditorWorkspace({
           >
             删除单元
           </Button>
-        </div>
+        </ButtonGroup>
       </Dialog>
     </Appearance>
   );

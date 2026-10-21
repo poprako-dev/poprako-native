@@ -8,6 +8,7 @@ import { usePreference } from "@/route/business/preference-context";
 import { hasShortcutConflict } from "@/route/business/shortcut";
 import { Button } from "@/shared/component/Button";
 import { Dialog } from "@/shared/component/Dialog";
+import { ButtonGroup } from "@/shared/component/ButtonGroup";
 
 type PreferenceDialogProps = {
   onClose: () => void;
@@ -57,6 +58,7 @@ export function PreferenceDialog({
 
   return (
     <Dialog
+      closeDisabled={locked}
       open={true}
       onOpenChange={(open) => {
         if (!open && !locked) {
@@ -69,7 +71,7 @@ export function PreferenceDialog({
     >
       <nav
         aria-label="设置分类"
-        className="flex gap-1 border-b border-border pb-3"
+        className="grid grid-cols-3 gap-1 border-b border-border pb-3"
       >
         <Button
           variant={tab === "general" ? "secondary" : "ghost"}
@@ -156,7 +158,7 @@ export function PreferenceDialog({
           {error}
         </p>
       )}
-      <div className="flex justify-end gap-2 border-t border-border pt-4">
+      <ButtonGroup className="border-t border-border pt-4">
         <Button
           variant="ghost"
           disabled={locked}
@@ -183,9 +185,7 @@ export function PreferenceDialog({
         >
           恢复默认
         </Button>
-        <Button variant="ghost" disabled={locked} onClick={onClose}>
-          取消
-        </Button>
+
         <Button
           variant="primary"
           disabled={busy || invalid}
@@ -197,7 +197,7 @@ export function PreferenceDialog({
         >
           {busy ? "正在保存…" : pending !== null ? "核实保存结果" : "保存设置"}
         </Button>
-      </div>
+      </ButtonGroup>
     </Dialog>
   );
 }

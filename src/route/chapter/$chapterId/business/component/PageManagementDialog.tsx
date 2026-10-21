@@ -12,6 +12,7 @@ import { ManagedImage } from "@/route/business/component/ManagedImage";
 import { pageBaseline } from "@/route/chapter/$chapterId/business/page-baseline";
 import { Button } from "@/shared/component/Button";
 import { Dialog } from "@/shared/component/Dialog";
+import { ButtonGroup } from "@/shared/component/ButtonGroup";
 
 type PageManagementDialogProps = {
   detail: ChapterDetail;
@@ -90,6 +91,7 @@ export function PageManagementDialog({
 
   return (
     <Dialog
+      closeDisabled={locked}
       open={true}
       onOpenChange={(open) => {
         if (!open && !locked) {
@@ -197,7 +199,7 @@ export function PageManagementDialog({
             确定删除所选 {selected.length} 页及其全部单元？此操作无法撤销。
             {selected.length === order.length ? "删除后会保留空项目资料。" : ""}
           </p>
-          <div className="mt-3 flex justify-end gap-2">
+          <ButtonGroup className="mt-3">
             <Button
               variant="ghost"
               disabled={locked}
@@ -205,7 +207,7 @@ export function PageManagementDialog({
                 setConfirmDelete(false);
               }}
             >
-              取消删除
+              返回页面选择
             </Button>
             <Button
               variant="danger"
@@ -223,13 +225,10 @@ export function PageManagementDialog({
             >
               确认删除页面
             </Button>
-          </div>
+          </ButtonGroup>
         </div>
       )}
-      <div className="flex flex-wrap justify-end gap-2">
-        <Button variant="ghost" disabled={locked} onClick={onClose}>
-          取消
-        </Button>
+      <ButtonGroup>
         <Button
           variant="danger"
           disabled={locked || selected.length === 0 || changed}
@@ -266,7 +265,7 @@ export function PageManagementDialog({
             核实原操作结果
           </Button>
         )}
-      </div>
+      </ButtonGroup>
     </Dialog>
   );
 }

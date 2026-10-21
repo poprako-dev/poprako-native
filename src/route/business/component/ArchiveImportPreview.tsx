@@ -7,6 +7,7 @@ import type {
 } from "@/bridge/generated/bindings";
 import { MetadataForm } from "@/route/business/component/MetadataForm";
 import { Button } from "@/shared/component/Button";
+import { ButtonGroup } from "@/shared/component/ButtonGroup";
 
 type ArchiveImportPreviewProps = {
   preview: ArchivePreview;
@@ -14,7 +15,6 @@ type ArchiveImportPreviewProps = {
   busy: boolean;
   error: string;
   onSubmit: (metadata: ArchiveComic, mode: ArchiveImportMode) => void;
-  onCancel: () => void;
 };
 
 export function ArchiveImportPreview({
@@ -23,7 +23,6 @@ export function ArchiveImportPreview({
   busy,
   error,
   onSubmit,
-  onCancel,
 }: ArchiveImportPreviewProps): ReactElement {
   const [mode, setMode] = useState<ArchiveImportMode>("fill_empty");
   const [chapterTitle, setChapterTitle] = useState(
@@ -113,7 +112,6 @@ export function ArchiveImportPreview({
           busy={busy}
           error={error}
           submitLabel="确认导入"
-          onCancel={onCancel}
           onSubmit={(title, subtitle, author) => {
             onSubmit({ title, subtitle, author }, mode);
           }}
@@ -156,10 +154,7 @@ export function ArchiveImportPreview({
               {error}
             </p>
           )}
-          <div className="flex justify-end gap-2">
-            <Button variant="ghost" disabled={busy} onClick={onCancel}>
-              取消
-            </Button>
+          <ButtonGroup>
             <Button
               variant="primary"
               type="submit"
@@ -167,7 +162,7 @@ export function ArchiveImportPreview({
             >
               确认导入章节
             </Button>
-          </div>
+          </ButtonGroup>
         </form>
       )}
       {existing && (
@@ -180,10 +175,7 @@ export function ArchiveImportPreview({
               {error}
             </p>
           )}
-          <div className="flex justify-end gap-2">
-            <Button variant="ghost" disabled={busy} onClick={onCancel}>
-              取消
-            </Button>
+          <ButtonGroup>
             <Button
               variant="primary"
               disabled={busy}
@@ -195,7 +187,7 @@ export function ArchiveImportPreview({
                 ? "确认替换全部页面单元"
                 : "确认只填空白页"}
             </Button>
-          </div>
+          </ButtonGroup>
         </>
       )}
     </div>

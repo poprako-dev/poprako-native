@@ -11,6 +11,7 @@ type DialogProps = {
   description: string;
   children: ReactNode;
   className: string;
+  closeDisabled?: boolean;
 };
 
 export function Dialog({
@@ -20,10 +21,16 @@ export function Dialog({
   description,
   children,
   className: customClass,
+  closeDisabled = false,
 }: DialogProps): ReactElement {
   const surface = useSurface();
   return (
-    <Primitive.Root open={open} onOpenChange={onOpenChange}>
+    <Primitive.Root
+      open={open}
+      onOpenChange={(next) => {
+        if (next || !closeDisabled) onOpenChange(next);
+      }}
+    >
       <Primitive.Portal>
         <Primitive.Overlay className="fixed inset-0 z-50 bg-black/40" />
         <Primitive.Content
@@ -46,7 +53,8 @@ export function Dialog({
           </div>
           {children}
           <Primitive.Close
-            className="absolute top-4 right-4 rounded p-1 text-muted-foreground hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring"
+            className="absolute top-4 right-4 rounded p-1 text-muted-foreground hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring disabled:pointer-events-none disabled:opacity-40"
+            disabled={closeDisabled}
             aria-label="关闭弹窗"
           >
             <X className="size-4" aria-hidden="true" />
