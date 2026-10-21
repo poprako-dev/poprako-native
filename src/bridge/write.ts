@@ -21,6 +21,17 @@ function uncertain(): Failure {
   };
 }
 
+function blocked(): Failure {
+  return {
+    status: "error",
+    error: {
+      code: "write_blocked",
+      message: "另一项写入尚未确认，请先核实该操作后重试。当前操作尚未写入。",
+      recovery: "retry",
+    },
+  };
+}
+
 async function perform<T>(
   key: string,
   operation: WriteOperation<T>,
@@ -30,10 +41,10 @@ async function perform<T>(
       .acknowledgeWriteResult(pending.request)
       .catch(() => null);
     if (acknowledged === null || acknowledged.status === "error")
-      return uncertain();
+      return blocked();
     pending = null;
   }
-  if (pending !== null && pending.key !== key) return uncertain();
+  if (pending !== null && pending.key !== key) return blocked();
   if (pending === null) {
     const session = await native.getWriteSession();
     if (session.status === "error") return session;
