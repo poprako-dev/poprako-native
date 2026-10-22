@@ -57,7 +57,7 @@ describe("preference saving", () => {
         .hasAttribute("disabled"),
     ).toBe(true);
     expect(
-      screen.getByRole("button", { name: "取消" }).hasAttribute("disabled"),
+      screen.getByRole("button", { name: "关闭弹窗" }).hasAttribute("disabled"),
     ).toBe(true);
     expect(close).not.toHaveBeenCalled();
     await user.click(screen.getByRole("button", { name: "核实保存结果" }));

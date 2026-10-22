@@ -7,6 +7,7 @@ import { Button } from "@/shared/component/Button";
 import { Dialog } from "@/shared/component/Dialog";
 import { StatePanel } from "@/shared/component/StatePanel";
 import { useResource } from "@/shared/hook/use-resource";
+import { ButtonGroup } from "@/shared/component/ButtonGroup";
 
 type Props = {
   chapter: Chapter;
@@ -47,6 +48,7 @@ export function ChapterMoveDialog({
   }
   return (
     <Dialog
+      closeDisabled={write.locked}
       open={true}
       onOpenChange={(open) => {
         if (!open && !write.locked) onClose();
@@ -86,7 +88,7 @@ export function ChapterMoveDialog({
                 </option>
               ))}
           </select>
-          <div className="flex justify-center gap-2">
+          <div className="grid grid-cols-2 gap-2">
             <Button
               variant="ghost"
               disabled={write.locked || offset === 0}
@@ -122,10 +124,7 @@ export function ChapterMoveDialog({
           {write.error}
         </p>
       )}
-      <div className="flex justify-end gap-2">
-        <Button variant="ghost" disabled={write.locked} onClick={onClose}>
-          取消
-        </Button>
+      <ButtonGroup>
         {write.uncertain ? (
           <Button variant="primary" disabled={write.busy} onClick={write.retry}>
             核实移动结果
@@ -141,7 +140,7 @@ export function ChapterMoveDialog({
             移动章节
           </Button>
         )}
-      </div>
+      </ButtonGroup>
     </Dialog>
   );
 }

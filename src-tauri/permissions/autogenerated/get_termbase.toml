@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-get-termbase"
+description = "Enables the get_termbase command without any pre-configured scope."
+commands.allow = ["get_termbase"]
+
+[[permission]]
+identifier = "deny-get-termbase"
+description = "Denies the get_termbase command without any pre-configured scope."
+commands.deny = ["get_termbase"]

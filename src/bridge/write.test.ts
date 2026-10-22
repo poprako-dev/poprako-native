@@ -18,6 +18,41 @@ beforeEach(() => {
 });
 
 describe("write receipt recovery", () => {
+  it("lets a blocked terminology form close while the original editor save remains recoverable", async () => {
+    const { write } = await import("./write");
+    const save = vi
+      .fn()
+      .mockResolvedValueOnce({
+        status: "error",
+        error: {
+          code: "commit_unknown",
+          message: "pending",
+          recovery: "wait_for_confirmation",
+        },
+      })
+      .mockResolvedValue({ status: "ok", data: 1 });
+    await write("savePageUnits", ["draft"], save);
+    const term = vi.fn().mockResolvedValue({ status: "ok", data: 2 });
+    expect(await write("createTerm", ["new"], term)).toMatchObject({
+      status: "error",
+      error: { code: "write_blocked", recovery: "retry" },
+    });
+    expect(term).not.toHaveBeenCalled();
+    expect(await write("savePageUnits", ["draft"], save)).toEqual({
+      status: "ok",
+      data: 1,
+    });
+    native.getWriteSession.mockResolvedValue({
+      status: "ok",
+      data: { session_id: "session", next_sequence: 2 },
+    });
+    expect(await write("createTerm", ["new"], term)).toEqual({
+      status: "ok",
+      data: 2,
+    });
+    expect(term).toHaveBeenCalledTimes(1);
+  });
+
   it("recovers two lost replies using the original request and fixed payload", async () => {
     const { write } = await import("./write");
     native.getWriteResult.mockResolvedValue({

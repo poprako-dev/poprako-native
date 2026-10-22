@@ -19,6 +19,10 @@ pub struct RecoveryScope {
     pub unit_ids: Vec<String>,
     pub work_position: bool,
     pub preference: bool,
+    pub termbase_ids: Vec<String>,
+    pub term_ids: Vec<String>,
+    pub termbase_terms: bool,
+    pub comic_terminology: bool,
 }
 
 impl RecoveryScope {
@@ -34,6 +38,8 @@ impl RecoveryScope {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct MutationState {
+    pub termbases: Vec<crate::model::terminology::Termbase>,
+    pub terms: Vec<crate::model::terminology::Term>,
     pub comics: Vec<crate::model::comic::Comic>,
     pub chapters: Vec<Chapter>,
     pub pages: Vec<Page>,

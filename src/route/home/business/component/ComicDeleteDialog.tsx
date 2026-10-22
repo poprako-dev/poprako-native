@@ -7,6 +7,7 @@ import { Button } from "@/shared/component/Button";
 import { Dialog } from "@/shared/component/Dialog";
 import { StatePanel } from "@/shared/component/StatePanel";
 import { useResource } from "@/shared/hook/use-resource";
+import { ButtonGroup } from "@/shared/component/ButtonGroup";
 
 type Props = { comic: Comic; onClose: () => void; onComplete: () => void };
 export function ComicDeleteDialog({
@@ -22,12 +23,13 @@ export function ComicDeleteDialog({
   const write = useLibraryWrite(onComplete);
   return (
     <Dialog
+      closeDisabled={write.locked}
       open={true}
       onOpenChange={(open) => {
         if (!open && !write.locked) onClose();
       }}
       title="删除漫画"
-      description={`删除“${comic.title}”及其全部章节、页面和翻校内容？此操作无法撤销，原始导入目录中的图片不会被删除。`}
+      description={`删除“${comic.title}”及其术语库、全部术语、章节、页面和翻校内容？此操作无法撤销，原始导入目录中的图片不会被删除。`}
       className=""
     >
       {resource.state.status === "loading" && (
@@ -57,10 +59,7 @@ export function ComicDeleteDialog({
           {write.error}
         </p>
       )}
-      <div className="flex justify-end gap-2">
-        <Button variant="ghost" disabled={write.locked} onClick={onClose}>
-          取消
-        </Button>
+      <ButtonGroup>
         <Button
           variant="danger"
           disabled={write.busy || resource.state.status !== "ready"}
@@ -74,7 +73,7 @@ export function ComicDeleteDialog({
         >
           {write.uncertain ? "核实删除结果" : "删除漫画及全部章节"}
         </Button>
-      </div>
+      </ButtonGroup>
     </Dialog>
   );
 }

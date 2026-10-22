@@ -46,3 +46,5 @@ mod chapter_move_test;
 
 #[cfg(test)]
 mod undo_test;
+
+pub mod terminology;

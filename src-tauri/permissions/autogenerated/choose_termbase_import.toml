@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-choose-termbase-import"
+description = "Enables the choose_termbase_import command without any pre-configured scope."
+commands.allow = ["choose_termbase_import"]
+
+[[permission]]
+identifier = "deny-choose-termbase-import"
+description = "Denies the choose_termbase_import command without any pre-configured scope."
+commands.deny = ["choose_termbase_import"]

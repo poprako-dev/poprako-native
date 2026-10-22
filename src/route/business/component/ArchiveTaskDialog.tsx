@@ -9,6 +9,7 @@ import { ArchiveImportPreview } from "@/route/business/component/ArchiveImportPr
 import { useArchiveTask } from "@/route/business/use-archive-task";
 import { Button } from "@/shared/component/Button";
 import { Dialog } from "@/shared/component/Dialog";
+import { ButtonGroup } from "@/shared/component/ButtonGroup";
 
 type ArchiveTaskDialogProps = {
   taskId: string;
@@ -130,6 +131,7 @@ export function ArchiveTaskDialog({
                   : "准备完成，请核对后确认。";
   return (
     <Dialog
+      closeDisabled={locked}
       open={true}
       onOpenChange={(open) => {
         if (!open && !locked) {
@@ -149,7 +151,6 @@ export function ArchiveTaskDialog({
           existing={existing}
           busy={busy}
           error={error}
-          onCancel={closeSafely}
           onSubmit={(metadata, mode) => {
             confirm(metadata, mode).catch(() => {
               setError("提交尚未确认，请重新查询。");
@@ -168,7 +169,7 @@ export function ArchiveTaskDialog({
           {error || resource.error}
         </p>
       )}
-      <div className="flex justify-end gap-2">
+      <ButtonGroup>
         {(error !== "" || resource.error !== "" || uncertain) && (
           <Button
             variant="secondary"
@@ -191,16 +192,7 @@ export function ArchiveTaskDialog({
             核实原提交结果
           </Button>
         )}
-        {task?.phase !== "awaiting_confirmation" && (
-          <Button variant="ghost" disabled={locked} onClick={closeSafely}>
-            {task?.phase === "completed"
-              ? "完成"
-              : task?.phase === "failed" || task?.phase === "cancelled"
-                ? "关闭"
-                : "取消任务"}
-          </Button>
-        )}
-      </div>
+      </ButtonGroup>
     </Dialog>
   );
 }

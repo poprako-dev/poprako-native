@@ -106,13 +106,15 @@ test.each([
     });
     await waitFor(() => {
       expect(
-        screen.getByRole("button", { name: "关闭" }).hasAttribute("disabled"),
+        screen
+          .getByRole("button", { name: "关闭弹窗" })
+          .hasAttribute("disabled"),
       ).toBe(false);
     });
     expect(session.store.getState().canUndo).toBe(
       !changedPages.includes("page"),
     );
-    fireEvent.click(screen.getByRole("button", { name: "关闭" }));
+    fireEvent.click(screen.getByRole("button", { name: "关闭弹窗" }));
     act(() => {
       session.undo();
     });

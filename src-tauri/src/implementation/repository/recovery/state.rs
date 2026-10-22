@@ -111,7 +111,13 @@ pub async fn capture(
         false => None,
     };
 
+    let (termbases, terms) =
+        crate::implementation::repository::terminology::recovery::capture(connection, scope)
+            .await?;
+
     Ok(MutationState {
+        termbases,
+        terms,
         comics,
         chapters,
         pages,

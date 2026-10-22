@@ -9,3 +9,5 @@ pub mod preference;
 pub mod recovery;
 pub mod search;
 pub mod work_position;
+
+pub mod terminology;

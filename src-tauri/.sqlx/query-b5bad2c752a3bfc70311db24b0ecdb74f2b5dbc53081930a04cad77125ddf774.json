@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE term SET source = ?, source_key = ?, targets = ?, comment = ?, updated_at = ? WHERE id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 6
+    },
+    "nullable": []
+  },
+  "hash": "b5bad2c752a3bfc70311db24b0ecdb74f2b5dbc53081930a04cad77125ddf774"
+}

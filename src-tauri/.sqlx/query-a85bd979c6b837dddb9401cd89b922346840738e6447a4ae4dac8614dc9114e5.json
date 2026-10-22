@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO term (id, termbase_id, source, source_key, targets, comment, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 8
+    },
+    "nullable": []
+  },
+  "hash": "a85bd979c6b837dddb9401cd89b922346840738e6447a4ae4dac8614dc9114e5"
+}

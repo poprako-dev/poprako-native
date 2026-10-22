@@ -53,6 +53,18 @@
     "core:window:allow-set-fullscreen",
     "core:window:allow-close",
     "core:window:allow-start-dragging",
-    "core:window:allow-start-resize-dragging"
+    "core:window:allow-start-resize-dragging",
+    "allow-list-termbase-infos",
+    "allow-get-termbase",
+    "allow-list-term-infos",
+    "allow-copy-term-target",
+    "allow-create-termbase",
+    "allow-choose-termbase-import",
+    "allow-import-termbase",
+    "allow-update-termbase",
+    "allow-delete-termbase",
+    "allow-create-term",
+    "allow-update-term",
+    "allow-delete-term"
   ]
 }

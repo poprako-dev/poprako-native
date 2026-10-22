@@ -24,9 +24,14 @@ impl From<AppError> for CommandError {
     fn from(error: AppError) -> Self {
         let (code, recovery) = match error {
             AppError::InvalidInput => ("validation", Recovery::CorrectInput),
+            AppError::DuplicateTermbase | AppError::DuplicateTerm => {
+                ("validation", Recovery::CorrectInput)
+            }
             AppError::NotFound => ("not_found", Recovery::Reload),
             AppError::Conflict => ("conflict", Recovery::Reload),
             AppError::Busy => ("storage_busy", Recovery::Retry),
+            AppError::Clipboard => ("clipboard", Recovery::Retry),
+            AppError::TermbaseImport => ("termbase_import", Recovery::CorrectInput),
             AppError::Storage => ("storage", Recovery::Retry),
             AppError::Migration => ("migration", Recovery::Restart),
             AppError::CommitUncertain => ("commit_unknown", Recovery::WaitForConfirmation),

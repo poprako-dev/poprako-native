@@ -2,9 +2,11 @@ import { commands as native } from "./generated/bindings";
 import type { CommandError } from "./generated/bindings";
 
 import { write } from "./write";
+import { terminologyCommands } from "./terminology";
 
 export const commands = {
   ...native,
+  ...terminologyCommands,
   moveChapter(
     input: Parameters<typeof native.moveChapter>[0],
   ): ReturnType<typeof native.moveChapter> {

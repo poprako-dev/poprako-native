@@ -5,6 +5,7 @@ import type { Chapter, Comic } from "@/bridge/generated/bindings";
 import { useLibraryWrite } from "@/route/business/use-library-write";
 import { Button } from "@/shared/component/Button";
 import { Dialog } from "@/shared/component/Dialog";
+import { ButtonGroup } from "@/shared/component/ButtonGroup";
 
 export type MetadataTarget =
   | { kind: "new_comic" }
@@ -93,6 +94,7 @@ export function LibraryMetadataDialog({
 
   return (
     <Dialog
+      closeDisabled={write.locked}
       open={true}
       onOpenChange={(open) => {
         if (!open && !write.locked) onClose();
@@ -163,10 +165,7 @@ export function LibraryMetadataDialog({
             {write.error}
           </p>
         )}
-        <div className="flex justify-end gap-2">
-          <Button variant="ghost" onClick={onClose} disabled={write.locked}>
-            取消
-          </Button>
+        <ButtonGroup>
           {write.uncertain ? (
             <Button
               variant="primary"
@@ -188,7 +187,7 @@ export function LibraryMetadataDialog({
               {write.busy ? "正在保存…" : "保存"}
             </Button>
           )}
-        </div>
+        </ButtonGroup>
       </form>
     </Dialog>
   );

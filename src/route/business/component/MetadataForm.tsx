@@ -1,6 +1,7 @@
 import { useId, useState } from "react";
 import type { ReactElement } from "react";
 import { Button } from "@/shared/component/Button";
+import { ButtonGroup } from "@/shared/component/ButtonGroup";
 
 type MetadataFormProps = {
   title: string;
@@ -10,7 +11,6 @@ type MetadataFormProps = {
   error: string;
   submitLabel: string;
   onSubmit: (title: string, subtitle: string, author: string) => void;
-  onCancel: () => void;
 };
 
 export function MetadataForm(props: MetadataFormProps): ReactElement {
@@ -78,10 +78,7 @@ export function MetadataForm(props: MetadataFormProps): ReactElement {
           {props.error}
         </p>
       )}
-      <div className="flex justify-end gap-2">
-        <Button variant="ghost" onClick={props.onCancel} disabled={props.busy}>
-          取消
-        </Button>
+      <ButtonGroup>
         <Button
           variant="primary"
           type="submit"
@@ -89,7 +86,7 @@ export function MetadataForm(props: MetadataFormProps): ReactElement {
         >
           {props.busy ? "正在保存…" : props.submitLabel}
         </Button>
-      </div>
+      </ButtonGroup>
     </form>
   );
 }

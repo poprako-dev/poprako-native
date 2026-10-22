@@ -8,6 +8,7 @@ import type {
 import { imageUrl } from "@/bridge/image-url";
 import { Button } from "@/shared/component/Button";
 import { Dialog } from "@/shared/component/Dialog";
+import { ButtonGroup } from "@/shared/component/ButtonGroup";
 
 type ImageImportDialogProps = {
   target: ImageImportTarget;
@@ -188,9 +189,17 @@ export function ImageImportDialog({
     task === null || ["cancelled", "failed"].includes(task.phase);
   return (
     <Dialog
+      closeDisabled={
+        locked || task?.phase === "committing" || task?.phase === "publishing"
+      }
       open={true}
       onOpenChange={(open) => {
-        if (!open && !locked) {
+        if (
+          !open &&
+          !locked &&
+          task?.phase !== "committing" &&
+          task?.phase !== "publishing"
+        ) {
           cancel().catch(() => {
             setError("取消尚未确认，请重试。");
           });
@@ -259,7 +268,7 @@ export function ImageImportDialog({
         <p className="text-xs text-muted-foreground">
           {task.phase === "completed"
             ? "图片已保存，可以完成并关闭窗口；下次导入时将自动重试清理。"
-            : "暂存资源清理未完成，可再次取消以重试清理。"}
+            : "暂存资源清理未完成，可再次点击右上角关闭以重试清理。"}
         </p>
       )}
       {error !== "" && (
@@ -267,22 +276,7 @@ export function ImageImportDialog({
           {error}
         </p>
       )}
-      <div className="flex flex-wrap justify-end gap-2">
-        <Button
-          variant="ghost"
-          disabled={
-            locked ||
-            task?.phase === "committing" ||
-            task?.phase === "publishing"
-          }
-          onClick={() => {
-            cancel().catch(() => {
-              setError("取消尚未确认，请重试。");
-            });
-          }}
-        >
-          {task?.phase === "completed" ? "关闭" : "取消"}
-        </Button>
+      <ButtonGroup>
         {error !== "" && task !== null && (
           <Button
             variant="secondary"
@@ -340,12 +334,7 @@ export function ImageImportDialog({
                   : "确认导入"}
           </Button>
         )}
-        {task?.phase === "completed" && !uncertain && (
-          <Button variant="primary" onClick={onComplete}>
-            完成
-          </Button>
-        )}
-      </div>
+      </ButtonGroup>
     </Dialog>
   );
 }

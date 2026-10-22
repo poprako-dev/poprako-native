@@ -59,6 +59,7 @@ export function ManagedImage({
           <p>{error}</p>
           {interactive && (
             <Button
+              className="w-full"
               variant="secondary"
               onClick={() => {
                 image.retry();

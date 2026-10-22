@@ -3,7 +3,7 @@ import type { ReactElement } from "react";
 import type { PageInfo } from "@/bridge/generated/bindings";
 import { ManagedImage } from "@/route/business/component/ManagedImage";
 import { Button } from "@/shared/component/Button";
-import { IconButton } from "@/shared/component/IconButton";
+import { ButtonGroup } from "@/shared/component/ButtonGroup";
 import { Dialog } from "@/shared/component/Dialog";
 
 type PagePreviewDialogProps = {
@@ -57,7 +57,10 @@ export function PagePreviewDialog({
           interactive={true}
         />
       </div>
-      <div className="flex flex-wrap items-center justify-center gap-6">
+      <p className="text-center text-xs text-muted-foreground tabular-nums">
+        {index + 1} / {pages.length}
+      </p>
+      <ButtonGroup>
         <Button
           variant="ghost"
           aria-label="上一页"
@@ -67,10 +70,8 @@ export function PagePreviewDialog({
           }}
         >
           <ChevronLeft className="size-4" aria-hidden="true" />
+          上一页
         </Button>
-        <span className="text-xs text-muted-foreground tabular-nums">
-          {index + 1} / {pages.length}
-        </span>
         <Button
           variant="ghost"
           aria-label="下一页"
@@ -80,16 +81,18 @@ export function PagePreviewDialog({
           }}
         >
           <ChevronRight className="size-4" aria-hidden="true" />
+          下一页
         </Button>
-        <IconButton
-          label="更换图片／修复缺图"
+        <Button
+          variant="secondary"
           onClick={() => {
             onReplace(selected);
           }}
         >
           <ImagePlus size={16} aria-hidden="true" />
-        </IconButton>
-      </div>
+          更换图片／修复缺图
+        </Button>
+      </ButtonGroup>
     </Dialog>
   );
 }

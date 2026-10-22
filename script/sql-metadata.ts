@@ -8,26 +8,44 @@ const generated = join(temporary, "metadata");
 const database = join(temporary, "schema.sqlite3");
 const checked = resolve("src-tauri/.sqlx");
 const check = process.argv.includes("--check");
+// This task must never clean a desktop executable that may still be running.
+const env = {
+  ...process.env,
+  CARGO_TARGET_DIR: resolve(
+    process.env["CARGO_TARGET_DIR"] ?? "src-tauri/target",
+    "sql-metadata",
+  ),
+};
 try {
   await mkdir(generated);
-  await run("cargo", [
-    "run",
-    "--manifest-path",
-    "src-tauri/Cargo.toml",
-    "--locked",
-    "-p",
-    "poprako-sql-prepare",
-    "--",
-    database,
-  ]);
+  await run(
+    "cargo",
+    [
+      "run",
+      "--manifest-path",
+      "src-tauri/Cargo.toml",
+      "--locked",
+      "-p",
+      "poprako-sql-prepare",
+      "--",
+      database,
+    ],
+    process.cwd(),
+    env,
+  );
   // Recompile only this application so every macro emits fresh metadata, including unchanged SQL.
-  await run("cargo", [
-    "clean",
-    "--manifest-path",
-    "src-tauri/Cargo.toml",
-    "-p",
-    "poprako-native",
-  ]);
+  await run(
+    "cargo",
+    [
+      "clean",
+      "--manifest-path",
+      "src-tauri/Cargo.toml",
+      "-p",
+      "poprako-native",
+    ],
+    process.cwd(),
+    env,
+  );
   await run(
     "cargo",
     [
@@ -39,7 +57,7 @@ try {
     ],
     process.cwd(),
     {
-      ...process.env,
+      ...env,
       SQLX_OFFLINE: "false",
       DATABASE_URL: `sqlite://${database}`,
       SQLX_OFFLINE_DIR: generated,

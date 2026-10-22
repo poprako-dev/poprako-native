@@ -10,3 +10,5 @@ pub mod page;
 pub mod recovery;
 pub mod save_recovery;
 pub mod search;
+
+pub mod terminology;

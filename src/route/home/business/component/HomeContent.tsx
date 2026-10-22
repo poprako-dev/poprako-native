@@ -1,4 +1,5 @@
 import {
+  BookOpenText,
   ChevronDown,
   ChevronRight,
   FolderInput,
@@ -120,6 +121,16 @@ export function HomeContent({
       >
         <div className="flex justify-end">
           <IconButton
+            label="全局术语库"
+            onClick={() => {
+              void navigate({ to: "/terminology" }).catch(() => {
+                setNotice("无法打开术语库，请重试。");
+              });
+            }}
+          >
+            <BookOpenText size={16} strokeWidth={1.5} />
+          </IconButton>
+          <IconButton
             label="应用设置"
             onClick={() => {
               setSettings(true);
@@ -225,7 +236,7 @@ export function HomeContent({
         {(offset > 0 || comics.length === 50) && (
           <nav
             aria-label="漫画列表分页"
-            className="flex justify-center gap-3 py-4"
+            className="grid grid-cols-2 gap-3 py-4"
           >
             <Button
               variant="ghost"

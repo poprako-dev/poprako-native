@@ -86,6 +86,7 @@ pub async fn update_comic_metadata(
 /// Captures all descendant identities and work positions before cascading deletion.
 pub async fn delete_comic(coordinator: &SqliteCoordinator, comic_id: &str) -> AppResult<()> {
     let scope = RecoveryScope {
+        comic_terminology: true,
         comic_ids: vec![comic_id.to_owned()],
         chapter_pages: true,
         chapter_units: true,

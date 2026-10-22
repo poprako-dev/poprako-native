@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-update-term"
+description = "Enables the update_term command without any pre-configured scope."
+commands.allow = ["update_term"]
+
+[[permission]]
+identifier = "deny-update-term"
+description = "Denies the update_term command without any pre-configured scope."
+commands.deny = ["update_term"]

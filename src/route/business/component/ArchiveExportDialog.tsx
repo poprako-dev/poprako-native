@@ -4,6 +4,7 @@ import { commands, NativeCommandError, unwrap } from "@/bridge";
 import { ArchiveTaskDialog } from "@/route/business/component/ArchiveTaskDialog";
 import { Button } from "@/shared/component/Button";
 import { Dialog } from "@/shared/component/Dialog";
+import { ButtonGroup } from "@/shared/component/ButtonGroup";
 
 type ArchiveExportDialogProps = { chapterId: string; onClose: () => void };
 
@@ -50,6 +51,7 @@ export function ArchiveExportDialog({
   }
   return (
     <Dialog
+      closeDisabled={busy}
       open={true}
       onOpenChange={(open) => {
         if (!open && !busy) {
@@ -99,10 +101,7 @@ export function ArchiveExportDialog({
           {error}
         </p>
       )}
-      <div className="flex justify-end gap-2">
-        <Button variant="ghost" disabled={busy} onClick={onClose}>
-          取消
-        </Button>
+      <ButtonGroup>
         <Button
           variant="primary"
           disabled={busy}
@@ -114,7 +113,7 @@ export function ArchiveExportDialog({
         >
           {busy ? "正在选择…" : "选择保存位置"}
         </Button>
-      </div>
+      </ButtonGroup>
     </Dialog>
   );
 }

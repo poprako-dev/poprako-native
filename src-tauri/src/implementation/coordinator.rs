@@ -180,3 +180,6 @@ mod hierarchy_migration_test;
 
 #[cfg(test)]
 mod undo_migration_test;
+
+#[cfg(test)]
+mod terminology_migration_test;

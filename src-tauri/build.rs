@@ -13,6 +13,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     tauri_build::try_build(tauri_build::Attributes::new().app_manifest(
         tauri_build::AppManifest::new().commands(&[
+            "list_termbase_infos",
+            "get_termbase",
+            "list_term_infos",
+            "copy_term_target",
+            "create_termbase",
+            "choose_termbase_import",
+            "import_termbase",
+            "update_termbase",
+            "delete_termbase",
+            "create_term",
+            "update_term",
+            "delete_term",
             "select_images",
             "select_image_folder",
             "get_image_import",

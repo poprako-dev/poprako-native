@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO termbase (id, scope, comic_id, name, name_key, description, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 8
+    },
+    "nullable": []
+  },
+  "hash": "fbdcfb6147f2ed1755ae1b81381f7aff8a9fa051f34bd3a12feb9ab268263845"
+}

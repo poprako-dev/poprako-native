@@ -37,7 +37,6 @@ it("previews skipped nonblank pages and requires the explicit replacement choice
       busy={false}
       error=""
       onSubmit={submit}
-      onCancel={() => undefined}
     />,
   );
   expect(screen.getByText("跳过已有 2 个单元")).toBeDefined();
