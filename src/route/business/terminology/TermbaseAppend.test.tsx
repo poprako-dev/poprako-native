@@ -115,39 +115,48 @@ it("appends from a global row without selecting it or saving editor content", as
   expect(save).not.toHaveBeenCalled();
 });
 
-it("preserves both search fields and the selected library while refreshing its count and terms", async () => {
-  const user = userEvent.setup();
-  render(<TerminologyPage />);
-  await user.type(
-    screen.getByRole("textbox", { name: "搜索术语库名称" }),
-    "奇幻",
-  );
-  await user.click(await screen.findByRole("button", { name: /奇幻世界/ }));
-  await user.type(
-    await screen.findByRole("textbox", { name: "搜索术语原文" }),
-    "団",
-  );
-  await user.click(screen.getByRole("button", { name: "返回术语库" }));
-  await user.click(await appendButton(globalBase.termbase.name));
-  await screen.findByText("已追加：新增 1 条，更新 2 条，未变更 3 条");
-  expect(screen.getByRole("textbox", { name: "搜索术语库名称" })).toHaveValue(
-    "奇幻",
-  );
-  await user.click(await screen.findByRole("button", { name: /奇幻世界/ }));
-  expect(screen.getByRole("textbox", { name: "搜索术语原文" })).toHaveValue(
-    "団",
-  );
-  await waitFor(() => {
-    expect(commands.getTermbase).toHaveBeenCalledTimes(2);
-  });
-  await waitFor(() => {
-    expect(commands.listTermInfos).toHaveBeenLastCalledWith(
-      { kind: "global" },
-      "global",
-      expect.objectContaining({ text: "団" }),
+it.each([0, 15])(
+  "preserves both search fields and the selected library while refreshing its count and terms (event delay: %i ms)",
+  async (delay) => {
+    const user = userEvent.setup({ delay });
+    render(<TerminologyPage />);
+    await user.type(
+      screen.getByRole("textbox", { name: "搜索术语库名称" }),
+      "奇幻",
     );
-  });
-});
+    await waitFor(() => {
+      expect(commands.listTermbaseInfos).toHaveBeenLastCalledWith(
+        { kind: "global" },
+        expect.objectContaining({ text: "奇幻" }),
+      );
+    });
+    await user.click(await screen.findByRole("button", { name: /奇幻世界/ }));
+    await user.type(
+      await screen.findByRole("textbox", { name: "搜索术语原文" }),
+      "団",
+    );
+    await user.click(screen.getByRole("button", { name: "返回术语库" }));
+    await user.click(await appendButton(globalBase.termbase.name));
+    await screen.findByText("已追加：新增 1 条，更新 2 条，未变更 3 条");
+    expect(screen.getByRole("textbox", { name: "搜索术语库名称" })).toHaveValue(
+      "奇幻",
+    );
+    await user.click(await screen.findByRole("button", { name: /奇幻世界/ }));
+    expect(
+      await screen.findByRole("textbox", { name: "搜索术语原文" }),
+    ).toHaveValue("団");
+    await waitFor(() => {
+      expect(commands.getTermbase).toHaveBeenCalledTimes(2);
+    });
+    await waitFor(() => {
+      expect(commands.listTermInfos).toHaveBeenLastCalledWith(
+        { kind: "global" },
+        "global",
+        expect.objectContaining({ text: "団" }),
+      );
+    });
+  },
+);
 
 it("cancels silently and reports invalid files without submitting a write", async () => {
   vi.mocked(commands.chooseTermbaseAppend)
