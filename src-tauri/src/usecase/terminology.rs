@@ -15,6 +15,7 @@ use crate::part::repository::terminology::{
 use crate::result::AppResult;
 use crate::usecase::recovery::execute;
 
+pub mod export;
 pub mod import;
 
 fn recovery_scope(scope: &TermbaseScope, base_id: String) -> RecoveryScope {

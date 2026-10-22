@@ -3,6 +3,15 @@ use specta::Type;
 
 use crate::model::terminology::Termbase;
 
+pub mod portable;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "snake_case")]
+pub enum TermbaseExportOutcome {
+    Saved,
+    Cancelled,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Type)]
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
 pub enum TerminologyContext {

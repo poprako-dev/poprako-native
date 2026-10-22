@@ -10,11 +10,14 @@ import { TerminologyToolbar } from "@/route/business/terminology/TerminologyTool
 import { TermbaseList } from "@/route/business/terminology/TermbaseList";
 import { SelectedTerms } from "@/route/business/terminology/SelectedTerms";
 import { TerminologyEditors } from "@/route/business/terminology/TerminologyEditors";
+import { useTermbaseExport } from "@/route/business/terminology/use-termbase-export";
+import { TermbaseExportNotice } from "@/route/business/terminology/TermbaseExportNotice";
 
 const access: TerminologyContext = { kind: "global" };
 
 export function TerminologyPage(): ReactElement {
   const state = useTerminology(access);
+  const exports = useTermbaseExport(access);
   const [level, setLevel] = useState<"bases" | "terms">("bases");
   const [error, setError] = useState("");
   const current = state.selectedId === null ? "bases" : level;
@@ -73,6 +76,7 @@ export function TerminologyPage(): ReactElement {
           {current === "terms" ? "术语库" : "全局术语库"}
         </h1>
       </header>
+      <TermbaseExportNotice exports={exports} />
       {error && (
         <p role="alert" className="text-xs text-destructive">
           {error}
@@ -101,6 +105,7 @@ export function TerminologyPage(): ReactElement {
               selectedId={state.selectedId}
               directory={true}
               locked={false}
+              exports={exports}
               onSelect={(info) => {
                 state.select(info.termbase.id);
                 setLevel("terms");

@@ -18,6 +18,7 @@ pub fn builder() -> Builder<tauri::Wry> {
     Builder::new().commands(collect_commands![
         terminology::list_termbase_infos,
         terminology::get_termbase,
+        terminology::export::export_termbase,
         terminology::list_term_infos,
         terminology::copy_term_target,
         terminology::termbase::create_termbase,

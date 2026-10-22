@@ -1,9 +1,14 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import type { ReactElement } from "react";
 import { useStore } from "zustand";
 import { SquareArrowRight } from "lucide-react";
-import type { ChapterDetail } from "@/bridge/generated/bindings";
+import type {
+  ChapterDetail,
+  TerminologyContext,
+} from "@/bridge/generated/bindings";
 import { TerminologyLookup } from "@/route/business/terminology/TerminologyLookup";
+import { useTermbaseExport } from "@/route/business/terminology/use-termbase-export";
+import { TermbaseExportNotice } from "@/route/business/terminology/TermbaseExportNotice";
 import { usePreference } from "@/route/business/preference-context";
 import { PreferenceDialog } from "@/route/business/component/PreferenceDialog";
 import { Button } from "@/shared/component/Button";
@@ -42,6 +47,11 @@ export function EditorWorkspace({
   onRefresh,
 }: EditorWorkspaceProps): ReactElement {
   const state = useStore(session.store);
+  const terminologyAccess = useMemo<TerminologyContext>(
+    () => ({ kind: "chapter", chapter_id: detail.chapter.id }),
+    [detail.chapter.id],
+  );
+  const exports = useTermbaseExport(terminologyAccess);
   const { preference, save } = usePreference();
   const resource = usePageImage(detail.chapter.id, state.baseline.page.id);
   const [flagged, setFlagged] = useState(false);
@@ -130,8 +140,12 @@ export function EditorWorkspace({
             chapterId={detail.chapter.id}
             locked={locked}
             onInteraction={setTerminologyActive}
+            exports={exports}
           />
         )}
+        <div className="pointer-events-none absolute top-12 left-2 z-40 max-w-[calc(100%-1rem)]">
+          <TermbaseExportNotice exports={exports} />
+        </div>
         <div className="absolute top-2 left-2 flex items-center gap-2">
           <EditorToolbox
             readonly={state.mode === "readonly"}

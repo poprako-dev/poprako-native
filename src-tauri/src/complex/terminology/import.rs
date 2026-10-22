@@ -1,28 +1,11 @@
 use std::collections::HashSet;
 
-use serde::Deserialize;
-
 use crate::complex::terminology::{key, normalize_base, normalize_term};
+use crate::data::terminology::portable::PortableTermbase;
 use crate::data::terminology::{TermMetadata, TermbaseImport, TermbaseMetadata};
 use crate::result::{AppError, AppResult};
 
 pub const MAX_FILE_BYTES: u64 = 8 * 1024 * 1024;
-
-#[derive(Deserialize)]
-#[serde(deny_unknown_fields)]
-struct PortableTerm {
-    source: String,
-    targets: Vec<String>,
-    comment: Option<String>,
-}
-
-#[derive(Deserialize)]
-#[serde(deny_unknown_fields)]
-struct PortableTermbase {
-    name: String,
-    description: Option<String>,
-    terms: Vec<PortableTerm>,
-}
 
 /// # Errors
 /// Validates all entries before creating a library; duplicate sources never overwrite terms.

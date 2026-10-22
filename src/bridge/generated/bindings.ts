@@ -16,6 +16,11 @@ export const commands = {
 	getTermbase: (access: TerminologyContext, id: string) => typedError<TermbaseInfo, CommandError>(__TAURI_INVOKE("get_termbase", { access, id })),
 	/**
 	 *  # Errors
+	 *  Saves a visible library through a native picker without exposing paths or changing the database.
+	 */
+	exportTermbase: (access: TerminologyContext, id: string) => typedError<TermbaseExportOutcome, CommandError>(__TAURI_INVOKE("export_termbase", { access, id })),
+	/**
+	 *  # Errors
 	 *  Lists a bounded page of matching terms from one visible library.
 	 */
 	listTermInfos: (access: TerminologyContext, termbaseId: string, query: TerminologyQuery) => typedError<Term[], CommandError>(__TAURI_INVOKE("list_term_infos", { access, termbaseId, query })),
@@ -572,6 +577,8 @@ export type Termbase = {
 	created_at: number,
 	updated_at: number,
 };
+
+export type TermbaseExportOutcome = "saved" | "cancelled";
 
 export type TermbaseImport = {
 	metadata: TermbaseMetadata,

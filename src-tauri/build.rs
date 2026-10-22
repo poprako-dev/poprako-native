@@ -15,6 +15,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         tauri_build::AppManifest::new().commands(&[
             "list_termbase_infos",
             "get_termbase",
+            "export_termbase",
             "list_term_infos",
             "copy_term_target",
             "create_termbase",

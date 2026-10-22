@@ -10,6 +10,17 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { commands } from "@/bridge";
 import { TerminologyLookup } from "./TerminologyLookup";
 import { setupTerminology } from "./terminology-test-fixture";
+import { useTermbaseExport } from "./use-termbase-export";
+
+function Lookup(
+  props: Omit<Parameters<typeof TerminologyLookup>[0], "exports">,
+): React.ReactElement {
+  const exports = useTermbaseExport({
+    kind: "chapter",
+    chapter_id: props.chapterId,
+  });
+  return <TerminologyLookup {...props} exports={exports} />;
+}
 
 vi.mock("@tanstack/react-router", () => ({ useBlocker: vi.fn() }));
 beforeEach(setupTerminology);
@@ -24,11 +35,7 @@ it("looks up global terms and copies without saving or exposing global mutation 
   const save = vi.spyOn(commands, "savePageUnits");
   const interaction = vi.fn();
   render(
-    <TerminologyLookup
-      chapterId="chapter"
-      locked={false}
-      onInteraction={interaction}
-    />,
+    <Lookup chapterId="chapter" locked={false} onInteraction={interaction} />,
   );
   await user.click(screen.getByRole("button", { name: "选择术语库" }));
   await user.click(await screen.findByRole("button", { name: /奇幻世界/ }));
@@ -52,11 +59,7 @@ it("allows local term editing, isolates copy from long press, and closes panels 
   const user = userEvent.setup();
   const interaction = vi.fn();
   render(
-    <TerminologyLookup
-      chapterId="chapter"
-      locked={false}
-      onInteraction={interaction}
-    />,
+    <Lookup chapterId="chapter" locked={false} onInteraction={interaction} />,
   );
   await user.click(screen.getByRole("button", { name: "选择术语库" }));
   await user.click(await screen.findByRole("button", { name: /本作人名/ }));

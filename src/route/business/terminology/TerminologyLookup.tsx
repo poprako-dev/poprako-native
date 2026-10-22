@@ -16,16 +16,19 @@ import { TermbaseList } from "./TermbaseList";
 import { SelectedTerms } from "./SelectedTerms";
 import { TerminologyToolbar } from "./TerminologyToolbar";
 import { TerminologyEditors } from "./TerminologyEditors";
+import type { TermbaseExportController } from "./use-termbase-export";
 
 type Props = {
   chapterId: string;
   locked: boolean;
+  exports: TermbaseExportController;
   onInteraction: (active: boolean) => void;
 };
 
 export function TerminologyLookup({
   chapterId,
   locked,
+  exports,
   onInteraction,
 }: Props): ReactElement {
   const access = useMemo<TerminologyContext>(
@@ -88,6 +91,7 @@ export function TerminologyLookup({
                   selectedId={state.selectedId}
                   directory={false}
                   locked={locked}
+                  exports={exports}
                   onSelect={(info) => {
                     state.select(info.termbase.id);
                     state.setBaseQuery("");

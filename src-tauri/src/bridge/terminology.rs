@@ -12,6 +12,7 @@ use crate::model::terminology::Term;
 use crate::result::AppError;
 use crate::usecase::terminology;
 
+pub mod export;
 pub mod import;
 pub mod term;
 pub mod termbase;
