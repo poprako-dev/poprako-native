@@ -21,6 +21,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             "create_termbase",
             "choose_termbase_import",
             "import_termbase",
+            "choose_termbase_append",
+            "append_termbase",
             "update_termbase",
             "delete_termbase",
             "create_term",

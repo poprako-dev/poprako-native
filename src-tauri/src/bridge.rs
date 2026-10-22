@@ -24,6 +24,8 @@ pub fn builder() -> Builder<tauri::Wry> {
         terminology::termbase::create_termbase,
         terminology::import::choose_termbase_import,
         terminology::import::import_termbase,
+        terminology::append::choose_termbase_append,
+        terminology::append::append_termbase,
         terminology::termbase::update_termbase,
         terminology::termbase::delete_termbase,
         terminology::term::create_term,

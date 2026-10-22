@@ -5,13 +5,14 @@ use std::path::Path;
 use tauri::AppHandle;
 use tauri_plugin_dialog::DialogExt;
 
+use crate::complex::terminology::append;
 use crate::complex::terminology::import::{MAX_FILE_BYTES, parse};
-use crate::data::terminology::TermbaseImport;
+use crate::data::terminology::{TermbaseAppend, TermbaseImport};
 use crate::result::{AppError, AppResult};
 
 /// # Errors
 /// Bounds allocation even when a selected file grows while being read.
-pub fn read(path: &Path) -> AppResult<TermbaseImport> {
+fn read_content(path: &Path) -> AppResult<Vec<u8>> {
     let file = File::open(path).map_err(|_| AppError::Storage)?;
 
     let metadata = file.metadata().map_err(|_| AppError::Storage)?;
@@ -26,16 +27,14 @@ pub fn read(path: &Path) -> AppResult<TermbaseImport> {
         .read_to_end(&mut content)
         .map_err(|_| AppError::Storage)?;
 
-    parse(&content)
+    Ok(content)
 }
 
-/// # Errors
-/// Only a native file picker introduces the import path; cancellation has no database effect.
-pub fn choose(app: &AppHandle) -> AppResult<Option<TermbaseImport>> {
+fn choose_content(app: &AppHandle, title: &str) -> AppResult<Option<Vec<u8>>> {
     let Some(file) = app
         .dialog()
         .file()
-        .set_title("导入术语库 JSON")
+        .set_title(title)
         .add_filter("术语库 JSON", &["json"])
         .blocking_pick_file()
     else {
@@ -44,5 +43,21 @@ pub fn choose(app: &AppHandle) -> AppResult<Option<TermbaseImport>> {
 
     let path = file.into_path().map_err(|_| AppError::InvalidInput)?;
 
-    read(&path).map(Some)
+    read_content(&path).map(Some)
+}
+
+/// # Errors
+/// Only a native file picker introduces the import path; cancellation has no database effect.
+pub fn choose(app: &AppHandle) -> AppResult<Option<TermbaseImport>> {
+    choose_content(app, "导入术语库 JSON")?
+        .map(|content| parse(&content))
+        .transpose()
+}
+
+/// # Errors
+/// Shares bounded file reading while accepting only the metadata-free append document.
+pub fn choose_append(app: &AppHandle) -> AppResult<Option<TermbaseAppend>> {
+    choose_content(app, "追加术语 JSON")?
+        .map(|content| append::parse(&content))
+        .transpose()
 }

@@ -42,6 +42,19 @@ pub struct TermbaseImport {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Type)]
+#[serde(deny_unknown_fields)]
+pub struct TermbaseAppend {
+    pub terms: Vec<TermMetadata>,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, Type)]
+pub struct TermbaseAppendResult {
+    pub added: u32,
+    pub updated: u32,
+    pub unchanged: u32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Type)]
 pub struct TermbaseInfo {
     pub termbase: Termbase,
     pub term_count: u32,

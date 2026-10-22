@@ -21,6 +21,14 @@ import {
   setupTerminology,
 } from "./terminology-test-fixture";
 import { useTermbaseExport } from "./use-termbase-export";
+import { useTermbaseAppend } from "./use-termbase-append";
+import { useTerminology } from "./use-terminology";
+import type { TerminologyContext } from "@/bridge/generated/bindings";
+
+const lookupAccess: TerminologyContext = {
+  kind: "chapter",
+  chapter_id: "chapter",
+};
 
 vi.mock("@tanstack/react-router", () => ({
   useNavigate: () => vi.fn(),
@@ -43,13 +51,16 @@ function deferred(): DeferredExport {
 
 function Lookup({ readonly = false }: { readonly?: boolean }): ReactElement {
   const exports = useTermbaseExport({ kind: "chapter", chapter_id: "chapter" });
+  const state = useTerminology(lookupAccess);
+  const appends = useTermbaseAppend(state.access, state.appendedTerms);
   return (
     <>
       {!readonly && (
         <TerminologyLookup
-          chapterId="chapter"
+          state={state}
           locked={false}
           exports={exports}
+          appends={appends}
           onInteraction={vi.fn()}
         />
       )}

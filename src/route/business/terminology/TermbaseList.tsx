@@ -11,6 +11,8 @@ import { useTermList } from "./use-term-list";
 import { useTermPress } from "./use-term-press";
 import { TermbaseShareButton } from "./TermbaseShareButton";
 import type { TermbaseExportController } from "./use-termbase-export";
+import { TermbaseAppendButton } from "./TermbaseAppendButton";
+import type { TermbaseAppendController } from "./use-termbase-append";
 
 type RowProps = {
   info: TermbaseInfo;
@@ -19,6 +21,10 @@ type RowProps = {
   editable: boolean;
   busy: boolean;
   onExport: () => void;
+  canAppend: boolean;
+  appendBusy: boolean;
+  appendDisabled: boolean;
+  onAppend: () => void;
   onSelect: () => void;
   onEdit: () => void;
 };
@@ -65,7 +71,16 @@ function TermbaseRow(props: RowProps): ReactElement {
           {base.description || "暂无描述"}
         </span>
       </button>
-      <TermbaseShareButton busy={props.busy} onExport={props.onExport} />
+      <div className="flex shrink-0 items-center gap-1">
+        <TermbaseShareButton busy={props.busy} onExport={props.onExport} />
+        {props.canAppend && (
+          <TermbaseAppendButton
+            busy={props.appendBusy}
+            disabled={props.appendDisabled}
+            onAppend={props.onAppend}
+          />
+        )}
+      </div>
     </div>
   );
 }
@@ -77,6 +92,7 @@ type Props = {
   directory: boolean;
   locked: boolean;
   exports: TermbaseExportController;
+  appends: TermbaseAppendController;
   onSelect: (info: TermbaseInfo) => void;
   onEdit: (info: TermbaseInfo) => void;
 };
@@ -112,6 +128,14 @@ export function TermbaseList(props: Props): ReactElement {
           selected={info.termbase.id === props.selectedId}
           directory={props.directory}
           busy={props.exports.pending.has(info.termbase.id)}
+          canAppend={
+            access.kind === "global" || info.termbase.scope.kind === "comic"
+          }
+          appendBusy={props.appends.pendingId === info.termbase.id}
+          appendDisabled={props.locked || props.appends.locked}
+          onAppend={() => {
+            void props.appends.appendTermbase(info.termbase.id);
+          }}
           onExport={() => {
             void props.exports.exportTermbase(info.termbase.id);
           }}

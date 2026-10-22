@@ -9,6 +9,9 @@ import type {
 import { TerminologyLookup } from "@/route/business/terminology/TerminologyLookup";
 import { useTermbaseExport } from "@/route/business/terminology/use-termbase-export";
 import { TermbaseExportNotice } from "@/route/business/terminology/TermbaseExportNotice";
+import { TermbaseAppendNotice } from "@/route/business/terminology/TermbaseAppendNotice";
+import { useTermbaseAppend } from "@/route/business/terminology/use-termbase-append";
+import { useTerminology } from "@/route/business/terminology/use-terminology";
 import { usePreference } from "@/route/business/preference-context";
 import { PreferenceDialog } from "@/route/business/component/PreferenceDialog";
 import { Button } from "@/shared/component/Button";
@@ -52,6 +55,11 @@ export function EditorWorkspace({
     [detail.chapter.id],
   );
   const exports = useTermbaseExport(terminologyAccess);
+  const terminology = useTerminology(terminologyAccess);
+  const appends = useTermbaseAppend(
+    terminologyAccess,
+    terminology.appendedTerms,
+  );
   const { preference, save } = usePreference();
   const resource = usePageImage(detail.chapter.id, state.baseline.page.id);
   const [flagged, setFlagged] = useState(false);
@@ -137,14 +145,16 @@ export function EditorWorkspace({
         {state.mode !== "readonly" && (
           <TerminologyLookup
             key={detail.chapter.id}
-            chapterId={detail.chapter.id}
-            locked={locked}
+            state={terminology}
+            locked={locked || appends.locked}
             onInteraction={setTerminologyActive}
             exports={exports}
+            appends={appends}
           />
         )}
-        <div className="pointer-events-none absolute top-12 left-2 z-40 max-w-[calc(100%-1rem)]">
+        <div className="pointer-events-none absolute top-12 left-2 z-40 max-w-[calc(100%-1rem)] space-y-1">
           <TermbaseExportNotice exports={exports} />
+          <TermbaseAppendNotice appends={appends} />
         </div>
         <div className="absolute top-2 left-2 flex items-center gap-2">
           <EditorToolbox

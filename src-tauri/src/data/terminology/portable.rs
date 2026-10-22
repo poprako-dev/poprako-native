@@ -10,6 +10,12 @@ pub struct PortableTerm {
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
+pub struct PortableTermbaseAppend {
+    pub terms: Vec<PortableTerm>,
+}
+
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct PortableTermbase {
     pub name: String,
     pub description: Option<String>,

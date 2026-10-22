@@ -6,20 +6,37 @@ import {
   waitFor,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { useMemo } from "react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { commands } from "@/bridge";
+import type { TerminologyContext } from "@/bridge/generated/bindings";
 import { TerminologyLookup } from "./TerminologyLookup";
 import { setupTerminology } from "./terminology-test-fixture";
 import { useTermbaseExport } from "./use-termbase-export";
+import { useTermbaseAppend } from "./use-termbase-append";
+import { useTerminology } from "./use-terminology";
 
-function Lookup(
-  props: Omit<Parameters<typeof TerminologyLookup>[0], "exports">,
-): React.ReactElement {
-  const exports = useTermbaseExport({
-    kind: "chapter",
-    chapter_id: props.chapterId,
-  });
-  return <TerminologyLookup {...props} exports={exports} />;
+function Lookup(props: {
+  chapterId: string;
+  locked: boolean;
+  onInteraction: (active: boolean) => void;
+}): React.ReactElement {
+  const access = useMemo<TerminologyContext>(
+    () => ({ kind: "chapter", chapter_id: props.chapterId }),
+    [props.chapterId],
+  );
+  const exports = useTermbaseExport(access);
+  const state = useTerminology(access);
+  const appends = useTermbaseAppend(state.access, state.appendedTerms);
+  return (
+    <TerminologyLookup
+      state={state}
+      locked={props.locked}
+      onInteraction={props.onInteraction}
+      exports={exports}
+      appends={appends}
+    />
+  );
 }
 
 vi.mock("@tanstack/react-router", () => ({ useBlocker: vi.fn() }));

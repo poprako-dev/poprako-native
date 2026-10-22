@@ -1,41 +1,32 @@
-import {
-  useCallback,
-  useEffect,
-  useId,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import type { ReactElement } from "react";
 import { Search } from "lucide-react";
-import type { TerminologyContext } from "@/bridge/generated/bindings";
 import { useDismiss } from "@/shared/hook/use-dismiss";
-import { useTerminology } from "./use-terminology";
+import type { TerminologyController } from "./use-terminology";
 import { useDebouncedQuery } from "./use-term-list";
 import { TermbaseList } from "./TermbaseList";
 import { SelectedTerms } from "./SelectedTerms";
 import { TerminologyToolbar } from "./TerminologyToolbar";
 import { TerminologyEditors } from "./TerminologyEditors";
 import type { TermbaseExportController } from "./use-termbase-export";
+import type { TermbaseAppendController } from "./use-termbase-append";
 
 type Props = {
-  chapterId: string;
+  state: TerminologyController;
   locked: boolean;
   exports: TermbaseExportController;
+  appends: TermbaseAppendController;
   onInteraction: (active: boolean) => void;
 };
 
 export function TerminologyLookup({
-  chapterId,
+  state,
   locked,
   exports,
+  appends,
   onInteraction,
 }: Props): ReactElement {
-  const access = useMemo<TerminologyContext>(
-    () => ({ kind: "chapter", chapter_id: chapterId }),
-    [chapterId],
-  );
-  const state = useTerminology(access);
+  const access = state.access;
   const [panel, setPanel] = useState<"closed" | "bases" | "terms">("closed");
   const root = useRef<HTMLDivElement>(null);
   const panelId = useId();
@@ -92,6 +83,7 @@ export function TerminologyLookup({
                   directory={false}
                   locked={locked}
                   exports={exports}
+                  appends={appends}
                   onSelect={(info) => {
                     state.select(info.termbase.id);
                     state.setBaseQuery("");

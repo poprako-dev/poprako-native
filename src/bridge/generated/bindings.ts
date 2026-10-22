@@ -49,6 +49,18 @@ export const commands = {
 	importTermbase: (access: TerminologyContext, document: TermbaseImport, request: WriteRequest) => typedError<Termbase, CommandError>(__TAURI_INVOKE("import_termbase", { access, document, request })),
 	/**
 	 *  # Errors
+	 *  Reads a bounded native selection without exposing its path to the frontend.
+	 */
+	chooseTermbaseAppend: () => typedError<{
+	terms: TermMetadata[],
+} | null, CommandError>(__TAURI_INVOKE("choose_termbase_append")),
+	/**
+	 *  # Errors
+	 *  Deduplicates the original append request; uncertain retries only verify retained evidence.
+	 */
+	appendTermbase: (access: TerminologyContext, termbaseId: string, document: TermbaseAppend, request: WriteRequest) => typedError<TermbaseAppendResult, CommandError>(__TAURI_INVOKE("append_termbase", { access, termbaseId, document, request })),
+	/**
+	 *  # Errors
 	 *  Validates scope and retains exact transaction evidence for retrying confirmation.
 	 */
 	updateTermbase: (access: TerminologyContext, baseline: Termbase, metadata: TermbaseMetadata, request: WriteRequest) => typedError<Termbase, CommandError>(__TAURI_INVOKE("update_termbase", { access, baseline, metadata, request })),
@@ -576,6 +588,16 @@ export type Termbase = {
 	description: string,
 	created_at: number,
 	updated_at: number,
+};
+
+export type TermbaseAppend = {
+	terms: TermMetadata[],
+};
+
+export type TermbaseAppendResult = {
+	added: number,
+	updated: number,
+	unchanged: number,
 };
 
 export type TermbaseExportOutcome = "saved" | "cancelled";

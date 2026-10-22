@@ -62,6 +62,8 @@
     "allow-create-termbase",
     "allow-choose-termbase-import",
     "allow-import-termbase",
+    "allow-choose-termbase-append",
+    "allow-append-termbase",
     "allow-update-termbase",
     "allow-delete-termbase",
     "allow-create-term",

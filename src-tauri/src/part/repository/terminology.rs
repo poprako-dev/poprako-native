@@ -2,7 +2,8 @@ use poprako_orchestra::Oper;
 
 use crate::data::terminology::portable::PortableTermbase;
 use crate::data::terminology::{
-    TermMetadata, TermbaseInfo, TermbaseMetadata, TerminologyContext, TerminologyQuery,
+    TermMetadata, TermbaseAppendResult, TermbaseInfo, TermbaseMetadata, TerminologyContext,
+    TerminologyQuery,
 };
 use crate::model::terminology::{Term, Termbase, TermbaseScope};
 
@@ -86,6 +87,14 @@ pub struct CreateTerm {
 pub struct ImportTermbase {
     pub base: CreateTermbase,
     pub terms: Vec<CreateTerm>,
+}
+
+#[derive(Oper)]
+#[oper(output = TermbaseAppendResult)]
+pub struct AppendTermbase {
+    pub access: TerminologyContext,
+    pub termbase_id: String,
+    pub terms: Vec<TermMetadata>,
 }
 
 #[derive(Oper)]

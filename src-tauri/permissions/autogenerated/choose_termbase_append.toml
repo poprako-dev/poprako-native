@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-choose-termbase-append"
+description = "Enables the choose_termbase_append command without any pre-configured scope."
+commands.allow = ["choose_termbase_append"]
+
+[[permission]]
+identifier = "deny-choose-termbase-append"
+description = "Denies the choose_termbase_append command without any pre-configured scope."
+commands.deny = ["choose_termbase_append"]
