@@ -28,6 +28,7 @@ export function useTerminology(access: TerminologyContext): {
   savedBase: (base: Termbase) => void;
   deletedBase: (id: string) => void;
   savedTerm: (created: boolean) => void;
+  appendedTerms: () => void;
 } {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [baseQuery, setBaseQuery] = useState("");
@@ -68,6 +69,11 @@ export function useTerminology(access: TerminologyContext): {
     if (created) setTermQuery("");
     setEditor(null);
   }
+  function appendedTerms(): void {
+    setBaseRevision((value) => value + 1);
+    setTermRevision((value) => value + 1);
+    selection.reload();
+  }
   return {
     access,
     selectedId,
@@ -84,6 +90,7 @@ export function useTerminology(access: TerminologyContext): {
     savedBase,
     deletedBase,
     savedTerm,
+    appendedTerms,
   };
 }
 

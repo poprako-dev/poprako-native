@@ -7,5 +7,6 @@ pub mod image_selection;
 pub mod image_task;
 pub mod repository;
 pub mod resource;
+pub mod terminology_export;
 pub mod terminology_import;
 pub mod write;

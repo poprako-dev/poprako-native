@@ -2,6 +2,15 @@ import { commands as native } from "./generated/bindings";
 import { write } from "./write";
 
 export const terminologyCommands = {
+  appendTermbase(
+    access: Parameters<typeof native.appendTermbase>[0],
+    termbaseId: Parameters<typeof native.appendTermbase>[1],
+    document: Parameters<typeof native.appendTermbase>[2],
+  ): ReturnType<typeof native.appendTermbase> {
+    return write("appendTermbase", [access, termbaseId, document], (request) =>
+      native.appendTermbase(access, termbaseId, document, request),
+    );
+  },
   importTermbase(
     access: Parameters<typeof native.importTermbase>[0],
     document: Parameters<typeof native.importTermbase>[1],

@@ -10,11 +10,17 @@ import { TerminologyToolbar } from "@/route/business/terminology/TerminologyTool
 import { TermbaseList } from "@/route/business/terminology/TermbaseList";
 import { SelectedTerms } from "@/route/business/terminology/SelectedTerms";
 import { TerminologyEditors } from "@/route/business/terminology/TerminologyEditors";
+import { useTermbaseExport } from "@/route/business/terminology/use-termbase-export";
+import { TermbaseExportNotice } from "@/route/business/terminology/TermbaseExportNotice";
+import { TermbaseAppendNotice } from "@/route/business/terminology/TermbaseAppendNotice";
+import { useTermbaseAppend } from "@/route/business/terminology/use-termbase-append";
 
 const access: TerminologyContext = { kind: "global" };
 
 export function TerminologyPage(): ReactElement {
   const state = useTerminology(access);
+  const exports = useTermbaseExport(access);
+  const appends = useTermbaseAppend(access, state.appendedTerms);
   const [level, setLevel] = useState<"bases" | "terms">("bases");
   const [error, setError] = useState("");
   const current = state.selectedId === null ? "bases" : level;
@@ -73,6 +79,8 @@ export function TerminologyPage(): ReactElement {
           {current === "terms" ? "术语库" : "全局术语库"}
         </h1>
       </header>
+      <TermbaseExportNotice exports={exports} />
+      <TermbaseAppendNotice appends={appends} />
       {error && (
         <p role="alert" className="text-xs text-destructive">
           {error}
@@ -88,7 +96,7 @@ export function TerminologyPage(): ReactElement {
               query={state.baseQuery}
               label="搜索术语库名称"
               createLabel="新建术语库"
-              canCreate={true}
+              canCreate={!appends.locked}
               onQuery={state.setBaseQuery}
               onCreate={() => {
                 state.setEditor({ kind: "base", value: null });
@@ -100,7 +108,9 @@ export function TerminologyPage(): ReactElement {
               query={query}
               selectedId={state.selectedId}
               directory={true}
-              locked={false}
+              locked={appends.locked}
+              exports={exports}
+              appends={appends}
               onSelect={(info) => {
                 state.select(info.termbase.id);
                 setLevel("terms");
@@ -121,7 +131,7 @@ export function TerminologyPage(): ReactElement {
                 key={state.selectedId}
                 state={state}
                 directory={true}
-                locked={false}
+                locked={appends.locked}
               />
             )}
           </section>

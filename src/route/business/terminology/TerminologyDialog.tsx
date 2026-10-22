@@ -7,14 +7,18 @@ import { Dialog } from "@/shared/component/Dialog";
 import { Button } from "@/shared/component/Button";
 import { ButtonGroup } from "@/shared/component/ButtonGroup";
 
+export function useTerminologyGuard(locked: boolean): void {
+  useBlocker({ shouldBlockFn: () => locked, enableBeforeUnload: false });
+  useEffect(() => registerExitGuard(() => Promise.resolve(!locked)), [locked]);
+}
+
 export function useTerminologyWrite(
   onClose: () => void,
   selecting = false,
 ): ReturnType<typeof useLibraryWrite> {
   const write = useLibraryWrite(onClose);
   const locked = write.locked || selecting;
-  useBlocker({ shouldBlockFn: () => locked, enableBeforeUnload: false });
-  useEffect(() => registerExitGuard(() => Promise.resolve(!locked)), [locked]);
+  useTerminologyGuard(locked);
   return { ...write, locked, busy: write.busy || selecting };
 }
 

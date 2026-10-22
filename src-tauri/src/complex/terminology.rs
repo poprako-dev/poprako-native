@@ -3,6 +3,7 @@ use std::collections::HashSet;
 use crate::data::terminology::{TermMetadata, TermbaseMetadata, TerminologyQuery};
 use crate::result::{AppError, AppResult};
 
+pub mod append;
 pub mod import;
 
 #[cfg(test)]

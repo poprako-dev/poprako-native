@@ -6,10 +6,38 @@ import {
   waitFor,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { useMemo } from "react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { commands } from "@/bridge";
+import type { TerminologyContext } from "@/bridge/generated/bindings";
 import { TerminologyLookup } from "./TerminologyLookup";
 import { setupTerminology } from "./terminology-test-fixture";
+import { useTermbaseExport } from "./use-termbase-export";
+import { useTermbaseAppend } from "./use-termbase-append";
+import { useTerminology } from "./use-terminology";
+
+function Lookup(props: {
+  chapterId: string;
+  locked: boolean;
+  onInteraction: (active: boolean) => void;
+}): React.ReactElement {
+  const access = useMemo<TerminologyContext>(
+    () => ({ kind: "chapter", chapter_id: props.chapterId }),
+    [props.chapterId],
+  );
+  const exports = useTermbaseExport(access);
+  const state = useTerminology(access);
+  const appends = useTermbaseAppend(state.access, state.appendedTerms);
+  return (
+    <TerminologyLookup
+      state={state}
+      locked={props.locked}
+      onInteraction={props.onInteraction}
+      exports={exports}
+      appends={appends}
+    />
+  );
+}
 
 vi.mock("@tanstack/react-router", () => ({ useBlocker: vi.fn() }));
 beforeEach(setupTerminology);
@@ -24,11 +52,7 @@ it("looks up global terms and copies without saving or exposing global mutation 
   const save = vi.spyOn(commands, "savePageUnits");
   const interaction = vi.fn();
   render(
-    <TerminologyLookup
-      chapterId="chapter"
-      locked={false}
-      onInteraction={interaction}
-    />,
+    <Lookup chapterId="chapter" locked={false} onInteraction={interaction} />,
   );
   await user.click(screen.getByRole("button", { name: "选择术语库" }));
   await user.click(await screen.findByRole("button", { name: /奇幻世界/ }));
@@ -52,11 +76,7 @@ it("allows local term editing, isolates copy from long press, and closes panels 
   const user = userEvent.setup();
   const interaction = vi.fn();
   render(
-    <TerminologyLookup
-      chapterId="chapter"
-      locked={false}
-      onInteraction={interaction}
-    />,
+    <Lookup chapterId="chapter" locked={false} onInteraction={interaction} />,
   );
   await user.click(screen.getByRole("button", { name: "选择术语库" }));
   await user.click(await screen.findByRole("button", { name: /本作人名/ }));

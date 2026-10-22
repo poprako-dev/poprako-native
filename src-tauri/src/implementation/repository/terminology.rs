@@ -7,6 +7,8 @@ use crate::model::terminology::{Term, TermbaseScope};
 use crate::part::repository::terminology::{ListTermInfos, ListTermbaseInfos, ReadTermbase};
 use crate::result::{AppError, AppResult};
 
+pub mod append;
+pub mod export;
 pub mod import;
 pub mod read;
 pub mod recovery;
@@ -139,3 +141,9 @@ mod validation_test;
 
 #[cfg(test)]
 mod import_test;
+
+#[cfg(test)]
+mod export_test;
+
+#[cfg(test)]
+mod append_test;

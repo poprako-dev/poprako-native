@@ -28,7 +28,7 @@ impl Display for AppError {
             Self::DuplicateTerm => "此术语库已有相同原文，请修改原文或编辑已有词条",
             Self::Clipboard => "复制失败，请重试",
             Self::TermbaseImport => {
-                "术语库文件无效，请检查 JSON 格式、库名及词条内容；文件最多 8 MiB"
+                "术语库文件无效，请检查 JSON 格式及必需字段、重复原文或译名；文件最多 8 MiB"
             }
             Self::NotFound => "内容已不存在，请刷新",
             Self::Conflict => "内容已变化，请保留草稿并重新载入",

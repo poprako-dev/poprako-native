@@ -16,6 +16,11 @@ export const commands = {
 	getTermbase: (access: TerminologyContext, id: string) => typedError<TermbaseInfo, CommandError>(__TAURI_INVOKE("get_termbase", { access, id })),
 	/**
 	 *  # Errors
+	 *  Saves a visible library through a native picker without exposing paths or changing the database.
+	 */
+	exportTermbase: (access: TerminologyContext, id: string) => typedError<TermbaseExportOutcome, CommandError>(__TAURI_INVOKE("export_termbase", { access, id })),
+	/**
+	 *  # Errors
 	 *  Lists a bounded page of matching terms from one visible library.
 	 */
 	listTermInfos: (access: TerminologyContext, termbaseId: string, query: TerminologyQuery) => typedError<Term[], CommandError>(__TAURI_INVOKE("list_term_infos", { access, termbaseId, query })),
@@ -42,6 +47,18 @@ export const commands = {
 	 *  Imports the fixed selected document once; uncertain results only verify retained evidence.
 	 */
 	importTermbase: (access: TerminologyContext, document: TermbaseImport, request: WriteRequest) => typedError<Termbase, CommandError>(__TAURI_INVOKE("import_termbase", { access, document, request })),
+	/**
+	 *  # Errors
+	 *  Reads a bounded native selection without exposing its path to the frontend.
+	 */
+	chooseTermbaseAppend: () => typedError<{
+	terms: TermMetadata[],
+} | null, CommandError>(__TAURI_INVOKE("choose_termbase_append")),
+	/**
+	 *  # Errors
+	 *  Deduplicates the original append request; uncertain retries only verify retained evidence.
+	 */
+	appendTermbase: (access: TerminologyContext, termbaseId: string, document: TermbaseAppend, request: WriteRequest) => typedError<TermbaseAppendResult, CommandError>(__TAURI_INVOKE("append_termbase", { access, termbaseId, document, request })),
 	/**
 	 *  # Errors
 	 *  Validates scope and retains exact transaction evidence for retrying confirmation.
@@ -572,6 +589,18 @@ export type Termbase = {
 	created_at: number,
 	updated_at: number,
 };
+
+export type TermbaseAppend = {
+	terms: TermMetadata[],
+};
+
+export type TermbaseAppendResult = {
+	added: number,
+	updated: number,
+	unchanged: number,
+};
+
+export type TermbaseExportOutcome = "saved" | "cancelled";
 
 export type TermbaseImport = {
 	metadata: TermbaseMetadata,
