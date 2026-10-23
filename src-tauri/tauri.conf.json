@@ -50,10 +50,7 @@
     },
     "windows": {
       "nsis": {
-        "languages": [
-          "English",
-          "SimpChinese"
-        ],
+        "languages": ["English", "SimpChinese"],
         "installerHooks": "platform/windows/installer-hooks.nsh"
       },
       "webviewInstallMode": {
