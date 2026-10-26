@@ -146,6 +146,8 @@ export function Canvas({
     unit: UnitDraft | null,
   ): void {
     if (event.button !== 0 || !image.current) return;
+    const current = session.store.getState();
+    if (current.locked || current.uncertain) return;
     event.stopPropagation();
     if (unit && !editable) {
       session.select(unit.id);

@@ -47,4 +47,7 @@ mod chapter_move_test;
 #[cfg(test)]
 mod undo_test;
 
+#[cfg(test)]
+mod editor_coordinate_test;
+
 pub mod terminology;
