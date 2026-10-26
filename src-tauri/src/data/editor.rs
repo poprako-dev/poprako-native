@@ -46,3 +46,6 @@ pub struct PageEditor {
     pub page: Page,
     pub units: Vec<Unit>,
 }
+
+#[cfg(test)]
+mod test;
