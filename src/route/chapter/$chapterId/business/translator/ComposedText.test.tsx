@@ -79,10 +79,13 @@ test("IME previews neither save nor enter history and final input records once",
   expect(session.store.getState().canUndo).toBe(false);
   await act(() => vi.advanceTimersByTimeAsync(20_000));
   expect(save).not.toHaveBeenCalled();
-  expect(await session.save()).toBe(false);
+  const saving = session.save();
   fireEvent.compositionEnd(input, { data: "拼" });
   fireEvent.change(input, { target: { value: "拼" } });
   expect(session.store.getState().draft[0]?.translated_text).toBe("拼");
+  await act(async () => {
+    expect(await saving).toBe(true);
+  });
   await act(() => vi.advanceTimersByTimeAsync(15_000));
   expect(save).toHaveBeenCalledTimes(1);
   act(() => {
@@ -104,6 +107,7 @@ test("an older save receipt leaves the composition preview and selection intact"
   );
   session.edit("a", { translated_text: "before" });
   const saving = session.save();
+  await Promise.resolve();
   render(<Harness />);
   const input = screen.getByRole("textbox");
   if (!(input instanceof HTMLTextAreaElement))

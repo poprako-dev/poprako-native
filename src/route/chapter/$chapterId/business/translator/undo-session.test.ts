@@ -97,6 +97,7 @@ test("undo during a deletion save preserves original identity and subsequent edi
     session.store.getState().draft.filter((unit) => unit.id !== "a"),
   );
   const first = session.save();
+  await Promise.resolve();
   const submitted = save.mock.calls[0]?.[0];
   if (!submitted) throw new Error("missing submission");
   const fixed = structuredClone(submitted);

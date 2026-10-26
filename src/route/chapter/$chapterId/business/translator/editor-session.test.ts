@@ -89,6 +89,7 @@ describe("editor save lifecycle", () => {
     const session = createEditorSession(fixture(), "translation", { save });
     session.edit("unit", { translated_text: "A" });
     const saving = session.save();
+    await Promise.resolve();
     const submitted = save.mock.calls[0]?.[0];
     expect(submitted).toBeDefined();
     session.edit("unit", { translated_text: "B", is_flagged: true });
@@ -131,6 +132,7 @@ describe("editor save lifecycle", () => {
     const first = session.save();
     session.edit("unit", { translated_text: "B" });
     const second = session.save();
+    await Promise.resolve();
     expect(save).toHaveBeenCalledTimes(1);
     const snapshot = save.mock.calls[0]?.[0];
     if (!snapshot) throw new Error("missing snapshot");
@@ -172,9 +174,10 @@ describe("editor save lifecycle", () => {
     session.suspend(true);
     session.edit("unit", { translated_text: "拼音" });
     await vi.advanceTimersByTimeAsync(60_000);
-    expect(await session.save()).toBe(false);
+    const saving = session.save();
     expect(save).not.toHaveBeenCalled();
     session.suspend(false);
+    expect(await saving).toBe(true);
     await vi.advanceTimersByTimeAsync(15_000);
     expect(save).toHaveBeenCalledTimes(1);
     session.dispose();

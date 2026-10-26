@@ -104,6 +104,8 @@ export function createEditorSession(
   }));
   let timer: ReturnType<typeof setTimeout> | undefined;
   let inflight: Promise<boolean> | undefined;
+  let interaction: Promise<boolean> | undefined;
+  let finishInteraction: ((ready: boolean) => void) | undefined;
   const suspension = new Set<string>();
   const history = createUnitHistory();
   let disposed = false;
@@ -112,6 +114,23 @@ export function createEditorSession(
   function clearTimer(): void {
     clearTimeout(timer);
     timer = undefined;
+  }
+
+  function releaseInteraction(ready: boolean): void {
+    const finish = finishInteraction;
+    interaction = undefined;
+    finishInteraction = undefined;
+    finish?.(ready);
+  }
+
+  async function waitForInteraction(): Promise<boolean> {
+    while (!disposed && suspension.size > 0) {
+      interaction ??= new Promise<boolean>((resolve) => {
+        finishInteraction = resolve;
+      });
+      if (!(await interaction)) return false;
+    }
+    return !disposed;
   }
 
   function schedule(): void {
@@ -148,27 +167,28 @@ export function createEditorSession(
     schedule();
   }
 
-  async function commit(): Promise<boolean> {
-    const submitted = uncertainSubmission ?? store.getState();
-    if (!isDirty(submitted)) return true;
-    store.setState({ busy: true, error: "" });
+  async function commit(submitted: EditorState): Promise<boolean> {
+    // Register inflight before store subscribers or the API can reenter save.
+    await Promise.resolve();
     try {
+      if (disposed) return false;
+      store.setState({ busy: true, error: "" });
       const result = await api.save({
         chapter_id: submitted.baseline.page.chapter_id,
         page_id: submitted.baseline.page.id,
         expected_revision: submitted.baseline.page.unit_revision,
         units: submitted.draft.map(normalizedDraft),
       });
+      // dispose() can run while the native save is pending.
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       if (disposed) return false;
       // A receipt advances only the submitted baseline, never subsequent edits.
       uncertainSubmission = null;
       store.setState({
         baseline: result,
-        busy: false,
         error: "",
         uncertain: false,
       });
-      schedule();
       return true;
     } catch (error) {
       if (disposed) return false;
@@ -181,30 +201,38 @@ export function createEditorSession(
         error.detail.recovery === "wait_for_confirmation";
       uncertainSubmission = uncertain ? submitted : null;
       store.setState({
-        busy: false,
         uncertain,
         error: error instanceof Error ? error.message : "保存失败，请重试。",
       });
       clearTimer();
       return false;
+    } finally {
+      inflight = undefined;
+      store.setState({ busy: false });
+      schedule();
     }
   }
 
   async function save(): Promise<boolean> {
     clearTimer();
-    if (disposed || suspension.size > 0) return false;
+    if (disposed) return false;
+    if (suspension.size > 0) {
+      if (!(await waitForInteraction())) return false;
+      return save();
+    }
     if (inflight) {
       if (!(await inflight)) return false;
       return save();
     }
-    inflight = commit();
-    const success = await inflight;
-    inflight = undefined;
-    return success;
+    const submitted = uncertainSubmission ?? store.getState();
+    if (!isDirty(submitted)) return true;
+    inflight = commit(submitted);
+    return inflight;
   }
 
   async function flush(): Promise<boolean> {
-    if (suspension.size > 0) return false;
+    if (disposed) return false;
+    if (suspension.size > 0 && !(await waitForInteraction())) return false;
     store.setState({ locked: true });
     do {
       if (!(await save())) return false;
@@ -292,7 +320,10 @@ export function createEditorSession(
       if (value) suspension.add(reason);
       else suspension.delete(reason);
       if (value) clearTimer();
-      else schedule();
+      else {
+        if (suspension.size === 0) releaseInteraction(true);
+        schedule();
+      }
     },
     cancelLeave(): void {
       store.setState({ locked: false });
@@ -322,6 +353,7 @@ export function createEditorSession(
     },
     dispose(): void {
       disposed = true;
+      releaseInteraction(false);
       clearTimer();
       history.clear();
       store.setState({ canUndo: false });
