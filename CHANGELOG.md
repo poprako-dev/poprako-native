@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.1.1](https://github.com/poprako-dev/poprako-native/compare/v1.1.0...v1.1.1) (2026-10-27)
+
+
+### 修复
+
+* **editor:** block canvas gestures while leaving ([5cae1c0](https://github.com/poprako-dev/poprako-native/commit/5cae1c03ef2422a5cbeec733d1c161f39ed6e62b))
+* **editor:** make editor save and leave transitions reliable ([c433d0a](https://github.com/poprako-dev/poprako-native/commit/c433d0a96eba036628cd75694d7f2070018865b7))
+* **editor:** preserve marker coordinate precision ([fda9f4b](https://github.com/poprako-dev/poprako-native/commit/fda9f4b884cd516d54c6c1dfa130333bd5b0dff0))
+* **editor:** serialize saves and await active interactions ([0655dc9](https://github.com/poprako-dev/poprako-native/commit/0655dc91f6aa362cf0af4688353beaa6a23eaf22))
+
 ## [1.1.0](https://github.com/poprako-dev/poprako-native/compare/v1.0.0...v1.1.0) (2026-10-23)
 
 
